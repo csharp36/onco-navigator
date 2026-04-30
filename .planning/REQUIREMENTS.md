@@ -45,17 +45,17 @@ Requirements for initial release (pilot-ready proof of concept at single practic
 ### Security & Compliance
 
 - [ ] **SEC-01**: All patient data is stored with encryption at rest (column-level for PHI fields, storage-level for database)
-- [ ] **SEC-02**: All data transmitted between system components uses TLS 1.2 or higher
+- [x] **SEC-02**: All data transmitted between system components uses TLS 1.2 or higher
 - [ ] **SEC-03**: Dashboard requires authenticated login with username and password
-- [ ] **SEC-04**: System enforces role-based access: care coordinator (data entry), nurse navigator (alerts + resolution), administrator (pathway configuration)
+- [x] **SEC-04**: System enforces role-based access: care coordinator (data entry), nurse navigator (alerts + resolution), administrator (pathway configuration)
 - [ ] **SEC-05**: All system actions (data access, alerts, resolutions, logins, failed attempts) are logged in an immutable audit trail with timestamp and user identity, retained for minimum 6 years
-- [ ] **SEC-06**: No PHI appears in application logs or Temporal workflow history — only opaque identifiers
+- [x] **SEC-06**: No PHI appears in application logs or Temporal workflow history — only opaque identifiers
 - [ ] **SEC-07**: Dashboard is accessible on desktop and tablet browsers (responsive design)
 
 ### Infrastructure
 
-- [ ] **INFR-01**: System runs locally via Docker Compose (Temporal Server, PostgreSQL, Keycloak, Spring Boot app, React frontend)
-- [ ] **INFR-02**: System supports Spring profile switching between local and AWS deployment configurations
+- [x] **INFR-01**: System runs locally via Docker Compose (Temporal Server, PostgreSQL, Keycloak, Spring Boot app, React frontend)
+- [x] **INFR-02**: System supports Spring profile switching between local and AWS deployment configurations
 - [ ] **INFR-03**: Patient pathway workflows are durable — they survive system restarts without losing state
 - [ ] **INFR-04**: Workflow engine handles patient journeys spanning weeks to months without event history overflow
 
@@ -126,14 +126,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AI-03 | Phase 4 | Pending |
 | AI-04 | Phase 4 | Pending |
 | SEC-01 | Phase 1 | Pending |
-| SEC-02 | Phase 1 | Pending |
+| SEC-02 | Phase 1 | Complete (01-01) |
 | SEC-03 | Phase 1 | Pending |
-| SEC-04 | Phase 1 | Pending |
+| SEC-04 | Phase 1 | Complete (01-01) |
 | SEC-05 | Phase 1 | Pending |
-| SEC-06 | Phase 1 | Pending |
+| SEC-06 | Phase 1 | Complete (01-01) |
 | SEC-07 | Phase 1 | Pending |
-| INFR-01 | Phase 1 | Pending |
-| INFR-02 | Phase 1 | Pending |
+| INFR-01 | Phase 1 | Complete (01-01) |
+| INFR-02 | Phase 1 | Complete (01-01) |
 | INFR-03 | Phase 2 | Pending |
 | INFR-04 | Phase 2 | Pending |
 
