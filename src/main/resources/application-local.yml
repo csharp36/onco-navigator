@@ -28,6 +28,9 @@ spring.temporal:
     packages:
       - com.onconavigator.workflow
       - com.onconavigator.activity
+  workers:
+    - task-queue: onco-pathway-queue
+      name: onco-pathway-worker
 
 onconavigator:
   encryption:
