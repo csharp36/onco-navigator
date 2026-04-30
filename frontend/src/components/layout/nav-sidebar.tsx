@@ -3,6 +3,8 @@ import { hasRole } from '@/lib/auth';
 import {
   LayoutDashboard, Users, Bell, Activity, Settings, ClipboardList,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useAlertCount } from '@/features/alerts/api';
 
 interface NavItem {
   label: string;
@@ -58,6 +60,9 @@ export function NavSidebar({ onNavigate }: NavSidebarProps) {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
 
+  const { data: alertCountData } = useAlertCount();
+  const alertCount = alertCountData?.count ?? 0;
+
   const visibleItems = NAV_ITEMS.filter(item =>
     item.roles.length === 0 || item.roles.some(role => hasRole(role)),
   );
@@ -81,6 +86,14 @@ export function NavSidebar({ onNavigate }: NavSidebarProps) {
           >
             <Icon size={18} />
             {item.label}
+            {item.path === '/alerts' && alertCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="ml-auto text-xs tabular-nums min-w-5 justify-center"
+              >
+                {alertCount > 99 ? '99+' : alertCount}
+              </Badge>
+            )}
           </Link>
         );
       })}
