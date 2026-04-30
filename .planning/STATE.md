@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-04-30T14:25:22.963Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-04-30T14:33:00Z"
 last_activity: 2026-04-30
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
-  percent: 67
+  completed_plans: 7
+  percent: 78
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 02 (pathway-engine) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-30
 
-Progress: [█████░░░░░] 55%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [█████░░░░░] 55%
 
 *Updated after each plan completion*
 | Phase 02-pathway-engine P01 | 15min | 2 tasks | 7 files |
+| Phase 02-pathway-engine P02 | 6min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,10 @@ Recent decisions affecting current work:
 - [Phase 02-01]: AnchorType placed in domain.dto (not domain.enums) — DTO-level enum for JSONB deserialization only, not a PostgreSQL column type
 - [Phase 02-01]: PathwayStep uses Java record canonical constructor — Jackson maps JSONB field names directly without @JsonProperty because V6 seed camelCase keys match record component names exactly
 - [Phase 02-01]: PhysicianOverride all fields updatable=false — overrides are write-once by clinical design; UNIQUE index on (patient_id, pathway_step_id) prevents duplicate suppression records
+- [Phase 02-02]: alertTypeStr passed as String to AlertGenerationActivity.generateAlert — Temporal serializes activity params; String enum name is more robust to schema evolution; implementation converts with AlertType.valueOf(alertTypeStr)
+- [Phase 02-02]: Activity stubs declared as instance fields in workflow impl (not inside monitorPathway method body) — conventional Temporal pattern; method-body creation also works but field declaration is consistent with replay determinism
+- [Phase 02-02]: PathwayService.startPathwayMonitoring uses WorkflowClient.start (async) — sync call would block until workflow completes (weeks), which is never correct
+- [Phase 02-02]: WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE for patient pathway workflows — allows re-enrollment after deactivation without manual workflow ID management
 
 ### Pending Todos
 
@@ -103,6 +108,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-30T14:25:20.403Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-04-30T14:33:00Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

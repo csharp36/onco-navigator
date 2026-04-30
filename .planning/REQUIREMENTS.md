@@ -56,8 +56,8 @@ Requirements for initial release (pilot-ready proof of concept at single practic
 
 - [x] **INFR-01**: System runs locally via Docker Compose (Temporal Server, PostgreSQL, Keycloak, Spring Boot app, React frontend)
 - [x] **INFR-02**: System supports Spring profile switching between local and AWS deployment configurations
-- [ ] **INFR-03**: Patient pathway workflows are durable — they survive system restarts without losing state
-- [ ] **INFR-04**: Workflow engine handles patient journeys spanning weeks to months without event history overflow
+- [x] **INFR-03**: Patient pathway workflows are durable — they survive system restarts without losing state
+- [x] **INFR-04**: Workflow engine handles patient journeys spanning weeks to months without event history overflow
 
 ## v2 Requirements
 
@@ -134,8 +134,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-07 | Phase 1 | Pending |
 | INFR-01 | Phase 1 | Complete (01-01) |
 | INFR-02 | Phase 1 | Complete (01-01) |
-| INFR-03 | Phase 2 | Pending |
-| INFR-04 | Phase 2 | Pending |
+| INFR-03 | Phase 2 | Complete (02-02) |
+| INFR-04 | Phase 2 | Complete (02-02) |
 
 **Coverage:**
 - v1 requirements: 34 total
