@@ -5,7 +5,7 @@ spring:
       # Production should use a Flyway migration for the _AUD tables instead.
       ddl-auto: update
   datasource:
-    url: jdbc:postgresql://localhost:5432/onconavigator
+    url: jdbc:postgresql://localhost:5432/onconavigator?stringtype=unspecified
     username: onco_app
     # For local dev, use plaintext password matching docker/init-db.sh.
     # Production uses AWS Secrets Manager (application-aws.yml).
@@ -31,6 +31,10 @@ spring.temporal:
   workers:
     - task-queue: onco-pathway-queue
       name: onco-pathway-worker
+      activity-beans:
+        - pathwayEvaluationActivityImpl
+        - alertGenerationActivityImpl
+        - sweepActivityImpl
 
 onconavigator:
   encryption:
@@ -39,7 +43,7 @@ onconavigator:
     #   openssl rand -base64 32
     # In production, inject from AWS Secrets Manager.
     # This is a non-secret placeholder; the actual key must never be committed.
-    key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    key: HqmsJAlCUqgAmHAsahP7Y4as/V5ChavBN2horjFffpw=
 
 jasypt:
   encryptor:
