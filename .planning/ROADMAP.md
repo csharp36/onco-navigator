@@ -74,8 +74,8 @@ Cross-cutting constraints:
 **Plans:** 6 plans
 Plans:
 **Wave 1** *(no dependencies — parallel)*
-- [ ] 03-01-PLAN.md — Backend contracts: Flyway V8 (HMAC MRN token), HmacTokenService, all DTOs, GlobalExceptionHandler, repository additions
-- [ ] 03-02-PLAN.md — Frontend scaffold: shadcn components, TypeScript types, TanStack Query hooks, route scaffolds
+- [x] 03-01-PLAN.md — Backend contracts: Flyway V8 (HMAC MRN token), HmacTokenService, all DTOs, GlobalExceptionHandler, repository additions
+- [x] 03-02-PLAN.md — Frontend scaffold: shadcn components, TypeScript types, TanStack Query hooks, route scaffolds
 **Wave 2** *(blocked on Wave 1 Plan 01)*
 - [ ] 03-03-PLAN.md — Backend services and controllers: PatientService, AlertService, PathwayStatusService, all 4 REST controllers
 **Wave 3** *(blocked on Wave 2 + Wave 1 Plan 02)*
@@ -110,5 +110,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. HIPAA Foundation | 4/5 (01-04 awaiting checkpoint) | In Progress | - |
 | 2. Pathway Engine | 4/4 | Complete | 2026-04-30 |
-| 3. Working Application | 0/6 | Not started | - |
+| 3. Working Application | 2/6 | In Progress | - |
 | 4. AI Enhancement & Production | 0/? | Not started | - |
