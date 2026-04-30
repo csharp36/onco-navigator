@@ -178,7 +178,10 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                         log.info("ALERT_CREATED: patient={} step={} type=OUT_OF_ORDER",
                                 patientId, step.stepId());
                     }
-                    // Even if out-of-order, still check for timing deviations below
+                    // Do not double-alert with MISSING/DELAYED for the same step in the same
+                    // evaluation run — one alert type per step per cycle prevents nurse navigator
+                    // confusion and avoids conflicting guidance on the same deviation.
+                    continue;
                 }
             }
 
