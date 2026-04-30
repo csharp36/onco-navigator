@@ -105,7 +105,7 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
         // 3. Fetch pathway template for this cancer type
         PathwayTemplate template = templateRepository.findByCancerType(patient.getCancerType())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "No pathway template for cancer type: " + patient.getCancerType()));
+                        "No pathway template found for patient (templateId lookup failed)"));
 
         // 4. Deserialize JSONB template data into typed step list
         List<PathwayStep> steps;
@@ -113,7 +113,7 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
             steps = objectMapper.readValue(template.getTemplateData(), new TypeReference<>() {});
         } catch (Exception e) {
             throw new IllegalStateException(
-                    "Failed to deserialize pathway template for cancer type: " + patient.getCancerType(), e);
+                    "Failed to deserialize pathway template (templateId=" + template.getId() + ")", e);
         }
 
         // 5. Build helper structures
