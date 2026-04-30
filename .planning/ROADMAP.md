@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold, Docker Compose, Spring profiles, Keycloak realm, PHI log redaction
 - [x] 01-02-PLAN.md — Database schema (Flyway), JPA entities with Envers audit, AES-GCM encryption, audit permissions
-- [ ] 01-03-PLAN.md — Spring Security with Keycloak JWT, RBAC, AuditLoggingFilter
+- [x] 01-03-PLAN.md — Spring Security with Keycloak JWT, RBAC, AuditLoggingFilter
 - [ ] 01-04-PLAN.md — React frontend scaffold, Keycloak OIDC login, responsive dashboard shell
 - [ ] 01-05-PLAN.md — Integration tests (encryption, audit immutability, schema), Dockerfile
 
@@ -79,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. HIPAA Foundation | 2/5 | In Progress | - |
+| 1. HIPAA Foundation | 3/5 | In Progress | - |
 | 2. Pathway Engine | 0/? | Not started | - |
 | 3. Working Application | 0/? | Not started | - |
 | 4. AI Enhancement & Production | 0/? | Not started | - |

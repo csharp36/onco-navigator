@@ -46,9 +46,9 @@ Requirements for initial release (pilot-ready proof of concept at single practic
 
 - [ ] **SEC-01**: All patient data is stored with encryption at rest (column-level for PHI fields, storage-level for database)
 - [x] **SEC-02**: All data transmitted between system components uses TLS 1.2 or higher
-- [ ] **SEC-03**: Dashboard requires authenticated login with username and password
+- [x] **SEC-03**: Dashboard requires authenticated login with username and password
 - [x] **SEC-04**: System enforces role-based access: care coordinator (data entry), nurse navigator (alerts + resolution), administrator (pathway configuration)
-- [ ] **SEC-05**: All system actions (data access, alerts, resolutions, logins, failed attempts) are logged in an immutable audit trail with timestamp and user identity, retained for minimum 6 years
+- [x] **SEC-05**: All system actions (data access, alerts, resolutions, logins, failed attempts) are logged in an immutable audit trail with timestamp and user identity, retained for minimum 6 years
 - [x] **SEC-06**: No PHI appears in application logs or Temporal workflow history — only opaque identifiers
 - [ ] **SEC-07**: Dashboard is accessible on desktop and tablet browsers (responsive design)
 
@@ -127,9 +127,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AI-04 | Phase 4 | Pending |
 | SEC-01 | Phase 1 | Pending |
 | SEC-02 | Phase 1 | Complete (01-01) |
-| SEC-03 | Phase 1 | Pending |
+| SEC-03 | Phase 1 | Complete (01-03) |
 | SEC-04 | Phase 1 | Complete (01-01) |
-| SEC-05 | Phase 1 | Pending |
+| SEC-05 | Phase 1 | Complete (01-03) |
 | SEC-06 | Phase 1 | Complete (01-01) |
 | SEC-07 | Phase 1 | Pending |
 | INFR-01 | Phase 1 | Complete (01-01) |

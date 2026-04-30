@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md — Flyway schema migrations + JPA entities + AES-GCM encryption + audit layer
-last_updated: "2026-04-30T00:42:00.000Z"
-last_activity: 2026-04-30 -- Phase 01 Plan 02 completed
+stopped_at: Completed 01-03-PLAN.md — Spring Security Keycloak JWT + RBAC + AuditLoggingFilter + AuditService
+last_updated: "2026-04-30T00:48:45.000Z"
+last_activity: 2026-04-30 -- Phase 01 Plan 03 completed
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
-  percent: 40
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -26,30 +26,30 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 01 (hipaa-foundation) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Executing Phase 01
-Last activity: 2026-04-30 -- Plan 01-02 completed (Flyway schema migrations + JPA entities + AES-GCM PHI encryption + immutable audit log)
+Last activity: 2026-04-30 -- Plan 01-03 completed (Spring Security Keycloak JWT + RBAC + AuditLoggingFilter + AuditService)
 
-Progress: [████░░░░░░] 40%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 2
-- Average duration: 9 minutes
-- Total execution time: 0.30 hours
+- Total plans completed: 3
+- Average duration: 10 minutes
+- Total execution time: 0.50 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-hipaa-foundation | 2/5 | ~17 min | ~9 min |
+| 01-hipaa-foundation | 3/5 | ~30 min | ~10 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (5 min), 01-02 (12 min)
-- Trend: —
+- Last 5 plans: 01-01 (5 min), 01-02 (12 min), 01-03 (4 min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -69,6 +69,10 @@ Recent decisions affecting current work:
 - [01-02]: AuditLogEntry uses IDENTITY (BIGSERIAL) not UUID — audit_log uses BIGSERIAL primary key for sequential ordering and index efficiency.
 - [01-02]: PatientRepository.findByMrn is a documented stub — AES-GCM random IV prevents ciphertext equality; Phase 3 will add HMAC index token for MRN search.
 - [01-02]: EncryptionConverter uses ApplicationContextProvider (static context accessor) — JPA converters are instantiated by Hibernate outside Spring lifecycle, constructor injection unavailable.
+- [01-03]: @Order(HIGHEST_PRECEDENCE + 10) on AuditLoggingFilter — runs early, calls filterChain.doFilter() first so security context is populated when audit data is extracted.
+- [01-03]: REQUIRES_NEW transaction on AuditService.logAccess — audit entry commits independently; rolled-back business operations still generate audit records.
+- [01-03]: Nil UUID for anonymous actors — satisfies NOT NULL constraint on audit_log.actor_id without schema change.
+- [01-03]: @MockitoBean replaces deprecated @MockBean — Spring Boot 3.4+ replacement used in test classes.
 
 ### Pending Todos
 
@@ -89,5 +93,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-04-30
-Stopped at: Completed 01-02-PLAN.md — Flyway schema migrations + JPA entities + AES-GCM encryption + audit layer
+Stopped at: Completed 01-03-PLAN.md — Spring Security Keycloak JWT + RBAC + AuditLoggingFilter + AuditService
 Resume file: None
