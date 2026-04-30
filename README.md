@@ -164,6 +164,96 @@ Three pathways are pre-configured as JSONB templates in the database:
 
 Each step defines: expected event type, time window (days), prerequisites, and whether it's required.
 
+## HIPAA Compliance
+
+Onco-Navigator is designed for HIPAA compliance from day one — not retrofitted. The system implements the technical safeguards required by the HIPAA Security Rule (45 CFR Part 164, Subpart C) and addresses the Privacy Rule's minimum necessary standard through role-based access control.
+
+### Technical Safeguards Implementation
+
+| HIPAA Requirement | CFR Reference | Implementation |
+|-------------------|---------------|----------------|
+| **Encryption at rest** | 45 CFR 164.312(a)(2)(iv) | AES-256-GCM column-level encryption on all PHI fields (patient names, DOB, MRN) via JPA `@Convert` attribute converter. Each encryption operation uses a unique random IV. Database stores only ciphertext (`bytea` columns). |
+| **Encryption in transit** | 45 CFR 164.312(e)(1) | TLS between all components. Local dev uses Vite proxy; production uses AWS ALB with ACM certificates for TLS 1.3 termination. |
+| **Access control** | 45 CFR 164.312(a)(1) | Keycloak OIDC + Spring Security JWT validation. Three distinct roles enforced at method level via `@PreAuthorize`: Care Coordinator (data entry), Nurse Navigator (alert management), Administrator (full access). |
+| **Audit controls** | 45 CFR 164.312(b) | Hibernate Envers `@Audited` on all ePHI entities creates immutable revision history. Dedicated `AuditLoggingFilter` records every API access with actor UUID, timestamp, endpoint, and success/failure. |
+| **Integrity controls** | 45 CFR 164.312(c)(1) | Bean validation (`@Valid`) on all request DTOs. Database CHECK constraints on clinical fields. HMAC-SHA256 tokens for deterministic MRN integrity verification. |
+| **Authentication** | 45 CFR 164.312(d) | Keycloak issues signed JWTs with PKCE (S256). Tokens validated against Keycloak's JWKS endpoint on every request. No session state on the server (stateless JWT). |
+| **Automatic logoff** | 45 CFR 164.312(a)(2)(iii) | Keycloak session timeout + frontend token refresh with forced re-authentication on expiry. |
+
+### PHI Protection Details
+
+**What is encrypted:**
+- `first_name_encrypted` (bytea) — Patient first name
+- `last_name_encrypted` (bytea) — Patient last name
+- `date_of_birth_encrypted` (bytea) — Date of birth
+- `mrn_encrypted` (bytea) — Medical Record Number
+
+**What is NOT encrypted (non-PHI):**
+- Cancer type, cancer stage, diagnosis date — clinical data that doesn't identify the patient alone
+- Alert descriptions, pathway step names — operational data
+- Patient UUID — random identifier with no intrinsic meaning
+
+**PHI in logs — prevented by design:**
+- `GlobalExceptionHandler` logs only `ex.getClass().getSimpleName()`, never exception messages that could contain field values
+- All service-layer log statements reference patients by UUID only
+- Logback configuration blocks known PHI field name patterns
+
+**Key separation:**
+- AES-256 encryption key (`onconavigator.encryption.key`) — used for column encryption/decryption
+- HMAC-SHA256 key (`onconavigator.hmac.key`) — used for deterministic MRN search tokens
+- Keys are separate Base64-encoded 256-bit values; compromise of the HMAC key does not expose encrypted data
+
+### Searchable Encryption Pattern
+
+Standard AES-GCM uses a random IV per encryption, making equality searches impossible (encrypting "MRN-123" twice produces different ciphertext). Onco-Navigator solves this with a blind index pattern:
+
+1. On patient creation, compute `HMAC-SHA256(mrn, hmac_key)` → deterministic 64-char hex token
+2. Store token in `mrn_hmac_token` column (indexed, not reversible)
+3. On MRN search, compute the same HMAC and query the token column
+
+This satisfies both the encryption-at-rest requirement (MRN is AES-GCM encrypted) and the functional search requirement (HMAC enables exact-match lookup). Reference: [Blind Index pattern for searchable encryption](https://paragonie.com/blog/2017/05/building-searchable-encrypted-databases-with-php-and-sql).
+
+### Audit Trail
+
+Every data access is recorded in the `audit_log` table:
+
+| Field | Purpose |
+|-------|---------|
+| `actor_id` | UUID of the authenticated user (from JWT `sub` claim) |
+| `actor_role` | Role at time of access (CARE_COORDINATOR, NURSE_NAVIGATOR, ADMIN) |
+| `http_method` | GET, POST, PATCH, DELETE |
+| `request_path` | API endpoint accessed |
+| `resource_type` | Entity type (PATIENT, ALERT, CARE_EVENT) |
+| `resource_id` | UUID of the accessed resource |
+| `success` | Whether the operation succeeded |
+| `timestamp` | ISO timestamp of the access |
+| `detail_hash` | SHA-256 hash of request details (integrity verification) |
+
+Audit entries are written in a `REQUIRES_NEW` transaction — even if the business operation rolls back, the audit record persists. The audit table uses `BIGSERIAL` primary keys for guaranteed sequential ordering.
+
+Additionally, Hibernate Envers maintains a complete revision history for all `@Audited` entities (patients, alerts, care events). Every field change is recorded with the revision timestamp and actor identity in `_AUD` shadow tables.
+
+### Production Deployment (AWS)
+
+For production HIPAA compliance on AWS:
+
+- **BAA required** — AWS Business Associate Agreement must be executed before any ePHI enters the account
+- **RDS encryption** — KMS Customer Managed Key (CMK) for storage-level encryption
+- **Secrets Manager** — All keys and credentials injected via `spring.config.import: aws-secretsmanager:/`
+- **CloudTrail** — Mandatory for infrastructure-level audit (all AWS API calls logged)
+- **VPC** — All services in private subnets; no direct public internet access to database or Temporal
+- **HIPAA-eligible services only** — RDS, ECS, Secrets Manager, KMS, CloudTrail, ALB, S3, CloudWatch Logs
+
+### References
+
+- [45 CFR Part 164 — Security and Privacy](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164) — The HIPAA Security Rule and Privacy Rule
+- [45 CFR 164.312 — Technical Safeguards](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.312) — Specific technical requirements referenced above
+- [NIST SP 800-111 — Guide to Storage Encryption](https://csrc.nist.gov/pubs/sp/800/111/final) — AES-GCM for data at rest
+- [NIST SP 800-66 Rev. 2 — Implementing the HIPAA Security Rule](https://csrc.nist.gov/pubs/sp/800/66/r2/final) — Implementation guidance for covered entities
+- [HHS Guidance on Encryption](https://www.hhs.gov/hipaa/for-professionals/breach-notification/guidance/index.html) — Encryption as safe harbor for breach notification
+- [Blind Index Pattern](https://paragonie.com/blog/2017/05/building-searchable-encrypted-databases-with-php-and-sql) — Searchable encryption without sacrificing confidentiality
+- [AWS HIPAA Eligible Services](https://aws.amazon.com/compliance/hipaa-eligible-services-reference/) — Services covered under the AWS BAA
+
 ## Roadmap
 
 - **Phase 1** (Complete) — HIPAA foundation: encryption, audit, RBAC, infrastructure
