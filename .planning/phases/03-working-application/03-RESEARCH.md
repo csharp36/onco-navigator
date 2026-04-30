@@ -750,22 +750,20 @@ const { register, handleSubmit, formState: { errors } } = useForm<Step1Data>({
 
 ---
 
-## Open Questions
 
-1. **HMAC key provisioning for existing patients**
+## Open Questions (RESOLVED)
+
+1. **HMAC key provisioning for existing patients** — RESOLVED
    - What we know: V8 migration adds the column; new patients will have HMAC tokens computed at create time
-   - What's unclear: Are there existing test patients in the local dev database that need their `mrn_hmac_token` backfilled?
-   - Recommendation: Add a note in the plan task for V8 migration: "If dev database has existing patients, run: `UPDATE patients SET mrn_hmac_token = <computed-value>` manually OR reset the database." For a clean dev setup, `docker compose down -v && docker compose up` resets to clean state.
+   - Resolution: For V1 pilot with no pre-existing production patients, NULL tokens are acceptable. Dev environment resets cleanly via `docker compose down -v && docker compose up`. No backfill script needed for pilot.
 
-2. **AlertType → severity display label mapping location**
+2. **AlertType -> severity display label mapping location** — RESOLVED
    - What we know: UI needs "OVERDUE", "MISSING", "OUT OF ORDER"; backend has `DELAYED_EVENT`, `MISSING_EVENT`, `OUT_OF_ORDER`
-   - What's unclear: Should the mapping be in `AlertService.toResponse()` or as a TypeScript enum in the frontend?
-   - Recommendation: Map server-side in `AlertService` — include both `alertType` (enum name for color logic) and `severityLabel` (display string) in `AlertResponse`. Avoids frontend needing to know backend enum names.
+   - Resolution: AlertService performs the mapping server-side in `toAlertResponse()`. The `AlertResponse` DTO includes both `alertType` (raw enum name for frontend color logic) and `severityLabel` (display string). Frontend does not need to know backend enum names.
 
-3. **Assigned navigator dropdown data source**
-   - What we know: Patient wizard Step 2 has an "assigned navigator" field (assigned_navigator_id UUID column)
-   - What's unclear: How does the frontend populate the navigator dropdown? There is no Users table or Keycloak user listing endpoint in scope.
-   - Recommendation: For V1 pilot, a lightweight `GET /api/users?role=ROLE_NURSE_NAVIGATOR` endpoint that queries Keycloak's admin API, OR the coordinator simply types a UUID/name freetext. Given no Keycloak admin API is set up, the simplest approach is to make `assignedNavigatorId` optional in the wizard and allow freetext `treatingPhysician` for now. The `assigned_navigator_id` column allows NULL. [ASSUMED — requires user confirmation before finalizing the wizard field design]
+3. **Assigned navigator dropdown data source** — RESOLVED
+   - What we know: Patient wizard Step 2 has an "assigned navigator" field. No user directory or Keycloak admin API is in scope for V1.
+   - Resolution: Freetext input field (navigator name, optional). The backend field is `assignedNavigator` (String, nullable) rather than a UUID foreign key. Since there is no user directory in V1 pilot, the care coordinator types the navigator's name as free text. This satisfies DATA-01 without requiring infrastructure that does not exist.
 
 ---
 
