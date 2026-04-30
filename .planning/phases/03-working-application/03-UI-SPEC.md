@@ -87,7 +87,7 @@ All values are OKLCh CSS variables already declared in `src/app.css`.
 
 **Accent reserved for (explicit list):**
 1. Active nav sidebar item background (`bg-primary text-primary-foreground`)
-2. Primary action buttons: "Add Patient", "Save Patient", "Record Event", "Resolve Alert"
+2. Primary action buttons: "Add Patient", "Enroll Patient", "Record Event", "Resolve Alert"
 3. Active wizard step indicator circle
 4. Alert count badge number text when count > 0
 
