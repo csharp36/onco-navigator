@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>These constants are shared between the workflow implementations and PathwayService
  * to ensure consistent task queue names and workflow ID formats across the application.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class TemporalConfig {
 
     /**
