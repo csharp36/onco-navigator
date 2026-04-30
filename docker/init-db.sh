@@ -11,6 +11,10 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE temporal OWNER temporal;
     CREATE DATABASE temporal_visibility OWNER temporal;
 
+    -- Create Keycloak database user and schema
+    CREATE USER keycloak WITH PASSWORD '${KEYCLOAK_DB_PASSWORD}';
+    CREATE DATABASE keycloak OWNER keycloak;
+
     -- Create application database user and schema
     CREATE USER onco_app WITH PASSWORD '${APP_DB_PASSWORD}';
     CREATE DATABASE onconavigator OWNER onco_app;
