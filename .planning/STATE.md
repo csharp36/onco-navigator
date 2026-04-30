@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md — project scaffold, Docker Compose, Keycloak realm, PHI logging
-last_updated: "2026-04-30T00:30:00.000Z"
-last_activity: 2026-04-30 -- Phase 01 Plan 01 completed
+stopped_at: Completed 01-02-PLAN.md — Flyway schema migrations + JPA entities + AES-GCM encryption + audit layer
+last_updated: "2026-04-30T00:42:00.000Z"
+last_activity: 2026-04-30 -- Phase 01 Plan 02 completed
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
-  percent: 20
+  completed_plans: 2
+  percent: 40
 ---
 
 # Project State
@@ -26,29 +26,29 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 01 (hipaa-foundation) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Executing Phase 01
-Last activity: 2026-04-30 -- Plan 01-01 completed (Maven scaffold + Docker Compose + Keycloak realm + PHI logging)
+Last activity: 2026-04-30 -- Plan 01-02 completed (Flyway schema migrations + JPA entities + AES-GCM PHI encryption + immutable audit log)
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 1
-- Average duration: 5 minutes
-- Total execution time: 0.08 hours
+- Total plans completed: 2
+- Average duration: 9 minutes
+- Total execution time: 0.30 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-hipaa-foundation | 1/5 | 5 min | 5 min |
+| 01-hipaa-foundation | 2/5 | ~17 min | ~9 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (5 min)
+- Last 5 plans: 01-01 (5 min), 01-02 (12 min)
 - Trend: —
 
 *Updated after each plan completion*
@@ -65,10 +65,14 @@ Recent decisions affecting current work:
 - [01-01]: Jasypt ENC(placeholder_encrypted_password) in application-local.yml — real password encrypted at developer setup time; prevents plaintext credentials in committed config.
 - [01-01]: docker-compose.yml app service commented out — during active dev, run Spring Boot directly via mvnw spring-boot:run to avoid Docker rebuild on each change.
 - [01-01]: KC_DB: dev-mem for Keycloak in local dev — avoids needing separate Keycloak PostgreSQL schema setup.
+- [01-02]: CareEventRepository uses findByPatient_IdOrderByEventDateDesc — CareEvent maps patient as @ManyToOne, Spring Data requires underscore traversal for relationship property paths.
+- [01-02]: AuditLogEntry uses IDENTITY (BIGSERIAL) not UUID — audit_log uses BIGSERIAL primary key for sequential ordering and index efficiency.
+- [01-02]: PatientRepository.findByMrn is a documented stub — AES-GCM random IV prevents ciphertext equality; Phase 3 will add HMAC index token for MRN search.
+- [01-02]: EncryptionConverter uses ApplicationContextProvider (static context accessor) — JPA converters are instantiated by Hibernate outside Spring lifecycle, constructor injection unavailable.
 
 ### Pending Todos
 
-None yet.
+- Generate a real AES-256 encryption key: `openssl rand -base64 32` and replace placeholder in application-local.yml before running the application.
 
 ### Blockers/Concerns
 
@@ -80,10 +84,10 @@ None yet.
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| Search | PatientRepository.findByMrn — AES-GCM random IV prevents DB-level equality search | Deferred to Phase 3 | 01-02 |
 
 ## Session Continuity
 
 Last session: 2026-04-30
-Stopped at: Completed 01-01-PLAN.md — project scaffold, Docker Compose, Keycloak realm, PHI logging
+Stopped at: Completed 01-02-PLAN.md — Flyway schema migrations + JPA entities + AES-GCM encryption + audit layer
 Resume file: None
