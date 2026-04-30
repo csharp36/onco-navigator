@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-03-PLAN.md — Spring Security Keycloak JWT + RBAC + AuditLoggingFilter + AuditService
-last_updated: "2026-04-30T00:48:45.000Z"
-last_activity: 2026-04-30 -- Phase 01 Plan 03 completed
+stopped_at: Checkpoint 01-04 Task 3 — human-verify: login with all 3 test users and confirm role-based navigation
+last_updated: "2026-04-30T01:20:00.000Z"
+last_activity: 2026-04-30 -- Phase 01 Plan 04 Tasks 1+2 completed (awaiting human checkpoint)
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
   completed_plans: 3
-  percent: 60
+  percent: 70
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 01 (hipaa-foundation) — EXECUTING
-Plan: 4 of 5
+Plan: 4 of 5 (Tasks 1+2 complete, awaiting checkpoint verification)
 Status: Executing Phase 01
-Last activity: 2026-04-30 -- Plan 01-03 completed (Spring Security Keycloak JWT + RBAC + AuditLoggingFilter + AuditService)
+Last activity: 2026-04-30 -- Plan 01-04 Tasks 1+2 completed (React frontend scaffold, Keycloak OIDC PKCE, dashboard shell)
 
-Progress: [██████░░░░] 60%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -73,6 +73,10 @@ Recent decisions affecting current work:
 - [01-03]: REQUIRES_NEW transaction on AuditService.logAccess — audit entry commits independently; rolled-back business operations still generate audit records.
 - [01-03]: Nil UUID for anonymous actors — satisfies NOT NULL constraint on audit_log.actor_id without schema change.
 - [01-03]: @MockitoBean replaces deprecated @MockBean — Spring Boot 3.4+ replacement used in test classes.
+- [01-04]: Tailwind v4 — no tailwind.config.ts; all config in src/app.css via @theme inline CSS block; @tailwindcss/vite plugin handles compilation.
+- [01-04]: TanStack Router routeTree.gen.ts pre-generated via vite build before first tsc run — avoids Cannot find module on first build.
+- [01-04]: TypeScript 6 erasableSyntaxOnly default disallows class parameter properties; ApiError refactored to explicit field assignment.
+- [01-04]: ignoreDeprecations: 6.0 added to tsconfig.app.json — TypeScript 6 deprecates baseUrl but paths alias still requires it.
 
 ### Pending Todos
 
@@ -93,5 +97,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-04-30
-Stopped at: Completed 01-03-PLAN.md — Spring Security Keycloak JWT + RBAC + AuditLoggingFilter + AuditService
+Stopped at: Checkpoint 01-04 Task 3 — human-verify: start frontend dev server, login as nurse1/coordinator1/admin1, confirm role navigation
 Resume file: None
