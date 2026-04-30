@@ -64,11 +64,11 @@ All sizes in pixels (rem conversions for Tailwind classes shown):
 | Body | 14px | `text-sm` | 400 | Regular | 1.5 | Form labels, table cell text, nav items, card body copy |
 | UI Label | 16px | `text-base` | 400 | Regular | 1.5 | Input field text, dialog body, resolution notes |
 | Subheading | 20px | `text-xl` | 600 | Semibold | 1.3 | Card titles, section headings, modal titles |
-| Heading | 28px | `text-3xl` | 700 | Bold | 1.2 | Page titles (Dashboard, Patients, Alerts) |
+| Heading | 28px | `text-3xl` | 600 | Semibold | 1.2 | Page titles (Dashboard, Patients, Alerts) |
 
 **Constraints:**
-- Only 4 sizes and 2 weight levels (regular 400 and semibold/bold 600/700) are permitted
-- Bold (700) reserved for page-level headings only; subheadings use semibold (600)
+- Only 4 sizes and exactly 2 weights are permitted: Regular (400) and Semibold (600)
+- 600 Semibold serves both Subheading (20px) and Heading (28px) — size differential provides sufficient visual hierarchy without a third weight
 - `text-muted-foreground` class applied to secondary labels, timestamps, help text
 - `tracking-tight` applied to all headings (matches existing Dashboard h1 pattern from routes/index.tsx)
 
@@ -146,7 +146,7 @@ Components needed for Phase 3, organized by feature area:
 |-----------|--------|---------------|
 | `Dialog` | existing | Medium width (max-w-lg), non-dismissible (requiresInteraction) |
 | `Textarea` | add via shadcn | Resolution notes — required, min 3 rows |
-| `Button` | existing | default "Resolve Alert", outline "Cancel" |
+| `Button` | existing | default "Resolve Alert", outline "Keep Alert Open" |
 | `Label` | add via shadcn | Notes field label with required indicator |
 
 ### Patient Detail Page (ALRT-03)
@@ -167,7 +167,7 @@ Components needed for Phase 3, organized by feature area:
 | `Input` | existing | type="date" for event date |
 | `Select` | add via shadcn | Status: Scheduled/Completed/Cancelled/Pending |
 | `Textarea` | add via shadcn | Optional notes, 2 rows |
-| `Button` | existing | default "Save Event", outline "Cancel" |
+| `Button` | existing | default "Save Event", outline "Discard Event" |
 
 ### Dashboard Landing Page (D-10, D-11, D-12)
 | Component | Source | Variant/Notes |
@@ -252,6 +252,8 @@ Components needed for Phase 3, organized by feature area:
 | Primary CTA — resolve alert | "Resolve Alert" | D-06 from CONTEXT.md |
 | Primary CTA — save wizard step 1 | "Next: Clinical Details" | default |
 | Primary CTA — save wizard step 2 | "Enroll Patient" | default — implies pathway enrollment |
+| Dismiss — alert resolution modal | "Keep Alert Open" | checker revision — replaces generic "Cancel"; communicates that the alert remains open |
+| Dismiss — quick-add care event dialog | "Discard Event" | checker revision — replaces generic "Cancel"; communicates that unsaved data is discarded |
 | Empty state — patient list | "No patients enrolled yet." / "Add your first patient to start monitoring their care pathway." | default |
 | Empty state — alert queue | "No open alerts." / "All patient pathways are on track." | default |
 | Empty state — care events on patient detail | "No care events recorded." / "Use 'Record Event' to log the patient's first care activity." | default |
@@ -271,6 +273,16 @@ Components needed for Phase 3, organized by feature area:
 | Nav badge tooltip | "Open alerts requiring attention" | default |
 | Dashboard section label | "Urgent Alerts" | D-10 from CONTEXT.md |
 | Dashboard "see all" link | "View All Alerts" | D-10 from CONTEXT.md |
+
+---
+
+## Visual Focal Points
+
+**Dashboard primary screen:** The primary visual anchor on the Dashboard is the Urgent Alerts card list. The stat cards (Open Alerts, Active Patients, On-Track Patients) at the top orient the nurse to overall state; the eye then moves immediately to the alert card list below, which is where action is required. The "Open Alerts" stat card number is the secondary focal point — it is rendered at 28px Semibold to draw attention before the user scans the card list.
+
+**Alert Queue:** The severity badge on each alert card (`border-l-4` left stripe in severity color) is the focal point — color immediately communicates urgency before the user reads any text.
+
+**Patient Detail:** The patient demographics header bar and active alert indicators on pathway steps are the focal points — the nurse needs to confirm patient identity before acting.
 
 ---
 
