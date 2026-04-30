@@ -29,7 +29,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Every login, failed login, and data access attempt appears in an append-only audit log with timestamp and user identity
   4. PHI fields in the database are column-encrypted and no PHI value appears in application log files
   5. The full system stack (Temporal, PostgreSQL, Keycloak, app, frontend) starts with a single `docker compose up` command
-**Plans**: TBD
+**Plans:** 5 plans
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold, Docker Compose, Spring profiles, Keycloak realm, PHI log redaction
+- [ ] 01-02-PLAN.md — Database schema (Flyway), JPA entities with Envers audit, AES-GCM encryption, audit permissions
+- [ ] 01-03-PLAN.md — Spring Security with Keycloak JWT, RBAC, AuditLoggingFilter
+- [ ] 01-04-PLAN.md — React frontend scaffold, Keycloak OIDC login, responsive dashboard shell
+- [ ] 01-05-PLAN.md — Integration tests (encryption, audit immutability, schema), Dockerfile
 
 ### Phase 2: Pathway Engine
 **Goal**: The system can enroll a patient in a cancer pathway and automatically detect missing, delayed, or out-of-order care events using durable Temporal workflows
@@ -73,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. HIPAA Foundation | 0/? | Not started | - |
+| 1. HIPAA Foundation | 0/5 | Planned | - |
 | 2. Pathway Engine | 0/? | Not started | - |
 | 3. Working Application | 0/? | Not started | - |
 | 4. AI Enhancement & Production | 0/? | Not started | - |
