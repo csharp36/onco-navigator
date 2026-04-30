@@ -24,6 +24,15 @@ spring.temporal:
       - com.onconavigator.workflow
       - com.onconavigator.activity
 
+onconavigator:
+  encryption:
+    # AES-256 key for PHI column encryption (Base64-encoded 32-byte key).
+    # PLACEHOLDER — replace with a real key before running:
+    #   openssl rand -base64 32
+    # In production, inject from AWS Secrets Manager.
+    # This is a non-secret placeholder; the actual key must never be committed.
+    key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
 jasypt:
   encryptor:
     algorithm: PBEWithHMACSHA512AndAES_256
