@@ -126,8 +126,7 @@ export function PatientWizard() {
       cancerType: values.cancerType as 'BREAST' | 'LUNG' | 'COLORECTAL',
       cancerStage: values.cancerStage,
       diagnosisDate: values.diagnosisDate,
-      // Map freetext assignedNavigator to assignedNavigatorId (backend accepts as-is for V1)
-      assignedNavigatorId: values.assignedNavigator || undefined,
+      // assignedNavigatorId is UUID on backend — V1 has no user directory, omit it
       treatingPhysician: values.treatingPhysician || undefined,
     };
 
@@ -261,12 +260,35 @@ export function PatientWizard() {
               {/* Cancer Stage */}
               <div className="grid gap-2">
                 <Label htmlFor="cancerStage">Cancer Stage</Label>
-                <Input
-                  id="cancerStage"
-                  placeholder="e.g. Stage II"
-                  {...form2.register('cancerStage')}
-                  aria-invalid={!!form2.formState.errors.cancerStage}
-                />
+                <Select
+                  onValueChange={(value) =>
+                    form2.setValue('cancerStage', value, { shouldValidate: true })
+                  }
+                  defaultValue={form2.getValues('cancerStage')}
+                >
+                  <SelectTrigger
+                    id="cancerStage"
+                    className="w-full"
+                    aria-invalid={!!form2.formState.errors.cancerStage}
+                  >
+                    <SelectValue placeholder="Select stage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="I">I</SelectItem>
+                    <SelectItem value="IA">IA</SelectItem>
+                    <SelectItem value="IB">IB</SelectItem>
+                    <SelectItem value="II">II</SelectItem>
+                    <SelectItem value="IIA">IIA</SelectItem>
+                    <SelectItem value="IIB">IIB</SelectItem>
+                    <SelectItem value="III">III</SelectItem>
+                    <SelectItem value="IIIA">IIIA</SelectItem>
+                    <SelectItem value="IIIB">IIIB</SelectItem>
+                    <SelectItem value="IIIC">IIIC</SelectItem>
+                    <SelectItem value="IV">IV</SelectItem>
+                    <SelectItem value="IVA">IVA</SelectItem>
+                    <SelectItem value="IVB">IVB</SelectItem>
+                  </SelectContent>
+                </Select>
                 {form2.formState.errors.cancerStage && (
                   <p className="text-destructive text-xs">
                     {form2.formState.errors.cancerStage.message}

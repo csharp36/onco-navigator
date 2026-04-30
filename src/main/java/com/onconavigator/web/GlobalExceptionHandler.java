@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -62,6 +63,20 @@ public class GlobalExceptionHandler {
                         fe -> fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "Invalid value",
                         (a, b) -> a));
         return ResponseEntity.badRequest().body(Map.of("errors", fieldErrors));
+    }
+
+    /**
+     * Handle malformed request bodies (JSON parse errors, type mismatches).
+     *
+     * <p>Safe to log: Jackson deserialization errors reference field names and type expectations,
+     * not PHI values. Returns a 400 with the parse error detail so the client can fix the request.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        String detail = ex.getMostSpecificCause().getMessage();
+        log.warn("Request body not readable: {}", detail);
+        return ResponseEntity.badRequest()
+                .body(Map.of("error", "Invalid request body: " + detail));
     }
 
     /**
