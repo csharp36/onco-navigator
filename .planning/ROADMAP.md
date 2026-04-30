@@ -47,10 +47,10 @@ Plans:
   3. The system raises a delayed-event alert when elapsed time since the previous step exceeds the pathway's configured threshold
   4. The system raises an out-of-order alert when a care event is recorded before its prerequisite steps are completed
   5. No duplicate alert is created when an existing open alert already covers the same patient and step
-**Plans:** 4 plans in 3 waves
+**Plans:** 1/4 plans executed
 Plans:
 **Wave 1** *(no dependencies — parallel)*
-- [ ] 02-01-PLAN.md — Flyway migrations (physician overrides, pathway template seed data), JPA entities, DTOs, repositories
+- [x] 02-01-PLAN.md — Flyway migrations (physician overrides, pathway template seed data), JPA entities, DTOs, repositories
 - [ ] 02-02-PLAN.md — Temporal workflow/activity interfaces, workflow implementations (signal+timer), PathwayService
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 02-03-PLAN.md — Activity implementations (deviation detection, alert generation, daily sweep), YAML config
@@ -92,6 +92,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. HIPAA Foundation | 4/5 (01-04 awaiting checkpoint) | In Progress | - |
-| 2. Pathway Engine | 0/4 | Ready to execute | - |
+| 2. Pathway Engine | 1/4 | In Progress|  |
 | 3. Working Application | 0/? | Not started | - |
 | 4. AI Enhancement & Production | 0/? | Not started | - |

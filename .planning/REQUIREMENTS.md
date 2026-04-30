@@ -17,14 +17,14 @@ Requirements for initial release (pilot-ready proof of concept at single practic
 
 ### Pathway Engine
 
-- [ ] **PATH-01**: System maintains configurable pathway templates defining the correct sequence of events for each cancer type, with step names, types, prerequisites, time windows, and suggested corrective actions
-- [ ] **PATH-02**: System includes pathway templates for breast cancer (Stage I-III), lung cancer (Stage I-III), and colorectal cancer (Stage I-III) as defined in the clinical specification
+- [x] **PATH-01**: System maintains configurable pathway templates defining the correct sequence of events for each cancer type, with step names, types, prerequisites, time windows, and suggested corrective actions
+- [x] **PATH-02**: System includes pathway templates for breast cancer (Stage I-III), lung cancer (Stage I-III), and colorectal cancer (Stage I-III) as defined in the clinical specification
 - [ ] **PATH-03**: System detects when a required pathway step has no associated care event in Completed status (missing event)
 - [ ] **PATH-04**: System detects when the time elapsed since the previous step exceeds the configured time window (delayed event)
 - [ ] **PATH-05**: System detects when a care event is recorded or scheduled before its prerequisite steps are completed (out-of-order event)
 - [ ] **PATH-06**: System does not create duplicate alerts for the same deviation — if an alert for a given patient and step is already open, no new alert is created
 - [ ] **PATH-07**: System logs every monitoring evaluation including timestamp, patients evaluated, and alerts generated
-- [ ] **PATH-08**: Physician can annotate a deliberate step reordering to suppress false-positive alerts for that patient's pathway
+- [x] **PATH-08**: Physician can annotate a deliberate step reordering to suppress false-positive alerts for that patient's pathway
 
 ### Alert Management
 
@@ -107,14 +107,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-03 | Phase 3 | Pending |
 | DATA-04 | Phase 3 | Pending |
 | DATA-05 | Phase 3 | Pending |
-| PATH-01 | Phase 2 | Pending |
-| PATH-02 | Phase 2 | Pending |
+| PATH-01 | Phase 2 | Complete |
+| PATH-02 | Phase 2 | Complete |
 | PATH-03 | Phase 2 | Pending |
 | PATH-04 | Phase 2 | Pending |
 | PATH-05 | Phase 2 | Pending |
 | PATH-06 | Phase 2 | Pending |
 | PATH-07 | Phase 2 | Pending |
-| PATH-08 | Phase 2 | Pending |
+| PATH-08 | Phase 2 | Complete |
 | ALRT-01 | Phase 3 | Pending |
 | ALRT-02 | Phase 3 | Pending |
 | ALRT-03 | Phase 3 | Pending |
