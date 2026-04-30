@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- PHI Redaction: Replace known PHI patterns before output -->
+    <conversionRule conversionWord="phiSafe"
+                    converterClass="com.onconavigator.logging.PhiRedactingConverter"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %phiSafe(%msg)%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Deny all log statements tagged with the PHI marker entirely.
+         This is the belt-and-suspenders control: even if PHI appears in a log
+         call tagged [PHI], the MarkerFilter prevents it from reaching any appender. -->
+    <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
+        <Name>PHI_DENY</Name>
+        <Marker>PHI</Marker>
+        <OnMatch>DENY</OnMatch>
+    </turboFilter>
+
+    <!-- Profile-specific appender overrides -->
+    <springProfile name="aws">
+        <!-- On AWS, structured JSON logging is preferred for CloudWatch Logs Insights. -->
+        <!-- Replace this appender with logstash-logback-encoder in Phase 4. -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %phiSafe(%msg)%n</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/onconavigator
+    username: onco_app
+    # Password is Jasypt-encrypted. Decrypt at runtime using JASYPT_ENCRYPTOR_PASSWORD env var.
+    # To encrypt: ./mvnw jasypt:encrypt-value -Djasypt.encryptor.password=<key> -Djasypt.plugin.value=<plaintext>
+    password: ENC(placeholder_encrypted_password)
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/onco-navigator
+
+spring.temporal:
+  connection:
+    target: localhost:7233
+  workers-auto-discovery:
+    packages:
+      - com.onconavigator.workflow
+      - com.onconavigator.activity
+
+jasypt:
+  encryptor:
+    algorithm: PBEWithHMACSHA512AndAES_256
+    iv-generator-classname: org.jasypt.iv.RandomIvGenerator
+    # Master key injected at runtime via JASYPT_ENCRYPTOR_PASSWORD env var
+    # Never set jasypt.encryptor.password directly in committed config files

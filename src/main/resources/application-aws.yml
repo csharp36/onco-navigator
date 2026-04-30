@@ -1,0 +1,31 @@
+# AWS production profile — all secrets injected from AWS Secrets Manager at startup.
+# Requires Spring Cloud AWS: io.awspring.cloud:spring-cloud-aws-starter-secrets-manager:3.3.0
+# Not included in Phase 1 pom.xml — added in Phase 4 (AWS deployment hardening).
+spring:
+  config:
+    import: aws-secretsmanager:/onco-navigator/
+  datasource:
+    url: jdbc:postgresql://${RDS_ENDPOINT}:5432/onconavigator
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://${KEYCLOAK_HOST}/realms/onco-navigator
+
+spring.temporal:
+  connection:
+    target: ${TEMPORAL_HOST}:7233
+    enable-https: true
+
+# AWS profile uses platform-managed logging (CloudWatch Logs)
+logging:
+  level:
+    root: WARN
+    com.onconavigator: INFO

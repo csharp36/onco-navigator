@@ -1,0 +1,184 @@
+{
+  "realm": "onco-navigator",
+  "enabled": true,
+  "displayName": "Onco-Navigator",
+  "displayNameHtml": "<b>Onco-Navigator AI</b>",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "sslRequired": "external",
+  "accessTokenLifespan": 900,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "roles": {
+    "realm": [
+      {
+        "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "name": "ROLE_NURSE_NAVIGATOR",
+        "description": "Nurse navigator role — view and manage patient alerts and care events",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "onco-navigator"
+      },
+      {
+        "id": "f47ac10b-58cc-4372-a567-0e02b2c3d480",
+        "name": "ROLE_CARE_COORDINATOR",
+        "description": "Care coordinator role — view patient pathways and coordinate care events",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "onco-navigator"
+      },
+      {
+        "id": "f47ac10b-58cc-4372-a567-0e02b2c3d481",
+        "name": "ROLE_ADMIN",
+        "description": "Administrator role — full access including pathway template configuration and user management",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "onco-navigator"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "onco-navigator-app",
+      "name": "Onco-Navigator Frontend",
+      "description": "React SPA client for the Onco-Navigator dashboard",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:8081/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://localhost:8081"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      },
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true
+    }
+  ],
+  "users": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "username": "nurse1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Nurse",
+      "lastName": "Navigator",
+      "email": "nurse1@onco-local.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "nurse1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_NURSE_NAVIGATOR"
+      ]
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "username": "coordinator1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Care",
+      "lastName": "Coordinator",
+      "email": "coordinator1@onco-local.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "coordinator1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_CARE_COORDINATOR"
+      ]
+    },
+    {
+      "id": "c3d4e5f6-a7b8-9012-cdef-012345678902",
+      "username": "admin1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin1@onco-local.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_ADMIN"
+      ]
+    }
+  ],
+  "browserSecurityHeaders": {
+    "contentTypeOptions": "nosniff",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  },
+  "smtpServer": {},
+  "internationalizationEnabled": false,
+  "supportedLocales": [],
+  "defaultLocale": "en",
+  "eventsEnabled": true,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "enabledEventTypes": [
+    "LOGIN",
+    "LOGIN_ERROR",
+    "LOGOUT",
+    "CODE_TO_TOKEN",
+    "CODE_TO_TOKEN_ERROR",
+    "CLIENT_LOGIN",
+    "CLIENT_LOGIN_ERROR",
+    "TOKEN_EXCHANGE",
+    "TOKEN_EXCHANGE_ERROR",
+    "REFRESH_TOKEN",
+    "REFRESH_TOKEN_ERROR",
+    "INTROSPECT_TOKEN",
+    "INTROSPECT_TOKEN_ERROR",
+    "FEDERATED_IDENTITY_LINK",
+    "FEDERATED_IDENTITY_LINK_ERROR",
+    "REMOVE_FEDERATED_IDENTITY",
+    "REMOVE_FEDERATED_IDENTITY_ERROR",
+    "UPDATE_EMAIL",
+    "UPDATE_PROFILE",
+    "UPDATE_PASSWORD",
+    "UPDATE_TOTP",
+    "VERIFY_EMAIL",
+    "REMOVE_TOTP",
+    "GRANT_CONSENT",
+    "REVOKE_GRANT",
+    "UPDATE_CONSENT_ERROR"
+  ],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
+  "identityProviders": [],
+  "identityProviderMappers": [],
+  "components": {}
+}

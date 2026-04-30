@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: onco-navigator
+  threads:
+    virtual:
+      enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      org.hibernate.envers:
+        audit_table_suffix: _AUD
+        revision_field_name: REV
+        revision_type_field_name: REVTYPE
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,auditevents
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: INFO
+    com.onconavigator: DEBUG
+    # Suppress verbose SQL (HIPAA: avoid query logs with potential PHI in WHERE clauses)
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
