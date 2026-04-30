@@ -2,9 +2,11 @@ package com.onconavigator.workflow;
 
 import com.onconavigator.activity.AlertGenerationActivity;
 import com.onconavigator.activity.PathwayEvaluationActivity;
+import com.onconavigator.config.TemporalConfig;
 import com.onconavigator.domain.dto.PathwayEvaluationResult;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
+import io.temporal.spring.boot.WorkflowImpl;
 import io.temporal.workflow.Workflow;
 
 import java.time.Duration;
@@ -29,6 +31,7 @@ import java.util.UUID;
  * <p>PHI safety: No PHI in any field or method. Patient is identified by UUID only.
  * Activity implementations access encrypted DB without exposing PHI to Temporal.
  */
+@WorkflowImpl(taskQueues = TemporalConfig.TASK_QUEUE)
 public class PatientPathwayWorkflowImpl implements PatientPathwayWorkflow {
 
     /**

@@ -1,8 +1,10 @@
 package com.onconavigator.workflow;
 
 import com.onconavigator.activity.SweepActivity;
+import com.onconavigator.config.TemporalConfig;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
+import io.temporal.spring.boot.WorkflowImpl;
 import io.temporal.workflow.Workflow;
 
 import java.time.Duration;
@@ -23,6 +25,7 @@ import java.time.Duration;
  *   <li>NO Spring/JPA imports — workflow classes run in Temporal's context, not Spring's</li>
  * </ul>
  */
+@WorkflowImpl(taskQueues = TemporalConfig.TASK_QUEUE)
 public class DailySweepWorkflowImpl implements DailySweepWorkflow {
 
     // Longer timeout (5 minutes) — sweep may query many patients and start multiple workflows
