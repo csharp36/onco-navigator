@@ -55,7 +55,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 02-03-PLAN.md — Activity implementations (deviation detection, alert generation, daily sweep), YAML config
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 02-04-PLAN.md — Workflow unit tests (TestWorkflowExtension), activity unit tests (all deviation types, overrides, dedup)
+- [x] 02-04-PLAN.md — Workflow unit tests (TestWorkflowExtension), activity unit tests (all deviation types, overrides, dedup)
 
 Cross-cutting constraints:
 - No PHI in Temporal workflow inputs/payloads — UUID-only approach (enforced across 02-02, 02-03, 02-04)
