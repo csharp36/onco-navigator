@@ -82,7 +82,7 @@ Plans:
 - [x] 03-04-PLAN.md — Patient pages: two-step wizard, patient list with search, patient detail with pathway visualization
 - [x] 03-05-PLAN.md — Alert and dashboard pages: alert queue with severity grouping, resolve modal, dashboard stats, nav sidebar badge
 **Wave 4** *(blocked on Wave 3)*
-- [ ] 03-06-PLAN.md — Human verification checkpoint: end-to-end flow testing through dashboard
+- [x] 03-06-PLAN.md — Human verification checkpoint: end-to-end flow testing through dashboard
 **UI hint**: yes
 
 Cross-cutting constraints:
@@ -110,5 +110,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. HIPAA Foundation | 4/5 (01-04 awaiting checkpoint) | In Progress | - |
 | 2. Pathway Engine | 4/4 | Complete | 2026-04-30 |
-| 3. Working Application | 5/6 | In Progress | - |
+| 3. Working Application | 6/6 | Complete | 2026-04-30 |
 | 4. AI Enhancement & Production | 0/? | Not started | - |
