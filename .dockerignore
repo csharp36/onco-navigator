@@ -1,0 +1,64 @@
+# ============================================================
+# .dockerignore — Onco-Navigator
+# Prevents unnecessary files from being sent to the Docker build context.
+# A smaller build context = faster builds and no accidental PHI/secret leakage.
+# ============================================================
+
+# Build output — the Dockerfile uses Maven Wrapper to build from source.
+target/
+
+# Maven local repository cache — Docker build downloads its own dependencies.
+.m2/
+
+# Git history — not needed inside the image.
+.git/
+.gitignore
+
+# IDE project files
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+*.code-workspace
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Frontend build artifacts — this Dockerfile builds backend only.
+# The React frontend is built and deployed separately.
+frontend/node_modules/
+frontend/dist/
+frontend/.env*
+
+# Local development configuration — contains secrets, never include in image.
+# Production secrets are injected via environment variables or AWS Secrets Manager.
+.env
+.env.local
+src/main/resources/application-local.yml
+
+# Keycloak dev realm export (contains admin passwords for local env).
+keycloak/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Test resources (test containers, test data, etc.)
+src/test/
+
+# Logs
+*.log
+logs/
+
+# Planning artifacts
+.planning/
+
+# Temporary files
+*.tmp
+*.bak

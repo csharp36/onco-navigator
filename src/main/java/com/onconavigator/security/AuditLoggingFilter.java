@@ -84,12 +84,13 @@ public class AuditLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Excludes health check, info, and static resource paths from audit logging.
-     * Load balancer probes should not generate audit log noise.
+     * Load balancer probes and Docker HEALTHCHECK should not generate audit log noise.
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/actuator/health")
+        return path.equals("/health")                   // Docker HEALTHCHECK / ECS probe
+            || path.startsWith("/actuator/health")
             || path.startsWith("/actuator/info")
             || path.equals("/favicon.ico");
     }

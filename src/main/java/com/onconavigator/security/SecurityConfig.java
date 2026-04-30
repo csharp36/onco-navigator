@@ -26,6 +26,7 @@ import java.util.List;
  *
  * <p>Authorization:
  * <ul>
+ *   <li>{@code /health} — public (Docker HEALTHCHECK, ECS load balancer probes)</li>
  *   <li>{@code /actuator/health} — public (Docker/ECS health checks)</li>
  *   <li>{@code /actuator/info} — public</li>
  *   <li>{@code /api/**} — requires valid JWT (any role)</li>
@@ -68,6 +69,7 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints — accessible without authentication
+                .requestMatchers("/health").permitAll()         // Docker HEALTHCHECK / ECS probe
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/actuator/info").permitAll()
                 // All API endpoints require a valid JWT
