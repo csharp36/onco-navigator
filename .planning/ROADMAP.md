@@ -13,7 +13,7 @@ Four phases deliver a HIPAA-compliant oncology care pathway monitoring system. P
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: HIPAA Foundation** - Secure infrastructure, data model, encryption, and RBAC that every subsequent phase depends on
-- [ ] **Phase 2: Pathway Engine** - Temporal.io durable workflows, deviation detection, and all three cancer pathway templates
+- [x] **Phase 2: Pathway Engine** - Temporal.io durable workflows, deviation detection, and all three cancer pathway templates (completed 2026-04-30)
 - [ ] **Phase 3: Working Application** - Patient data entry, alert management, and the nurse navigator dashboard
 - [ ] **Phase 4: AI Enhancement & Production** - Claude alert generation with circuit breaker and AWS deployment hardening
 
@@ -47,7 +47,7 @@ Plans:
   3. The system raises a delayed-event alert when elapsed time since the previous step exceeds the pathway's configured threshold
   4. The system raises an out-of-order alert when a care event is recorded before its prerequisite steps are completed
   5. No duplicate alert is created when an existing open alert already covers the same patient and step
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 Plans:
 **Wave 1** *(no dependencies — parallel)*
 - [x] 02-01-PLAN.md — Flyway migrations (physician overrides, pathway template seed data), JPA entities, DTOs, repositories
