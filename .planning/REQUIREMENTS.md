@@ -44,7 +44,7 @@ Requirements for initial release (pilot-ready proof of concept at single practic
 
 ### Security & Compliance
 
-- [ ] **SEC-01**: All patient data is stored with encryption at rest (column-level for PHI fields, storage-level for database)
+- [x] **SEC-01**: All patient data is stored with encryption at rest (column-level for PHI fields, storage-level for database)
 - [x] **SEC-02**: All data transmitted between system components uses TLS 1.2 or higher
 - [x] **SEC-03**: Dashboard requires authenticated login with username and password
 - [x] **SEC-04**: System enforces role-based access: care coordinator (data entry), nurse navigator (alerts + resolution), administrator (pathway configuration)

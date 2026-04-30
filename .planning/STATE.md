@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Checkpoint 01-04 Task 3 — human-verify: login with all 3 test users and confirm role-based navigation
-last_updated: "2026-04-30T01:20:00.000Z"
-last_activity: 2026-04-30 -- Phase 01 Plan 04 Tasks 1+2 completed (awaiting human checkpoint)
+stopped_at: Plan 01-05 complete. Plan 01-04 still awaiting human-verify checkpoint (frontend login).
+last_updated: "2026-04-30T02:10:00.000Z"
+last_activity: 2026-04-30 -- Phase 01 Plan 05 complete (integration tests + Dockerfile, 23/23 tests pass)
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
-  percent: 70
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 01 (hipaa-foundation) — EXECUTING
-Plan: 4 of 5 (Tasks 1+2 complete, awaiting checkpoint verification)
+Plan: 5 of 5 COMPLETE (Plan 01-04 still awaiting human-verify checkpoint for frontend login)
 Status: Executing Phase 01
-Last activity: 2026-04-30 -- Plan 01-04 Tasks 1+2 completed (React frontend scaffold, Keycloak OIDC PKCE, dashboard shell)
+Last activity: 2026-04-30 -- Plan 01-05 complete (integration tests, Testcontainers, Dockerfile, 23/23 tests pass)
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -44,12 +44,12 @@ Progress: [███████░░░] 70%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-hipaa-foundation | 3/5 | ~30 min | ~10 min |
+| 01-hipaa-foundation | 4/5 | ~70 min | ~17 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (5 min), 01-02 (12 min), 01-03 (4 min)
-- Trend: stable
+- Last 5 plans: 01-01 (5 min), 01-02 (12 min), 01-03 (4 min), 01-05 (40 min)
+- Trend: stable (01-05 was longer due to Docker Desktop compatibility debugging)
 
 *Updated after each plan completion*
 
@@ -77,6 +77,9 @@ Recent decisions affecting current work:
 - [01-04]: TanStack Router routeTree.gen.ts pre-generated via vite build before first tsc run — avoids Cannot find module on first build.
 - [01-04]: TypeScript 6 erasableSyntaxOnly default disallows class parameter properties; ApiError refactored to explicit field assignment.
 - [01-04]: ignoreDeprecations: 6.0 added to tsconfig.app.json — TypeScript 6 deprecates baseUrl but paths alias still requires it.
+- [01-05]: AuditLoggingFilter moved inside Spring Security chain via addFilterAfter(BearerTokenAuthenticationFilter) — running before FilterChainProxy caused SecurityContextHolder to be empty when audit data was extracted post-doFilter().
+- [01-05]: Testcontainers BOM 1.21.3 required for Docker Desktop 4.59 / Apple Silicon — docker-java API version 1.32 (BOM 1.20.4) rejected by Docker Desktop 4.59 minimum 1.44.
+- [01-05]: HealthCheckController uses static UP response — avoids HealthEndpoint unavailability in @WebMvcTest slices; sufficient for Docker HEALTHCHECK liveness check.
 
 ### Pending Todos
 
@@ -97,5 +100,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-04-30
-Stopped at: Checkpoint 01-04 Task 3 — human-verify: start frontend dev server, login as nurse1/coordinator1/admin1, confirm role navigation
+Stopped at: Plan 01-05 complete. Plan 01-04 still awaiting human-verify checkpoint (frontend login test).
 Resume file: None
