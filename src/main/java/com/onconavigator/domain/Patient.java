@@ -57,6 +57,9 @@ public class Patient {
     @Column(name = "mrn_encrypted", columnDefinition = "bytea", nullable = false)
     private String mrn;
 
+    @Column(name = "mrn_hmac_token", length = 64)
+    private String mrnHmacToken;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "cancer_type", columnDefinition = "cancer_type", nullable = false)
     private CancerType cancerType;
@@ -138,6 +141,14 @@ public class Patient {
 
     public void setMrn(String mrn) {
         this.mrn = mrn;
+    }
+
+    public String getMrnHmacToken() {
+        return mrnHmacToken;
+    }
+
+    public void setMrnHmacToken(String mrnHmacToken) {
+        this.mrnHmacToken = mrnHmacToken;
     }
 
     public CancerType getCancerType() {

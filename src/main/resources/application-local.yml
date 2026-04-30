@@ -44,6 +44,12 @@ onconavigator:
     # In production, inject from AWS Secrets Manager.
     # This is a non-secret placeholder; the actual key must never be committed.
     key: HqmsJAlCUqgAmHAsahP7Y4as/V5ChavBN2horjFffpw=
+  hmac:
+    # HMAC-SHA256 key for deterministic MRN index token (Base64-encoded 32-byte key).
+    # MUST be different from the AES encryption key (per D-04 key separation).
+    # Generate with: openssl rand -base64 32
+    # In production, inject from AWS Secrets Manager.
+    key: zGQKsAm4szIgA0tYoYZY8dPAPWkoUMUjXp5EM9Ifohc=
 
 jasypt:
   encryptor:
