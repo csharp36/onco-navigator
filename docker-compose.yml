@@ -21,15 +21,15 @@ services:
     restart: unless-stopped
 
   temporal:
-    image: temporalio/auto-setup:v1.28.3
+    image: temporalio/auto-setup:1.28.3
     container_name: onco-temporal
     ports:
       - "7233:7233"
     environment:
-      DB: postgres
+      DB: postgres12
       DB_PORT: 5432
-      POSTGRES_USER: temporal
-      POSTGRES_PWD: ${TEMPORAL_DB_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PWD: ${POSTGRES_PASSWORD}
       POSTGRES_SEEDS: postgres
       TEMPORAL_ADDRESS: temporal:7233
     depends_on:
@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
 
   temporal-ui:
-    image: temporalio/ui:latest
+    image: temporalio/ui:2.34.0
     container_name: onco-temporal-ui
     ports:
       - "8080:8080"

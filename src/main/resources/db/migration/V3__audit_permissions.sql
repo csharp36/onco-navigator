@@ -9,8 +9,8 @@ GRANT USAGE, SELECT ON SEQUENCE audit_log_id_seq TO audit_writer;
 -- Grant SELECT-only to audit_reader role (for compliance queries and reporting)
 GRANT SELECT ON audit_log TO audit_reader;
 
--- Assign audit_writer to the application user
-GRANT audit_writer TO onco_app;
+-- Role membership (GRANT audit_writer TO onco_app) is handled in docker/init-db.sh
+-- because it requires superuser privileges that Flyway's datasource user lacks.
 
 -- Explicitly revoke dangerous permissions from onco_app on audit_log
 -- This is the critical HIPAA control: no application code can alter audit history

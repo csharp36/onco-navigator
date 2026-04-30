@@ -1,10 +1,15 @@
 spring:
+  jpa:
+    hibernate:
+      # Override 'validate' from shared config — let Envers auto-create _AUD tables locally.
+      # Production should use a Flyway migration for the _AUD tables instead.
+      ddl-auto: update
   datasource:
     url: jdbc:postgresql://localhost:5432/onconavigator
     username: onco_app
-    # Password is Jasypt-encrypted. Decrypt at runtime using JASYPT_ENCRYPTOR_PASSWORD env var.
-    # To encrypt: ./mvnw jasypt:encrypt-value -Djasypt.encryptor.password=<key> -Djasypt.plugin.value=<plaintext>
-    password: ENC(placeholder_encrypted_password)
+    # For local dev, use plaintext password matching docker/init-db.sh.
+    # Production uses AWS Secrets Manager (application-aws.yml).
+    password: ${APP_DB_PASSWORD:localdev_app_password}
     hikari:
       maximum-pool-size: 10
       connection-timeout: 30000
