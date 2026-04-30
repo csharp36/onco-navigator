@@ -19,13 +19,17 @@ import java.util.List;
  * Daily sweep activity that ensures all active patients have a running pathway workflow.
  *
  * <p>Queries active patients, then attempts to start a pathway monitoring workflow for each one.
- * Uses {@link WorkflowIdReusePolicy#WORKFLOW_ID_REUSE_POLICY_REJECT_DUPLICATE} so that the start
- * attempt throws {@link WorkflowExecutionAlreadyStarted} if a workflow is already running for
- * that patient — allowing this activity to efficiently skip patients that are already monitored.
+ * Uses {@link WorkflowIdReusePolicy#WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE} (matching
+ * {@link com.onconavigator.service.PathwayService#startPathwayMonitoring}) so that a patient
+ * who completed their pathway and was re-enrolled receives a new workflow from the sweep as well.
+ * The start attempt throws {@link WorkflowExecutionAlreadyStarted} if a workflow is already
+ * running for that patient — allowing this activity to efficiently skip patients that are
+ * already monitored. With ALLOW_DUPLICATE, completed (not running) executions are not rejected,
+ * so re-enrolled patients are correctly started rather than silently skipped.
  *
- * <p>This try-to-start-with-reject pattern is idempotent: calling this activity multiple times
- * produces the same outcome (all active patients have a running workflow) without creating
- * duplicate workflows or overwriting running state.
+ * <p>This try-to-start pattern is idempotent: calling this activity multiple times produces
+ * the same outcome (all active patients have a running workflow) without creating duplicate
+ * workflows or overwriting running state.
  *
  * <p>PHI safety: This activity logs only patient UUIDs and summary counts. No patient names,
  * DOBs, or MRNs appear in any log statement.
@@ -54,10 +58,12 @@ public class SweepActivityImpl implements SweepActivity {
      * {@inheritDoc}
      *
      * <p>For each active patient, attempts to start a workflow with
-     * {@link WorkflowIdReusePolicy#WORKFLOW_ID_REUSE_POLICY_REJECT_DUPLICATE}. If the workflow
+     * {@link WorkflowIdReusePolicy#WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE}. If the workflow
      * is already running, Temporal throws {@link WorkflowExecutionAlreadyStarted}, which is
      * caught and counted as "skipped" (not an error). Successfully started workflows are counted
-     * separately.
+     * separately. ALLOW_DUPLICATE (rather than REJECT_DUPLICATE) is intentional: it matches the
+     * policy in PathwayService and allows re-enrolled patients whose previous workflow completed
+     * to receive a new workflow from the sweep instead of being silently skipped.
      *
      * <p>The summary log message (DAILY_SWEEP) records the total active patient count, how many
      * workflows were newly started, and how many were already running.
@@ -77,7 +83,7 @@ public class SweepActivityImpl implements SweepActivity {
                         .setWorkflowId(workflowId)
                         .setTaskQueue(TemporalConfig.TASK_QUEUE)
                         .setWorkflowIdReusePolicy(
-                                WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_REJECT_DUPLICATE)
+                                WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE)
                         .build();
 
                 PatientPathwayWorkflow workflow = workflowClient.newWorkflowStub(
