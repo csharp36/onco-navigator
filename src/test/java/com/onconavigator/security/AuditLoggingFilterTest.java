@@ -1,0 +1,103 @@
+package com.onconavigator.security;
+
+import com.onconavigator.service.AuditService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * Tests for {@link AuditLoggingFilter} verifying that audit entries are written
+ * for API requests and omitted for excluded paths.
+ *
+ * <p>Uses Spring Security Test's {@code jwt()} post-processor to simulate authenticated
+ * and unauthenticated scenarios without a running Keycloak instance.
+ *
+ * <p>The {@link AuditService} is mocked to verify that
+ * {@link AuditService#logAccess} is called with the expected parameters.
+ */
+@WebMvcTest
+@Import({SecurityConfig.class, AuditLoggingFilter.class})
+class AuditLoggingFilterTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private AuditService auditService;
+
+    /**
+     * Authenticated API requests must generate an audit entry capturing actor UUID,
+     * role, action (method + path), resource type, and success status.
+     */
+    @Test
+    void apiRequest_authenticated_generatesAuditEntry() throws Exception {
+        String actorSubject = "550e8400-e29b-41d4-a716-446655440000";
+
+        mockMvc.perform(get("/api/patients")
+            .with(jwt()
+                .jwt(builder -> builder.subject(actorSubject))
+                .authorities(new SimpleGrantedAuthority("ROLE_NURSE_NAVIGATOR"))))
+            // 404 = security passed, no controller registered in test context
+            .andExpect(status().isNotFound());
+
+        verify(auditService).logAccess(
+            eq(UUID.fromString(actorSubject)),
+            eq("ROLE_NURSE_NAVIGATOR"),
+            contains("GET"),
+            anyString(),
+            isNull(),
+            anyString(),
+            anyBoolean(),
+            eq("/api/patients"),
+            eq("GET")
+        );
+    }
+
+    /**
+     * Unauthenticated requests to protected API endpoints must also generate audit entries.
+     * HIPAA requires logging of rejected access attempts, not just successful ones.
+     */
+    @Test
+    void apiRequest_unauthenticated_generatesAuditEntryWithAnonymousActor() throws Exception {
+        mockMvc.perform(get("/api/patients"))
+            .andExpect(status().isUnauthorized());
+
+        verify(auditService).logAccess(
+            isNull(),
+            eq("ANONYMOUS"),
+            anyString(),
+            anyString(),
+            isNull(),
+            anyString(),
+            eq(false),
+            eq("/api/patients"),
+            eq("GET")
+        );
+    }
+
+    /**
+     * Health endpoint is excluded from audit logging via {@code shouldNotFilter}.
+     * Load balancer probes should not flood the audit log.
+     */
+    @Test
+    void healthEndpoint_notAudited() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+            .andExpect(status().isOk());
+
+        verify(auditService, never()).logAccess(
+            any(), any(), any(), any(), any(), any(), anyBoolean(), any(), any());
+    }
+}
