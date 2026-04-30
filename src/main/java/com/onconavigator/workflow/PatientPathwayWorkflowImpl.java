@@ -58,13 +58,16 @@ public class PatientPathwayWorkflowImpl implements PatientPathwayWorkflow {
     private UUID patientId;
 
     // Retry policy shared by evaluation and alert activities.
-    // IllegalArgumentException (bad input) is not retried — it is a programming error.
+    // IllegalArgumentException (bad input, e.g., patient not found) is not retried — programming error.
+    // IllegalStateException (e.g., corrupt template JSONB) is not retried — data error, retries waste time.
     private static final RetryOptions ACTIVITY_RETRY_OPTIONS = RetryOptions.newBuilder()
             .setMaximumAttempts(3)
             .setInitialInterval(Duration.ofSeconds(5))
             .setBackoffCoefficient(2.0)
             .setMaximumInterval(Duration.ofMinutes(1))
-            .setDoNotRetry(IllegalArgumentException.class.getName())
+            .setDoNotRetry(
+                    IllegalArgumentException.class.getName(),
+                    IllegalStateException.class.getName())
             .build();
 
     private final PathwayEvaluationActivity evaluationActivity = Workflow.newActivityStub(
