@@ -21,6 +21,7 @@ import com.onconavigator.repository.PhysicianOverrideRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -92,6 +93,7 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
      * </ol>
      */
     @Override
+    @Transactional
     public PathwayEvaluationResult evaluate(UUID patientId) {
         // 1. Fetch patient
         Patient patient = patientRepository.findById(patientId)
@@ -246,6 +248,7 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
      * Resolution is logged without PHI — only the count and patient UUID.
      */
     @Override
+    @Transactional
     public void closeOpenAlerts(UUID patientId) {
         List<Alert> openAlerts = alertRepository.findByPatientIdAndStatus(patientId, AlertStatus.OPEN);
         OffsetDateTime now = OffsetDateTime.now();
