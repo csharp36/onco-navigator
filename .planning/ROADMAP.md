@@ -47,12 +47,19 @@ Plans:
   3. The system raises a delayed-event alert when elapsed time since the previous step exceeds the pathway's configured threshold
   4. The system raises an out-of-order alert when a care event is recorded before its prerequisite steps are completed
   5. No duplicate alert is created when an existing open alert already covers the same patient and step
-**Plans:** 4 plans
+**Plans:** 4 plans in 3 waves
 Plans:
+**Wave 1** *(no dependencies — parallel)*
 - [ ] 02-01-PLAN.md — Flyway migrations (physician overrides, pathway template seed data), JPA entities, DTOs, repositories
 - [ ] 02-02-PLAN.md — Temporal workflow/activity interfaces, workflow implementations (signal+timer), PathwayService
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 02-03-PLAN.md — Activity implementations (deviation detection, alert generation, daily sweep), YAML config
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 02-04-PLAN.md — Workflow unit tests (TestWorkflowExtension), activity unit tests (all deviation types, overrides, dedup)
+
+Cross-cutting constraints:
+- No PHI in Temporal workflow inputs/payloads — UUID-only approach (enforced across 02-02, 02-03, 02-04)
+- All ePHI entities use `@Audited` (Hibernate Envers) — enforced across 02-01, 02-03
 
 ### Phase 3: Working Application
 **Goal**: A nurse navigator and care coordinator can use the system end-to-end — entering patient data, viewing pathway status, and resolving alerts — entirely through the dashboard
@@ -85,6 +92,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. HIPAA Foundation | 4/5 (01-04 awaiting checkpoint) | In Progress | - |
-| 2. Pathway Engine | 0/4 | Not started | - |
+| 2. Pathway Engine | 0/4 | Ready to execute | - |
 | 3. Working Application | 0/? | Not started | - |
 | 4. AI Enhancement & Production | 0/? | Not started | - |
