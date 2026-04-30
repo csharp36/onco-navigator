@@ -3,10 +3,10 @@ package com.onconavigator.security;
 import com.onconavigator.service.AuditService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,13 +39,29 @@ class SecurityConfigTest {
     private AuditService auditService;
 
     /**
+     * Satisfies Spring Security's oauth2ResourceServer() requirement.
+     * The jwt() post-processor from spring-security-test bypasses actual JWT validation,
+     * but the JwtDecoder bean must exist for the SecurityFilterChain to be created.
+     */
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
+
+    /**
      * Health endpoint must be accessible without authentication.
      * Used by Docker Compose and ECS health checks that do not carry JWT tokens.
+     *
+     * <p>In the {@code @WebMvcTest} slice, the actuator endpoint is not registered (no
+     * management context), so the response is 404 (no handler). 404 confirms the security
+     * filter chain permitted the request through — the security rule is correct.
+     * In production, {@code /actuator/health} is registered by Actuator auto-configuration
+     * and returns 200.
      */
     @Test
-    void healthEndpoint_noAuth_returns200() throws Exception {
+    void healthEndpoint_noAuth_permittedBySecurityFilter() throws Exception {
+        // 404 = security passed (path not blocked) but no handler registered in WebMvcTest slice.
+        // Confirms the permitAll() rule is in effect — a 401 or 403 would mean the rule is missing.
         mockMvc.perform(get("/actuator/health"))
-            .andExpect(status().isOk());
+            .andExpect(status().isNotFound());
     }
 
     /**

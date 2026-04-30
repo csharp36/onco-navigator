@@ -5,8 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,10 +18,14 @@ import java.util.UUID;
 /**
  * Servlet filter that writes a HIPAA-required audit log entry for every API request.
  *
- * <p>This filter runs after the Spring Security filter chain has processed authentication,
- * so the {@link SecurityContextHolder} context is populated when audit data is extracted.
- * It extends {@link OncePerRequestFilter} to guarantee exactly one audit entry per request,
- * even in forward/include dispatch scenarios.
+ * <p>This filter is registered INSIDE the Spring Security filter chain via
+ * {@code http.addFilterAfter(auditLoggingFilter, BearerTokenAuthenticationFilter.class)}
+ * in {@link SecurityConfig}. Running after {@code BearerTokenAuthenticationFilter} ensures
+ * the {@link SecurityContextHolder} context is populated with the JWT principal when
+ * {@link #extractActorId()} and {@link #extractActorRole()} are called.
+ *
+ * <p>It extends {@link OncePerRequestFilter} to guarantee exactly one audit entry per
+ * request, even in forward/include dispatch scenarios.
  *
  * <p>The filter is excluded from health-check and info endpoints to avoid flooding
  * the audit log with operational noise from load balancer probes.
@@ -39,7 +41,6 @@ import java.util.UUID;
  * in a separate transaction — audit logging never blocks or fails the request.
  */
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 10)
 public class AuditLoggingFilter extends OncePerRequestFilter {
 
     private final AuditService auditService;

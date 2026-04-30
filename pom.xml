@@ -24,6 +24,18 @@
         <jasypt.version>3.0.5</jasypt.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>1.21.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!-- ===== Web / Security ===== -->
         <dependency>
@@ -101,6 +113,16 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -116,6 +138,18 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <parameters>true</parameters>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Pass Docker configuration to forked test JVM for Testcontainers -->
+                    <systemPropertyVariables>
+                        <!-- Docker API version override for Docker Desktop 4.34+ compatibility -->
+                        <!-- See: https://github.com/testcontainers/testcontainers-java/issues/XXX -->
+                        <api.version>1.47</api.version>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>

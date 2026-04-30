@@ -1,5 +1,6 @@
 package com.onconavigator.security;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -7,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -52,9 +54,13 @@ public class SecurityConfig {
      *
      * <p>Configures stateless JWT authentication, authorization rules,
      * CORS, and disables CSRF (appropriate for token-based APIs).
+     *
+     * <p>The {@link AuditLoggingFilter} is added AFTER {@code BearerTokenAuthenticationFilter}
+     * so the {@code SecurityContextHolder} is populated when audit data is extracted.
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           AuditLoggingFilter auditLoggingFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable()) // SPA uses JWT Bearer token — not cookie-based auth
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -75,9 +81,26 @@ public class SecurityConfig {
                 .jwt(jwt -> jwt
                     .jwtAuthenticationConverter(jwtAuthenticationConverter())
                 )
-            );
+            )
+            // Register AuditLoggingFilter inside the Spring Security chain so that
+            // SecurityContextHolder is still populated when audit data is read.
+            .addFilterAfter(auditLoggingFilter, BearerTokenAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Prevents Spring Boot from auto-registering {@link AuditLoggingFilter} as a
+     * standalone servlet filter. The filter is registered inside the Spring Security
+     * chain via {@code http.addFilterAfter()} and must not be registered twice.
+     */
+    @Bean
+    public FilterRegistrationBean<AuditLoggingFilter> auditLoggingFilterRegistration(
+            AuditLoggingFilter auditLoggingFilter) {
+        FilterRegistrationBean<AuditLoggingFilter> registration =
+            new FilterRegistrationBean<>(auditLoggingFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     /**

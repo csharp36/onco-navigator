@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -37,6 +38,14 @@ class AuditLoggingFilterTest {
 
     @MockitoBean
     private AuditService auditService;
+
+    /**
+     * Satisfies Spring Security's oauth2ResourceServer() requirement.
+     * The jwt() post-processor from spring-security-test bypasses actual JWT validation,
+     * but the JwtDecoder bean must exist for the SecurityFilterChain to be created.
+     */
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
 
     /**
      * Authenticated API requests must generate an audit entry capturing actor UUID,
@@ -91,11 +100,17 @@ class AuditLoggingFilterTest {
     /**
      * Health endpoint is excluded from audit logging via {@code shouldNotFilter}.
      * Load balancer probes should not flood the audit log.
+     *
+     * <p>In the {@code @WebMvcTest} slice, the actuator endpoint is not registered so the
+     * response is 404. The important assertion is that {@link AuditService#logAccess} is
+     * never called — {@code shouldNotFilter()} excluded the path before the filter body ran.
      */
     @Test
     void healthEndpoint_notAudited() throws Exception {
+        // 404 = no actuator handler in WebMvcTest slice; security permitAll() lets it through.
+        // The key assertion: logAccess is never called because shouldNotFilter() returned true.
         mockMvc.perform(get("/actuator/health"))
-            .andExpect(status().isOk());
+            .andExpect(status().isNotFound());
 
         verify(auditService, never()).logAccess(
             any(), any(), any(), any(), any(), any(), anyBoolean(), any(), any());

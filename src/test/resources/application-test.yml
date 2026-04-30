@@ -1,0 +1,29 @@
+spring:
+  jpa:
+    hibernate:
+      # update: Hibernate adds missing tables (Envers _AUD tables) without touching Flyway-managed
+      # tables. ddl-auto: validate cannot be used in tests because Envers _AUD tables are created
+      # by Hibernate, not by Flyway migrations. Production uses validate + Flyway-managed Envers
+      # tables (to be added in a future migration). For now, update is the safest test option.
+      ddl-auto: update
+    show-sql: false
+  flyway:
+    enabled: true
+  # No OAuth2 resource server JWT issuer-uri configured in test profile.
+  # @WebMvcTest tests use spring-security-test jwt() post-processor which mocks JWT validation.
+  # @SpringBootTest integration tests that need full security context use @TestConfiguration
+  # to provide a stub JwtDecoder bean (see FullStackIntegrationTest.TestSecurityConfig).
+  # Configuring issuer-uri here would cause Spring to attempt OIDC discovery which fails in
+  # test environments where no Keycloak server is running.
+
+# Test encryption key — a real 256-bit AES key (Base64-encoded 32 bytes)
+# This is a test-only key; it carries no PHI and poses no security risk
+onconavigator:
+  encryption:
+    key: dGVzdC1lbmNyeXB0aW9uLWtleS0tLTMyLWJ5dGVzIT0=
+
+logging:
+  level:
+    org.testcontainers: INFO
+    com.github.dockerjava: WARN
+    org.springframework.security: WARN

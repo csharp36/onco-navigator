@@ -59,8 +59,16 @@ public class AuditLogEntry {
     @Column(name = "timestamp", nullable = false, updatable = false)
     private OffsetDateTime timestamp;
 
-    /** Source IP address of the request. Nullable — may be absent for internal actions. */
-    @Column(name = "ip_address", updatable = false, columnDefinition = "inet")
+    /**
+     * Source IP address of the request. Nullable — may be absent for internal actions.
+     *
+     * <p>Stored as VARCHAR(45) to accommodate both IPv4 (max 15 chars) and IPv6 (max 39 chars)
+     * addresses in CIDR notation. The V2 migration originally used PostgreSQL's INET type,
+     * which requires native casting incompatible with JPA String mapping. V4 migration changes
+     * the column to VARCHAR(45) which is semantically equivalent for audit logging purposes
+     * (we log IP addresses as strings, not as routing-queryable network objects).
+     */
+    @Column(name = "ip_address", updatable = false, length = 45)
     private String ipAddress;
 
     /** Whether the action was permitted and completed successfully. */

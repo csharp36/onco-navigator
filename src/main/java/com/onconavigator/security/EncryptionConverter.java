@@ -40,6 +40,42 @@ public class EncryptionConverter implements AttributeConverter<String, byte[]> {
     private static final int GCM_TAG_LENGTH_BITS = 128;
 
     /**
+     * Optional override key for testing. When non-null, this key is used instead of the
+     * Spring-managed bean from {@link ApplicationContextProvider}. This allows unit tests
+     * to instantiate the converter without a full Spring context.
+     */
+    private final SecretKey testKey;
+
+    /**
+     * Default constructor for production use. The encryption key is retrieved from the
+     * Spring context via {@link ApplicationContextProvider} at conversion time.
+     */
+    public EncryptionConverter() {
+        this.testKey = null;
+    }
+
+    /**
+     * Package-private constructor for unit testing. Injects the key directly, bypassing
+     * the Spring context. Do not use in production code.
+     *
+     * @param key the AES-256 key to use for encryption/decryption
+     */
+    EncryptionConverter(SecretKey key) {
+        this.testKey = key;
+    }
+
+    /**
+     * Returns the active encryption key: uses the injected test key if set, otherwise
+     * fetches from the Spring ApplicationContext.
+     */
+    private SecretKey resolveKey() {
+        if (testKey != null) {
+            return testKey;
+        }
+        return ApplicationContextProvider.getBean(SecretKey.class);
+    }
+
+    /**
      * Encrypts a plaintext String PHI value to a byte array for database storage.
      *
      * @param attribute the plaintext PHI string (may be null for optional fields)
@@ -52,7 +88,7 @@ public class EncryptionConverter implements AttributeConverter<String, byte[]> {
         }
 
         try {
-            SecretKey key = ApplicationContextProvider.getBean(SecretKey.class);
+            SecretKey key = resolveKey();
 
             byte[] iv = new byte[IV_LENGTH_BYTES];
             new SecureRandom().nextBytes(iv);
@@ -94,7 +130,7 @@ public class EncryptionConverter implements AttributeConverter<String, byte[]> {
         }
 
         try {
-            SecretKey key = ApplicationContextProvider.getBean(SecretKey.class);
+            SecretKey key = resolveKey();
 
             byte[] iv = Arrays.copyOfRange(dbData, 0, IV_LENGTH_BYTES);
             byte[] ciphertext = Arrays.copyOfRange(dbData, IV_LENGTH_BYTES, dbData.length);
