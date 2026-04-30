@@ -102,46 +102,46 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | — | Pending |
-| DATA-02 | — | Pending |
-| DATA-03 | — | Pending |
-| DATA-04 | — | Pending |
-| DATA-05 | — | Pending |
-| PATH-01 | — | Pending |
-| PATH-02 | — | Pending |
-| PATH-03 | — | Pending |
-| PATH-04 | — | Pending |
-| PATH-05 | — | Pending |
-| PATH-06 | — | Pending |
-| PATH-07 | — | Pending |
-| PATH-08 | — | Pending |
-| ALRT-01 | — | Pending |
-| ALRT-02 | — | Pending |
-| ALRT-03 | — | Pending |
-| ALRT-04 | — | Pending |
-| ALRT-05 | — | Pending |
-| ALRT-06 | — | Pending |
-| AI-01 | — | Pending |
-| AI-02 | — | Pending |
-| AI-03 | — | Pending |
-| AI-04 | — | Pending |
-| SEC-01 | — | Pending |
-| SEC-02 | — | Pending |
-| SEC-03 | — | Pending |
-| SEC-04 | — | Pending |
-| SEC-05 | — | Pending |
-| SEC-06 | — | Pending |
-| SEC-07 | — | Pending |
-| INFR-01 | — | Pending |
-| INFR-02 | — | Pending |
-| INFR-03 | — | Pending |
-| INFR-04 | — | Pending |
+| DATA-01 | Phase 3 | Pending |
+| DATA-02 | Phase 3 | Pending |
+| DATA-03 | Phase 3 | Pending |
+| DATA-04 | Phase 3 | Pending |
+| DATA-05 | Phase 3 | Pending |
+| PATH-01 | Phase 2 | Pending |
+| PATH-02 | Phase 2 | Pending |
+| PATH-03 | Phase 2 | Pending |
+| PATH-04 | Phase 2 | Pending |
+| PATH-05 | Phase 2 | Pending |
+| PATH-06 | Phase 2 | Pending |
+| PATH-07 | Phase 2 | Pending |
+| PATH-08 | Phase 2 | Pending |
+| ALRT-01 | Phase 3 | Pending |
+| ALRT-02 | Phase 3 | Pending |
+| ALRT-03 | Phase 3 | Pending |
+| ALRT-04 | Phase 3 | Pending |
+| ALRT-05 | Phase 3 | Pending |
+| ALRT-06 | Phase 3 | Pending |
+| AI-01 | Phase 4 | Pending |
+| AI-02 | Phase 4 | Pending |
+| AI-03 | Phase 4 | Pending |
+| AI-04 | Phase 4 | Pending |
+| SEC-01 | Phase 1 | Pending |
+| SEC-02 | Phase 1 | Pending |
+| SEC-03 | Phase 1 | Pending |
+| SEC-04 | Phase 1 | Pending |
+| SEC-05 | Phase 1 | Pending |
+| SEC-06 | Phase 1 | Pending |
+| SEC-07 | Phase 1 | Pending |
+| INFR-01 | Phase 1 | Pending |
+| INFR-02 | Phase 1 | Pending |
+| INFR-03 | Phase 2 | Pending |
+| INFR-04 | Phase 2 | Pending |
 
 **Coverage:**
 - v1 requirements: 34 total
-- Mapped to phases: 0
-- Unmapped: 34 ⚠️
+- Mapped to phases: 34
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-29*
-*Last updated: 2026-04-29 after initial definition*
+*Last updated: 2026-04-29 after roadmap creation — all requirements mapped*
