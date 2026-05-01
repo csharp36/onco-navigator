@@ -11,6 +11,7 @@ import com.onconavigator.domain.enums.AlertType;
 import com.onconavigator.domain.enums.CancerType;
 import com.onconavigator.domain.enums.CareEventStatus;
 import com.onconavigator.domain.enums.CareEventType;
+import com.onconavigator.ai.service.AlertGenerationAiService;
 import com.onconavigator.repository.AlertRepository;
 import com.onconavigator.repository.CareEventRepository;
 import com.onconavigator.repository.PathwayTemplateRepository;
@@ -58,6 +59,7 @@ class PathwayEvaluationActivityTest {
     private PathwayTemplateRepository templateRepository;
     private PhysicianOverrideRepository overrideRepository;
     private ObjectMapper objectMapper;
+    private AlertGenerationAiService alertGenerationAiService;
     private PathwayEvaluationActivityImpl activity;
 
     private static final UUID PATIENT_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
@@ -70,9 +72,11 @@ class PathwayEvaluationActivityTest {
         templateRepository = Mockito.mock(PathwayTemplateRepository.class);
         overrideRepository = Mockito.mock(PhysicianOverrideRepository.class);
         objectMapper = new ObjectMapper();
+        alertGenerationAiService = Mockito.mock(AlertGenerationAiService.class);
         activity = new PathwayEvaluationActivityImpl(
                 patientRepository, careEventRepository, alertRepository,
-                templateRepository, overrideRepository, objectMapper);
+                templateRepository, overrideRepository, objectMapper,
+                alertGenerationAiService);
     }
 
     // ---- Helper factories ----
