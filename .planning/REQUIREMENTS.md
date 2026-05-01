@@ -129,6 +129,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ALRT-04 | Phase 3 | Pending |
 | ALRT-05 | Phase 3 | Pending |
 | ALRT-06 | Phase 3 | Pending |
+| DOC-01 | Phase 4 | Complete (04-02) |
+| DOC-02 | Phase 4 | Complete (04-05, 04-06) |
+| DOC-03 | Phase 4 | Complete (04-03, 04-05) |
+| DOC-04 | Phase 4 | Complete (04-04, 04-06) |
+| DOC-05 | Phase 4 | Complete (04-04) |
 | AI-01 | Phase 4 | Complete (04-04) |
 | AI-02 | Phase 4 | Complete (04-03) |
 | AI-03 | Phase 4 | Complete (04-03) |

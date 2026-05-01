@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-05-01T21:36:04Z"
-last_activity: 2026-05-01 -- Phase 04 Plan 05 completed
+stopped_at: Completed 04-06-PLAN.md
+last_updated: "2026-05-01T21:43:28Z"
+last_activity: 2026-05-01 -- Phase 04 Plan 06 completed
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 22
-  completed_plans: 20
-  percent: 91
+  completed_plans: 21
+  percent: 95
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (ai-document-ingestion) — EXECUTING
-Plan: 6 of 7
-Status: Plan 05 complete, ready for Plan 06
-Last activity: 2026-05-01 -- Phase 04 Plan 05 completed
+Plan: 7 of 7
+Status: Plan 06 complete, ready for Plan 07
+Last activity: 2026-05-01 -- Phase 04 Plan 06 completed
 
-Progress: [█████████░] 91%
+Progress: [█████████░] 95%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [█████████░] 91%
 | Phase 04-ai-document-ingestion P03 | 7min | 2 tasks | 7 files |
 | Phase 04-ai-document-ingestion P04 | 4min | 2 tasks | 8 files |
 | Phase 04-ai-document-ingestion P05 | 4min | 2 tasks | 9 files |
+| Phase 04-ai-document-ingestion P06 | 4min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,9 @@ Recent decisions affecting current work:
 - [Phase 04-05]: react-dropzone 14.3.8 installed (15.0.0 not available on npm); API compatible with useDropzone hook pattern
 - [Phase 04-05]: DocumentProcessingModal derives step state from isUploading/uploadResult booleans since backend processes steps 2-4 synchronously in single upload call
 - [Phase 04-05]: PatientMatchSelector rendered as subcomponent inside DocumentProcessingModal rather than separate dialog
+- [Phase 04-06]: PrefilledCareEventDialog tracks user-modified fields via Set<string> to toggle bg-muted/30 visual distinction between AI-extracted and user-edited values
+- [Phase 04-06]: Patient detail upload bypasses DocumentProcessingModal entirely when classification succeeds -- goes straight to pre-filled form (D-09)
+- [Phase 04-06]: Manual classification on patient detail auto-opens pre-filled form immediately after type selection instead of showing intermediate modal
 
 ### Pending Todos
 
@@ -140,5 +144,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-05-01
-Stopped at: Completed 04-05-PLAN.md
-Resume file: .planning/phases/04-ai-document-ingestion/04-06-PLAN.md
+Stopped at: Completed 04-06-PLAN.md
+Resume file: .planning/phases/04-ai-document-ingestion/04-07-PLAN.md
