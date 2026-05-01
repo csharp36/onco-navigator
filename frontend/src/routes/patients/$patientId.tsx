@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Circle,
   Clock,
+  FileText,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +40,12 @@ import {
 import type { CareEventResponse, PathwayStepStatus } from '@/features/patients/types';
 import { QuickAddCareEventDialog } from '@/features/patients/QuickAddCareEventDialog';
 import { hasRole } from '@/lib/auth';
+import { DocumentDropZone } from '@/features/documents/DocumentDropZone';
+import { DocumentProcessingModal } from '@/features/documents/DocumentProcessingModal';
+import { PrefilledCareEventDialog } from '@/features/documents/PrefilledCareEventDialog';
+import { DocumentPreviewPanel } from '@/features/documents/DocumentPreviewPanel';
+import { usePatientDocuments } from '@/features/documents/api';
+import type { DocumentUploadResponse, DocumentPrefillData, DocumentType } from '@/features/documents/types';
 
 export const Route = createFileRoute('/patients/$patientId')({
   component: PatientDetailPage,
@@ -115,6 +122,77 @@ function PatientDetailPage() {
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [deactivationReason, setDeactivationReason] = useState('');
   const [deactivationError, setDeactivationError] = useState<string | null>(null);
+
+  // Document upload flow state
+  const [uploadResult, setUploadResult] = useState<DocumentUploadResponse | null>(null);
+  const [processingModalOpen, setProcessingModalOpen] = useState(false);
+  const [prefillData, setPrefillData] = useState<DocumentPrefillData | null>(null);
+  const [prefilledDialogOpen, setPrefilledDialogOpen] = useState(false);
+  const [previewDocId, setPreviewDocId] = useState<string | null>(null);
+  const { data: documents } = usePatientDocuments(patientId);
+
+  function handleDocUploadComplete(result: DocumentUploadResponse) {
+    setUploadResult(result);
+    if (result.classificationResult) {
+      // Patient already known -- skip matching, go straight to pre-filled form
+      setPrefillData({
+        documentId: result.documentId,
+        classification: result.classificationResult,
+        patientId,
+      });
+      setPrefilledDialogOpen(true);
+    } else {
+      // No classification -- show modal for manual classification
+      setProcessingModalOpen(true);
+    }
+  }
+
+  function handleDocPatientSelected(selectedPatientId: string) {
+    if (!uploadResult) return;
+    const classification = uploadResult.classificationResult ?? {
+      documentType: 'UNKNOWN',
+      confidence: 'low',
+      mrn: null,
+      patientName: null,
+      dateOfBirth: null,
+      eventType: null,
+      eventDate: null,
+      extractedNotes: null,
+    };
+    setPrefillData({
+      documentId: uploadResult.documentId,
+      classification,
+      patientId: selectedPatientId,
+    });
+    setProcessingModalOpen(false);
+    setPrefilledDialogOpen(true);
+  }
+
+  function handleDocManualClassification(documentType: DocumentType) {
+    if (!uploadResult) return;
+    const updatedResult: DocumentUploadResponse = {
+      ...uploadResult,
+      classificationResult: {
+        documentType,
+        confidence: 'manual',
+        mrn: null,
+        patientName: null,
+        dateOfBirth: null,
+        eventType: null,
+        eventDate: null,
+        extractedNotes: null,
+      },
+    };
+    setUploadResult(updatedResult);
+    // After manual classification on patient detail page, go straight to prefill
+    setPrefillData({
+      documentId: updatedResult.documentId,
+      classification: updatedResult.classificationResult!,
+      patientId,
+    });
+    setProcessingModalOpen(false);
+    setPrefilledDialogOpen(true);
+  }
 
   // ── Error state ──────────────────────────────────────────────────────────────
   if (patientError) {
@@ -269,9 +347,16 @@ function PatientDetailPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-semibold">Care Events</CardTitle>
-                <Button size="sm" onClick={() => setRecordEventOpen(true)}>
-                  Record Event
-                </Button>
+                <div className="flex items-center gap-2">
+                  <DocumentDropZone
+                    variant="button"
+                    patientId={patientId}
+                    onUploadComplete={handleDocUploadComplete}
+                  />
+                  <Button size="sm" onClick={() => setRecordEventOpen(true)}>
+                    Record Event
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -298,9 +383,24 @@ function PatientDetailPage() {
                       className="rounded-md border p-3 text-sm space-y-1"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium capitalize">
-                          {event.eventType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium capitalize">
+                            {event.eventType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </span>
+                          {documents?.find((d) => d.careEventId === event.id) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1.5"
+                              onClick={() => {
+                                const doc = documents?.find((d) => d.careEventId === event.id);
+                                if (doc) setPreviewDocId(doc.id);
+                              }}
+                            >
+                              <FileText className="size-3.5" />
+                            </Button>
+                          )}
+                        </div>
                         <CareEventStatusBadge status={event.status} />
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -350,6 +450,36 @@ function PatientDetailPage() {
         open={recordEventOpen}
         onOpenChange={setRecordEventOpen}
       />
+
+      {/* ── Document processing modal ──────────────────────────────────────── */}
+      <DocumentProcessingModal
+        open={processingModalOpen}
+        onOpenChange={setProcessingModalOpen}
+        uploadResult={uploadResult}
+        isUploading={false}
+        onPatientSelected={handleDocPatientSelected}
+        onManualClassification={handleDocManualClassification}
+      />
+
+      {/* ── Pre-filled care event dialog from document ─────────────────────── */}
+      {prefillData && (
+        <PrefilledCareEventDialog
+          open={prefilledDialogOpen}
+          onOpenChange={setPrefilledDialogOpen}
+          patientId={prefillData.patientId}
+          prefillData={prefillData}
+        />
+      )}
+
+      {/* ── Document preview panel ─────────────────────────────────────────── */}
+      {previewDocId && (
+        <DocumentPreviewPanel
+          open={!!previewDocId}
+          onOpenChange={(open) => { if (!open) setPreviewDocId(null); }}
+          documentId={previewDocId}
+          filename={documents?.find((d) => d.id === previewDocId)?.originalFilename ?? 'document.pdf'}
+        />
+      )}
 
       {/* ── Deactivate patient confirmation dialog ───────────────────────────── */}
       <Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
