@@ -179,6 +179,7 @@ public class PatientService {
         event.setEventDate(req.eventDate());
         event.setStatus(req.status());
         event.setNotes(req.notes());
+        event.setDocumentId(req.documentId());
         event.setCreatedBy(actorId);
 
         CareEvent saved = careEventRepository.save(event);

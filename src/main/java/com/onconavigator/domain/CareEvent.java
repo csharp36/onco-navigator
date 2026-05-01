@@ -64,6 +64,13 @@ public class CareEvent {
     @Column(name = "notes_encrypted", columnDefinition = "bytea")
     private String notes;
 
+    /**
+     * Optional reference to the clinical document that was the source of this care event.
+     * Managed by Flyway V10 migration — not by Hibernate ddl-auto.
+     */
+    @Column(name = "document_id")
+    private UUID documentId;
+
     @Column(name = "pathway_step_id")
     private String pathwayStepId;
 
@@ -136,6 +143,14 @@ public class CareEvent {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public UUID getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(UUID documentId) {
+        this.documentId = documentId;
     }
 
     public String getPathwayStepId() {
