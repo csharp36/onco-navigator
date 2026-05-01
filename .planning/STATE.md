@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-05-01T21:17:48Z"
-last_activity: 2026-05-01 -- Phase 04 Plan 03 completed
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-05-01T21:26:48Z"
+last_activity: 2026-05-01 -- Phase 04 Plan 04 completed
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 22
-  completed_plans: 18
-  percent: 81
+  completed_plans: 19
+  percent: 86
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (ai-document-ingestion) — EXECUTING
-Plan: 4 of 7
-Status: Plan 03 complete, ready for Plan 04
-Last activity: 2026-05-01 -- Phase 04 Plan 03 completed
+Plan: 5 of 7
+Status: Plan 04 complete, ready for Plan 05
+Last activity: 2026-05-01 -- Phase 04 Plan 04 completed
 
-Progress: [████████░░] 81%
+Progress: [████████░░] 86%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [████████░░] 81%
 | Phase 04-ai-document-ingestion P01 | 5min | 2 tasks | 12 files |
 | Phase 04-ai-document-ingestion P02 | 9min | 2 tasks | 18 files |
 | Phase 04-ai-document-ingestion P03 | 7min | 2 tasks | 7 files |
+| Phase 04-ai-document-ingestion P04 | 4min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,11 @@ Recent decisions affecting current work:
 - [Phase 04-03]: ClaudeVisionService uses AnthropicChatModel directly for multimodal vision -- ChatClient does not support Media objects in .user() lambda
 - [Phase 04-03]: DocumentProcessingService skips persistence without patient link (patient_id NOT NULL) -- frontend handles patient selection flow
 - [Phase 04-03]: Resilience4j fallback methods are public -- CGLIB proxy requirement for @CircuitBreaker annotation processing
+- [Phase 04-04]: DocumentUploadController uses hasRole CARE_COORDINATOR or ADMIN on ALL three endpoints (upload, content, patient docs) -- consistent role enforcement, not just isAuthenticated
+- [Phase 04-04]: Content streaming endpoint has in-method role verification as BOLA defense-in-depth (T-04-11) -- V2 TODO for patient-level access control
+- [Phase 04-04]: CareEvent.documentId is a plain UUID column (not @ManyToOne) -- matches ClinicalDocument.careEventId pattern, avoids bidirectional relationship complexity
+- [Phase 04-04]: buildAlert method preserves AI-01 template-first behavior unchanged; Claude called only when step.alertText() is null/blank
+- [Phase 04-04]: Generic fallback template in buildAlert includes step name and window days for minimal useful context when circuit breaker is open
 
 ### Pending Todos
 
@@ -130,5 +136,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-05-01
-Stopped at: Completed 04-03-PLAN.md
-Resume file: .planning/phases/04-ai-document-ingestion/04-04-PLAN.md
+Stopped at: Completed 04-04-PLAN.md
+Resume file: .planning/phases/04-ai-document-ingestion/04-05-PLAN.md
