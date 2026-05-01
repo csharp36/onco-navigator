@@ -42,6 +42,7 @@ export interface CreateCareEventRequest {
   eventDate: string;
   status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'PENDING';
   notes?: string;
+  documentId?: string;
 }
 
 export interface UpdateCareEventStatusRequest {
