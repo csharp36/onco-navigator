@@ -107,7 +107,7 @@ Cross-cutting constraints:
 **Plans:** 7 plans
 Plans:
 **Wave 1** *(no dependencies -- parallel)*
-- [ ] 04-01-PLAN.md — Maven dependencies (Spring AI, Resilience4j, PDFBox, Tess4J), Flyway V9 clinical_documents table, ClinicalDocument entity, AI config/types/prompts, Dockerfile Tesseract
+- [x] 04-01-PLAN.md — Maven dependencies (Spring AI, Resilience4j, PDFBox, Tess4J), Flyway V9 clinical_documents table, ClinicalDocument entity, AI config/types/prompts, Dockerfile Tesseract
 - [ ] 04-02-PLAN.md — Synthetic clinical document test corpus (16 documents, 5 types, 3 cancer types) with reference dataset JSON
 **Wave 2** *(blocked on Wave 1 Plan 01)*
 - [ ] 04-03-PLAN.md — Backend extraction pipeline (PDFBox, Tess4J OCR, Claude vision), classification service, alert generation service, patient matching service, document processing orchestrator
@@ -138,4 +138,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. HIPAA Foundation | 4/5 (01-04 awaiting checkpoint) | In Progress | - |
 | 2. Pathway Engine | 4/4 | Complete | 2026-04-30 |
 | 3. Working Application | 6/6 | Complete | 2026-04-30 |
-| 4. AI Document Ingestion & Alert Enhancement | 0/7 | Planning Complete | - |
+| 4. AI Document Ingestion & Alert Enhancement | 1/7 | In Progress | - |

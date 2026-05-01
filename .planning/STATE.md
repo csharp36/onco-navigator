@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-05-01T20:44:47.948Z"
-last_activity: 2026-05-01 -- Phase 04 execution started
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-05-01T20:52:39Z"
+last_activity: 2026-05-01 -- Phase 04 Plan 01 completed
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 22
-  completed_plans: 15
-  percent: 68
+  completed_plans: 16
+  percent: 72
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (ai-document-ingestion) — EXECUTING
-Plan: 1 of 7
-Status: Executing Phase 04
-Last activity: 2026-05-01 -- Phase 04 execution started
+Plan: 2 of 7
+Status: Plan 01 complete, ready for Plan 02
+Last activity: 2026-05-01 -- Phase 04 Plan 01 completed
 
-Progress: [█████░░░░░] 50%
+Progress: [███████░░░] 72%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [█████░░░░░] 50%
 | Phase 02-pathway-engine P02 | 6min | 2 tasks | 11 files |
 | Phase 02-pathway-engine P03 | 10min | 2 tasks | 4 files |
 | Phase 02-pathway-engine P04 | 9min | 2 tasks | 5 files |
+| Phase 04-ai-document-ingestion P01 | 5min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,10 @@ Recent decisions affecting current work:
 - [Phase 02-fix]: Code review found and fixed 7 critical issues + 1 warning: alert dedup TOCTOU race (V7 partial unique index), missing @Transactional on evaluate/closeOpenAlerts, OUT_OF_ORDER fall-through double-alerting, PHI in exception messages, missing @WorkflowImpl annotations, sweep ALLOW_DUPLICATE_FAILED_ONLY policy, EncryptionKeyValidator startup guard
 - [Phase 02-04]: Temporal workflow tests use concrete stub activity classes (not Mockito proxies) -- Mockito subclass proxies inherit @ActivityMethod on overriding methods; Temporal's POJOActivityImplMetadata rejects them; concrete stubs with AtomicInteger counters are the correct pattern
 - [Phase 02-04]: @Configuration(proxyBeanMethods=false) on TemporalConfig -- constants-only class with private constructor; Spring CGLIB cannot proxy without a visible constructor; proxyBeanMethods=false is semantically correct since no @Bean methods exist
+- [Phase 04-01]: ChatClient beans use ChatClient.Builder (injected by Spring AI auto-config) with per-bean temperature/maxTokens overrides -- follows Spring AI 1.1.x recommended pattern
+- [Phase 04-01]: ClinicalDocument.careEventId is a plain UUID column (not @ManyToOne) -- document may be created before care event linkage; avoids bidirectional relationship complexity
+- [Phase 04-01]: extractedText encrypted via EncryptionConverter; content byte[] relies on storage-level encryption since converter operates on String not byte[]
+- [Phase 04-01]: onconavigator.ai.document-classification.enabled=false by default -- feature flag gates Claude calls pending Anthropic BAA
 
 ### Pending Todos
 
@@ -118,5 +123,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-05-01
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-ai-document-ingestion/04-CONTEXT.md
+Stopped at: Completed 04-01-PLAN.md
+Resume file: .planning/phases/04-ai-document-ingestion/04-02-PLAN.md
