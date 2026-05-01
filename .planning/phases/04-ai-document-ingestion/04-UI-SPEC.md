@@ -59,11 +59,11 @@ Exceptions:
 
 ## Typography
 
-Carried forward from Phase 3 existing code. No new type scales introduced.
+Carried forward from Phase 3 existing code. Exactly 2 weights: 500 (medium) and 600 (semibold).
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Body | 14px (text-sm) | 400 (regular) | 1.5 | Care event notes, muted metadata, step descriptions |
+| Body | 14px (text-sm) | 500 (medium) | 1.5 | Care event notes, muted metadata, step descriptions |
 | Label | 14px (text-sm) | 500 (medium) | 1.4 | Form labels, card titles at small size |
 | Heading | 20–24px (text-xl) | 600 (semibold) | 1.2 | Card titles (`CardTitle`), section headers |
 | Display | 30px (text-3xl) | 600 (semibold) | 1.1 | Dashboard stat numbers, page h1 |
@@ -71,8 +71,10 @@ Carried forward from Phase 3 existing code. No new type scales introduced.
 Phase 4 additions:
 - Processing step labels in stepper modal: 14px, weight 500, line-height 1.4 (same as Label)
 - Document classification badge text: 12px (text-xs), weight 500 — rendered inside a `Badge` component
-- Extraction confidence indicator: 12px (text-xs), weight 400, color `text-muted-foreground`
-- Patient match candidate name: 14px (text-sm), weight 600 — distinguishes matched patient from surrounding metadata
+- Extraction confidence indicator: 12px (text-xs), weight 500, color `text-muted-foreground`
+- Patient match candidate name: 14px (text-sm), weight 500 — Badge context and card layout provide sufficient visual differentiation without a heavier weight
+
+**Weight summary:** 500 (medium) for all body, label, and small-text roles; 600 (semibold) for headings and display only.
 
 ---
 
@@ -115,6 +117,12 @@ All tokens are declared in `src/app.css`. No new color tokens are added in Phase
 
 ---
 
+## Visual Focal Point
+
+**Primary visual anchor on dashboard:** the Urgent Alerts card — the document drop zone is a secondary affordance placed above it to prompt document uploads without displacing the primary clinical signal.
+
+---
+
 ## Component Inventory
 
 ### New Components — Phase 4 Only
@@ -131,7 +139,7 @@ All tokens are declared in `src/app.css`. No new color tokens are added in Phase
 
 | Component | Extension |
 |-----------|-----------|
-| `QuickAddCareEventDialog` | Accepts `prefillData?: DocumentPrefillData` prop; if provided, renders read-only "Source Document" section above the form showing document type, classification confidence, and PDF thumbnail |
+| `QuickAddCareEventDialog` | Accepts `prefillData?: DocumentPrefillData` prop; if provided, renders read-only "Source Document" section above the form fields, inside `DialogContent`, showing document type, classification confidence, and PDF thumbnail |
 | `AlertCard` | No changes — Claude-generated `deviationDescription` is already rendered in the existing `<p className="mt-1 text-sm">` slot |
 
 ### Shadcn Components to Add
@@ -205,8 +213,8 @@ Five steps shown in sequence. Each step shows spinner (pending), check (done), o
 
 - Trigger: "View Document" button on care event list item (after document is attached)
 - Rendered as a `Sheet` (side panel, `side="right"`, `className="w-[600px] sm:max-w-[600px]"`) containing native browser PDF renderer: `<iframe src="{blob-url}" className="w-full h-full" title="Document preview" />`
-- Falls back to download link if browser cannot render: "Your browser cannot display this PDF inline. [Download document]"
-- "Download" `Button variant="outline"` with `Download` lucide icon always present in sheet header
+- Falls back to download link if browser cannot render: "Your browser cannot display this PDF inline. Download the document to view it."
+- "Download Document" `Button variant="outline"` with `Download` lucide icon always present in sheet header
 
 ### Alert Enhancement (Claude-generated descriptions)
 
@@ -247,7 +255,7 @@ No new UI components. Claude-generated text populates `deviationDescription` and
 | Source document section label | "Source Document" |
 | Preview link | "Preview full document" |
 | PDF preview fallback | "Your browser cannot display this PDF inline. Download the document to view it." |
-| Download button label | "Download" |
+| Download button label | "Download Document" |
 | Document attached to event — list item label | "View Document" |
 | Alert description tooltip (AI fallback) | "AI description unavailable — showing template text" |
 | Empty state — no documents on patient | (no empty state needed — document presence is optional per care event) |
