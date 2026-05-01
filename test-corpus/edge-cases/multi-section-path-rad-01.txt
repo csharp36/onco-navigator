@@ -1,0 +1,135 @@
+================================================================================
+                  COMPREHENSIVE CANCER CENTER
+              Multidisciplinary Diagnostic Report
+================================================================================
+
+               COMBINED PATHOLOGY AND RADIOLOGY REPORT
+
+Report Generated: 2026-04-15
+Case Conference Date: 2026-04-14
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    Claire TestMultiSection
+MRN:             TEST-016
+Date of Birth:   1964-11-08
+Sex:             Female
+Age:             61
+
+REFERRING PHYSICIAN: Dr. Andrew TestOncologist, MD
+PATHOLOGIST: Dr. Rebecca LabSpecialist, MD
+RADIOLOGIST: Dr. Linda RadioReader, MD
+
+==== SECTION 1: PATHOLOGY ====================================================
+
+SPECIMEN INFORMATION
+--------------------
+Specimen:           Right breast, vacuum-assisted core biopsy (11-gauge)
+Biopsy Date:        2026-04-08
+Accession:          SP-2026-03201
+
+CLINICAL HISTORY
+----------------
+61-year-old female with suspicious right breast mass identified on screening
+mammogram. MRI-guided vacuum-assisted core biopsy performed for tissue
+diagnosis. Patient has a history of left breast DCIS (treated with lumpectomy
+and radiation, 2018).
+
+MICROSCOPIC DESCRIPTION
+-----------------------
+Sections demonstrate cores of breast tissue with involvement by an invasive
+lobular carcinoma, classic type. The tumor cells are arranged in single-file
+linear cords and targetoid patterns infiltrating a fibrous stroma. Cells are
+small to intermediate in size with round, mildly pleomorphic nuclei and
+intracytoplasmic mucin vacuoles (signet ring features in a minority of cells).
+Mitotic activity is low (2 per 10 high-power fields). No definite
+lymphovascular invasion. No in-situ component identified.
+
+IMMUNOHISTOCHEMISTRY
+--------------------
+ER:          Positive (>95%, strong)
+PR:          Positive (85%, moderate-strong)
+HER2/neu:    Negative (IHC 1+)
+Ki-67:       8%
+E-cadherin:  Negative (consistent with lobular phenotype)
+
+PATHOLOGY DIAGNOSIS
+-------------------
+RIGHT BREAST, VACUUM-ASSISTED CORE BIOPSY:
+- Invasive lobular carcinoma, classic type
+- Low nuclear grade (Grade 1)
+- ER strongly positive, PR positive, HER2 negative
+- Ki-67 low (8%), E-cadherin negative (confirms lobular)
+- No lymphovascular invasion identified
+
+==== SECTION 2: RADIOLOGY (CORRELATION) ======================================
+
+BREAST MRI FINDINGS (performed 2026-04-01)
+-------------------------------------------
+Study:     Bilateral Breast MRI with gadolinium enhancement
+Indication: Known right breast mass on mammogram; assess extent of disease
+            and evaluate contralateral breast (history of left DCIS 2018)
+
+RIGHT BREAST:
+An irregular enhancing mass is identified at the 3 o'clock position, mid-depth,
+measuring 2.2 x 1.8 x 2.0 cm. The mass demonstrates type III (washout)
+kinetics, highly suspicious for malignancy. This corresponds to the mammographic
+finding and biopsy site.
+
+A second smaller enhancing focus is identified at the 4 o'clock position,
+3 cm posterior to the primary mass, measuring 0.6 cm. This focus demonstrates
+type II (plateau) kinetics and was not visualized on mammogram. This raises
+concern for multicentric disease (a known feature of invasive lobular carcinoma).
+
+No suspicious axillary lymphadenopathy on the right.
+
+LEFT BREAST:
+The left breast demonstrates post-treatment changes from prior lumpectomy
+(2018) in the upper outer quadrant. Architectural distortion and fat necrosis
+consistent with prior surgery and radiation. No suspicious enhancing masses or
+non-mass enhancement. No evidence of recurrent disease.
+
+LEFT AXILLA: No suspicious lymphadenopathy.
+
+RADIOLOGY IMPRESSION
+--------------------
+1. Right breast mass at 3 o'clock (2.2 cm) with type III kinetics,
+   corresponding to biopsy-proven invasive lobular carcinoma.
+2. Suspicious secondary enhancing focus at 4 o'clock (0.6 cm), raising concern
+   for multicentric disease. Recommend targeted ultrasound and possible biopsy
+   of this second focus.
+3. Left breast: Post-treatment changes only. No evidence of recurrence.
+
+==== SECTION 3: MULTIDISCIPLINARY SUMMARY =====================================
+
+INTEGRATED ASSESSMENT
+---------------------
+This 61-year-old female presents with biopsy-proven invasive lobular carcinoma
+(ILC) of the right breast (classic type, Grade 1, ER+/PR+/HER2-). MRI
+demonstrates a possible second focus suspicious for multicentric disease, which
+is consistent with the known tendency of ILC for multifocality/multicentricity
+not visualized on conventional imaging.
+
+TUMOR BOARD RECOMMENDATIONS (2026-04-14):
+1. Targeted ultrasound and biopsy of the second MRI-identified focus at
+   4 o'clock
+2. If second focus is malignant (multicentric ILC), recommend mastectomy over
+   lumpectomy
+3. If second focus is benign, breast-conserving surgery with wide excision
+   remains an option
+4. Sentinel lymph node biopsy at the time of definitive surgery
+5. Genomic testing (Oncotype DX) on the core biopsy specimen to assess
+   recurrence risk and chemotherapy benefit
+6. Contralateral breast surveillance: annual MRI given history of bilateral
+   breast disease
+
+NOTE: This combined report was generated at the request of the tumor board to
+consolidate the pathology and imaging findings for integrated clinical
+decision-making. The pathology findings section constitutes the primary
+diagnostic content of this document. Individual radiology report (MRI) is
+available separately under Accession RAD-2026-08102.
+
+Report prepared by:
+Dr. Rebecca LabSpecialist, MD (Pathology)
+Dr. Linda RadioReader, MD (Radiology)
+Date: 2026-04-15

@@ -1,0 +1,91 @@
+================================================================================
+                    REGIONAL ONCOLOGY INSTITUTE
+                  Department of Anatomic Pathology
+================================================================================
+
+                          PATHOLOGY REPORT
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    James DemoSubject
+MRN:             TEST-002
+Date of Birth:   1958-11-22
+Sex:             Male
+Age:             67
+
+SPECIMEN INFORMATION
+--------------------
+Specimen Type:        Right lung, CT-guided core needle biopsy
+Date of Procedure:    2026-02-28
+Date of Report:       2026-03-03
+Ordering Physician:   Dr. Anthony SampleDoc, MD (Pulmonology)
+Pathologist:          Dr. Karen MockPath, MD
+
+CLINICAL HISTORY
+----------------
+67-year-old male, former smoker (40 pack-year history, quit 5 years ago),
+presents with a 3.2 cm right upper lobe pulmonary nodule identified on chest CT
+performed for persistent cough. PET-CT demonstrated FDG avidity (SUV max 8.4)
+concerning for malignancy. CT-guided core needle biopsy performed for tissue
+diagnosis.
+
+GROSS DESCRIPTION
+-----------------
+Received in formalin, labeled "right upper lobe lung biopsy," are four
+cylindrical cores of tan-white tissue, each measuring 0.8-1.2 cm in length and
+0.1 cm in diameter. All tissue submitted in cassettes A1-A2.
+
+MICROSCOPIC DESCRIPTION
+-----------------------
+Sections demonstrate cores of pulmonary parenchyma extensively involved by a
+moderately differentiated adenocarcinoma. The tumor exhibits predominantly
+acinar and papillary growth patterns with focal lepidic component. Tumor cells
+show enlarged, hyperchromatic nuclei with prominent nucleoli and moderate
+amounts of eosinophilic cytoplasm. Scattered mitotic figures are identified.
+Necrosis is present in approximately 10% of the examined tissue. The background
+lung parenchyma shows mild chronic inflammation and focal emphysematous change.
+
+No definite lymphovascular invasion is identified in the limited biopsy
+material.
+
+IMMUNOHISTOCHEMISTRY
+--------------------
+TTF-1:    Positive (strong, diffuse nuclear)
+Napsin A: Positive (granular cytoplasmic)
+CK7:     Positive
+CK20:    Negative
+p40:     Negative
+ALK (D5F3 IHC): Negative
+PD-L1 (22C3):   Positive, TPS 45% (tumor proportion score)
+
+MOLECULAR TESTING
+-----------------
+Tissue sent to reference laboratory for comprehensive genomic profiling (CGP)
+including EGFR, ALK, ROS1, KRAS, BRAF, MET, RET, and NTRK fusions. Results
+pending at the time of this report and will be issued as an addendum.
+
+DIAGNOSIS
+---------
+RIGHT LUNG, CT-GUIDED CORE NEEDLE BIOPSY:
+- Adenocarcinoma, moderately differentiated
+- Growth patterns: Acinar (predominant), papillary, lepidic (minor)
+- PD-L1 (22C3) TPS: 45%
+- ALK IHC: Negative
+- Comprehensive genomic profiling: Pending (addendum to follow)
+
+COMMENT
+-------
+The immunoprofile (TTF-1+, Napsin A+, CK7+, CK20-, p40-) supports primary
+pulmonary adenocarcinoma. PD-L1 TPS of 45% exceeds the threshold for
+first-line pembrolizumab monotherapy or combination immunotherapy/chemotherapy
+per current NCCN guidelines. Final treatment recommendations should await
+molecular testing results, particularly EGFR mutation status, as this may
+influence the treatment approach.
+
+Clinical staging: Recommend PET-CT correlation and mediastinal staging for
+definitive clinical stage assignment.
+
+Electronically signed:
+Dr. Karen MockPath, MD
+Board Certified Anatomic Pathology
+Date: 2026-03-03

@@ -1,0 +1,109 @@
+================================================================================
+                    GREENFIELD MEDICAL CENTER
+                   Medical Oncology Department
+================================================================================
+
+                        REFERRAL LETTER
+
+                 REFERRAL TO RADIATION ONCOLOGY
+
+DATE OF REFERRAL: 2026-03-25
+
+TO:   Dr. Helen RadOncoDemo, MD
+      Department of Radiation Oncology
+      Valley Cancer Treatment Center
+      4500 Medical Parkway, Suite 200
+      Springfield, ST 00000
+
+FROM: Dr. Andrew TestOncologist, MD
+      Medical Oncology
+      Greenfield Medical Center
+      1200 Hospital Drive
+      Springfield, ST 00000
+      Phone: (555) 555-0101
+      Fax: (555) 555-0102
+
+RE: PATIENT REFERRAL
+--------------------
+Patient Name:    Elizabeth TestSubject
+MRN:             TEST-009
+Date of Birth:   1966-01-28
+Sex:             Female
+Age:             60
+
+REASON FOR REFERRAL
+-------------------
+Radiation therapy consultation and treatment planning following breast-
+conserving surgery for left breast invasive ductal carcinoma.
+
+CLINICAL SUMMARY
+----------------
+Ms. TestSubject is a 60-year-old female with recently diagnosed left breast
+invasive ductal carcinoma, status post left breast lumpectomy with sentinel
+lymph node biopsy performed on 2026-03-10 at Greenfield Medical Center by
+Dr. Robert SurgiTest.
+
+SURGICAL PATHOLOGY (2026-03-10):
+- Invasive ductal carcinoma, Grade 2 (Nottingham score 6/9)
+- Tumor size: 1.5 cm
+- Margins: Negative, closest margin 1.2 cm (deep)
+- Lymphovascular invasion: Not identified
+- Sentinel lymph nodes: 0/3 positive
+- Pathologic stage: pT1c pN0(sn), Stage IA
+
+BIOMARKER STATUS:
+- ER: Positive (90%, strong)
+- PR: Positive (70%, moderate)
+- HER2: Negative (IHC 0)
+- Ki-67: 12%
+- Oncotype DX Recurrence Score: 14 (low risk)
+
+TREATMENT PLAN:
+The multidisciplinary tumor board (2026-03-20) recommended:
+1. Whole breast radiation therapy (standard or hypofractionated course)
+2. Adjuvant endocrine therapy (tamoxifen or aromatase inhibitor)
+3. Oncotype DX score of 14 supports omission of adjuvant chemotherapy
+
+The patient has been counseled regarding the role of radiation therapy in
+reducing local recurrence following breast-conserving surgery. She understands
+and agrees with the recommended treatment plan.
+
+RELEVANT MEDICAL HISTORY
+-------------------------
+- Hypertension, controlled on lisinopril 10 mg daily
+- No diabetes
+- No prior chest radiation
+- No connective tissue disease
+- No cardiac history
+- ECOG Performance Status: 0
+
+MEDICATIONS
+-----------
+1. Lisinopril 10 mg daily
+2. Calcium 600 mg + Vitamin D 400 IU daily
+3. Multivitamin daily
+
+ALLERGIES: NKDA (No Known Drug Allergies)
+
+ENCLOSED DOCUMENTS
+------------------
+- Surgical pathology report (2026-03-10)
+- Operative note (2026-03-10)
+- Mammogram report (2026-01-15)
+- Tumor board summary (2026-03-20)
+
+REQUEST
+-------
+Please evaluate Ms. TestSubject for adjuvant whole breast radiation therapy.
+Cavity clips were placed intraoperatively for radiation planning purposes.
+Please contact our office with the proposed radiation start date so we can
+coordinate initiation of endocrine therapy.
+
+Thank you for your excellent care of our mutual patient.
+
+Sincerely,
+
+Dr. Andrew TestOncologist, MD
+Board Certified Medical Oncology and Internal Medicine
+Greenfield Medical Center
+Date: 2026-03-25

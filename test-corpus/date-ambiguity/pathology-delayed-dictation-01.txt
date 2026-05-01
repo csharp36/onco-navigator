@@ -1,0 +1,99 @@
+================================================================================
+                    COMMUNITY PATHOLOGY SERVICES
+================================================================================
+
+                          PATHOLOGY REPORT
+
+Report Date:          2026-02-20
+Received Date:        2026-02-10
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    Margaret TestDelayed
+MRN:             TEST-014
+Date of Birth:   1963-09-30
+Sex:             Female
+Age:             62
+
+SPECIMEN INFORMATION
+--------------------
+Specimen Type:        Left breast, core needle biopsy (14-gauge)
+Biopsy Date:          2026-02-10
+Accession Number:     SP-2026-01893
+Ordering Physician:   Dr. Patricia BreastImager, MD (Radiology)
+Pathologist:          Dr. Rebecca LabSpecialist, MD
+
+REASON FOR DELAY: Immunohistochemistry studies required additional tissue
+processing time. Special stains (ER, PR, HER2, Ki-67) added after initial
+H&E review demonstrated malignancy on 2026-02-12. IHC results available
+2026-02-18. Report dictated 2026-02-19, finalized 2026-02-20.
+
+CLINICAL HISTORY
+----------------
+62-year-old female with left breast mass identified on diagnostic mammogram
+(BI-RADS 5, 2026-01-25). Ultrasound-guided core needle biopsy performed
+2026-02-10. No prior breast biopsies.
+
+GROSS DESCRIPTION
+-----------------
+Received in formalin, labeled "left breast core biopsy, 2 o'clock," are five
+cores of tan-white, rubbery tissue, each measuring 0.8-1.5 cm in length and
+0.1 cm in diameter. All tissue submitted in cassettes A1-A2.
+
+MICROSCOPIC DESCRIPTION
+-----------------------
+Sections demonstrate multiple cores of breast tissue with extensive involvement
+by an invasive carcinoma with both ductal and lobular features. The tumor forms
+irregular nests and single-file cords infiltrating a desmoplastic stroma. There
+is moderate nuclear pleomorphism. Mitotic figures are identified at a rate of
+approximately 6 per 10 high-power fields.
+
+A component of high-grade ductal carcinoma in situ (DCIS) with comedonecrosis
+is identified in one of the five cores.
+
+No definite lymphovascular invasion is seen in the biopsy material.
+
+IMMUNOHISTOCHEMISTRY (performed 2026-02-14, resulted 2026-02-18)
+------------------------------------------------------------------
+Estrogen Receptor (ER):     Positive (75% of tumor nuclei, moderate intensity)
+Progesterone Receptor (PR): Negative (<1% of tumor nuclei)
+HER2/neu (IHC):             Equivocal (Score 2+)
+   ** HER2 FISH Testing: ORDERED -- results to follow as addendum
+Ki-67 Proliferation Index:  32%
+E-cadherin:                 Heterogeneous (positive in ductal areas, negative in
+                            lobular areas, consistent with mixed morphology)
+
+DIAGNOSIS
+---------
+LEFT BREAST, CORE NEEDLE BIOPSY (2 O'CLOCK):
+- Invasive carcinoma with mixed ductal and lobular features
+- Nuclear grade 2, overall histologic grade estimated at 2 (definitive grading
+  deferred to excision specimen)
+- ER positive (75%), PR negative, HER2 equivocal (2+, FISH pending)
+- Ki-67 proliferation index: 32%
+- Associated high-grade DCIS with comedonecrosis
+- E-cadherin pattern consistent with mixed ductal/lobular morphology
+
+COMMENT
+-------
+This biopsy demonstrates an invasive carcinoma with mixed ductal and lobular
+morphology, confirmed by E-cadherin immunohistochemistry. The ER-positive but
+PR-negative, high Ki-67 (32%) profile suggests a more aggressive Luminal B
+phenotype. HER2 FISH testing is critical for determining HER2 status and
+guiding neoadjuvant therapy decisions. Results will be issued as an addendum
+(expected turnaround 3-5 business days).
+
+Recommend surgical oncology consultation for treatment planning. Given the
+mixed histology and aggressive proliferative index, neoadjuvant chemotherapy
+may be considered, pending HER2 FISH result and breast MRI for extent of
+disease assessment.
+
+NOTE: This report was delayed from the biopsy date of 2026-02-10 due to the
+additional immunohistochemistry processing time required after initial H&E
+review confirmed malignancy.
+
+Electronically signed:
+Dr. Rebecca LabSpecialist, MD
+Board Certified Anatomic and Clinical Pathology
+Dictated: 2026-02-19
+Finalized: 2026-02-20

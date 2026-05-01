@@ -1,0 +1,79 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    VALLEY PATHOLOGY ASSOCIATES
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+                         CYTOLOGY REPORT
+
+Case Number: CYT-2026-003847
+Accession Date: 2026-03-28
+
+FINDINGS
+--------
+Specimen: Right breast, fine needle aspiration (FNA)
+
+Cytologic examination of two alcohol-fixed, Papanicolaou-stained slides and
+one air-dried, Diff-Quik-stained slide demonstrates:
+- Highly cellular specimen with numerous clusters and single atypical
+  epithelial cells
+- Cells exhibit enlarged, hyperchromatic nuclei with irregular nuclear membranes
+  and prominent nucleoli
+- High nuclear-to-cytoplasmic ratio
+- Scattered myoepithelial cells are absent from the atypical cell clusters
+- Background shows proteinaceous debris and scattered red blood cells
+- No necrosis identified
+
+INTERPRETATION: POSITIVE FOR MALIGNANT CELLS, consistent with carcinoma.
+Morphologic features favor invasive ductal carcinoma.
+
+PATIENT DEMOGRAPHICS
+---------------------
+Name:            Nancy TestVariant
+MRN:             TEST-011
+Date of Birth:   1969-05-22
+Sex:             Female
+Referring Doctor: Dr. Susan MockBreastSurgeon, MD
+
+PROCEDURE DETAILS
+-----------------
+Procedure Date:   2026-03-28
+Procedure Type:   Ultrasound-guided fine needle aspiration
+Location:         Right breast, 9 o'clock position, 5 cm from nipple
+Performed by:     Dr. Karen CytoSpecialist, MD
+Adequacy:         Satisfactory for evaluation
+
+CELL BLOCK RESULTS
+------------------
+A cell block was prepared from the aspirated material.
+
+Immunohistochemistry on cell block sections:
+- ER: Positive (85%, moderate-strong)
+- PR: Positive (60%, moderate)
+- HER2/neu: Equivocal (IHC 2+) -- FISH testing ordered
+- CK7: Positive
+- CK20: Negative
+- GATA3: Positive
+- Mammaglobin: Positive
+
+The immunoprofile supports a primary breast carcinoma.
+
+COMMENT
+-------
+Cytologic findings are diagnostic of malignancy consistent with breast
+carcinoma. Cell block immunohistochemistry confirms breast primary. HER2 status
+is equivocal by IHC (2+); FISH testing has been ordered and results will be
+issued as an addendum.
+
+Core needle biopsy is recommended for definitive histologic typing, grading,
+and margin assessment if surgical management is being planned.
+
+DIAGNOSIS
+---------
+RIGHT BREAST, FNA:
+- Positive for malignant cells, consistent with invasive breast carcinoma
+- ER positive, PR positive, HER2 equivocal (FISH pending)
+- Primary breast origin confirmed by immunoprofile
+
+Electronically signed:
+Dr. Karen CytoSpecialist, MD
+Board Certified Anatomic Pathology and Cytopathology
+Date: 2026-03-30

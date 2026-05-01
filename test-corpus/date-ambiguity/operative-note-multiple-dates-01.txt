@@ -1,0 +1,128 @@
+================================================================================
+                   REGIONAL SURGICAL CENTER
+                  Department of Thoracic Surgery
+================================================================================
+
+                         OPERATIVE NOTE
+
+DOCUMENT DATES
+--------------
+Procedure Date:       2026-03-20
+Date Dictated:        2026-03-22
+Date Transcribed:     2026-03-24
+Report Date:          2026-03-25
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    George TestMultiDate
+MRN:             TEST-013
+Date of Birth:   1961-04-09
+Sex:             Male
+Age:             64
+
+SURGERY INFORMATION
+-------------------
+Date of Surgery:      2026-03-20
+Time of Surgery:      0900 - 1245
+Surgeon:              Dr. Mark ThoracicDemo, MD, FACS
+First Assistant:      Dr. Lisa SurgResident, MD (PGY-4)
+Anesthesiologist:     Dr. Paul AnesthTest, MD
+Anesthesia Type:      General endotracheal anesthesia with double-lumen tube
+
+PREOPERATIVE DIAGNOSIS
+----------------------
+Right upper lobe non-small cell lung cancer, clinical stage IIB (cT2b N1 M0)
+
+POSTOPERATIVE DIAGNOSIS
+-----------------------
+Right upper lobe non-small cell lung cancer, clinical stage IIB (cT2b N1 M0)
+
+PROCEDURE PERFORMED
+-------------------
+1. Right video-assisted thoracoscopic surgery (VATS) right upper lobectomy
+2. Mediastinal lymph node dissection (stations 2R, 4R, 7, 8, 9)
+
+INDICATIONS
+-----------
+64-year-old male with right upper lobe adenocarcinoma diagnosed on CT-guided
+core needle biopsy (2026-02-15). Tumor measures 4.8 cm on CT. PET-CT
+demonstrated FDG-avid right upper lobe mass (SUV max 10.1) with a single
+FDG-avid right hilar lymph node (station 10R, SUV max 4.2). No distant
+metastases. Pulmonary function testing showed FEV1 of 2.4 L (82% predicted),
+adequate for lobectomy. Multidisciplinary tumor board recommended surgical
+resection.
+
+DESCRIPTION OF PROCEDURE
+-------------------------
+The patient was brought to the operating room and placed in the left lateral
+decubitus position. After satisfactory induction of general endotracheal
+anesthesia with a left-sided double-lumen endotracheal tube, the right lung
+was isolated and deflated. The right chest was prepped and draped in the usual
+sterile fashion. A time-out was performed.
+
+VATS ACCESS:
+A 2 cm utility incision was made in the anterior 4th intercostal space. Two
+additional 1 cm port incisions were placed in the 7th intercostal space at the
+mid-axillary line and posterior axillary line. A 30-degree thoracoscope was
+introduced.
+
+EXPLORATION:
+The pleural space was inspected. No pleural effusion or pleural implants. The
+tumor was identified in the right upper lobe as a firm mass approximately 5 cm
+in greatest dimension, not involving the chest wall or mediastinum. The fissures
+were complete.
+
+RIGHT UPPER LOBECTOMY:
+The right upper lobe pulmonary vein was identified and dissected circumfer-
+entially. The vein was divided using an endovascular stapler (Echelon Flex 45 mm
+white load). The truncus anterior (apical and anterior segmental arteries) was
+identified, dissected, and divided with an endovascular stapler (Echelon Flex
+45 mm white load). The posterior ascending artery was identified and divided
+with an endovascular stapler. The right upper lobe bronchus was identified and
+dissected. A frozen section of the bronchial margin was submitted and returned
+negative for malignancy. The bronchus was divided with an endobronchial stapler
+(Echelon Flex 45 mm green load). The minor fissure was completed with multiple
+firings of an endoscopic stapler (Echelon Flex 60 mm blue load). The specimen
+was placed in a retrieval bag and removed through the utility incision.
+
+MEDIASTINAL LYMPH NODE DISSECTION:
+Systematic mediastinal lymph node dissection was performed. Lymph node stations
+2R, 4R, 7, 8, and 9 were dissected and submitted as separate specimens.
+
+CLOSURE:
+The bronchial stump was tested under saline with no air leak. Hemostasis was
+confirmed. A 28 Fr chest tube was placed through the posterior port site into
+the pleural apex. The lung was re-expanded under direct vision. Port sites were
+closed in layers with 2-0 Vicryl and 4-0 Monocryl subcuticular sutures.
+
+Estimated blood loss: 200 mL.
+Fluids administered: 2,200 mL crystalloid.
+Complications: None.
+
+The patient tolerated the procedure well and was extubated in the operating room.
+Transferred to the thoracic surgical ICU for overnight monitoring.
+
+SPECIMENS SENT TO PATHOLOGY
+----------------------------
+1. Right upper lobe, lobectomy specimen
+2. Station 2R lymph nodes
+3. Station 4R lymph nodes
+4. Station 7 lymph nodes (subcarinal)
+5. Station 8 lymph nodes (paraesophageal)
+6. Station 9 lymph nodes (inferior pulmonary ligament)
+7. Right upper lobe bronchial margin, frozen section
+
+DISPOSITION
+-----------
+ICU monitoring overnight. Chest tube to water seal. Chest X-ray postoperative.
+Anticipated transfer to floor POD#1. Expected length of stay 3-4 days.
+
+Dictated by:
+Dr. Mark ThoracicDemo, MD, FACS
+Board Certified General and Thoracic Surgery
+Dictation Date: 2026-03-22
+
+Transcribed by: Janet TestTranscriptionist
+Transcription Date: 2026-03-24
+
+Report finalized: 2026-03-25

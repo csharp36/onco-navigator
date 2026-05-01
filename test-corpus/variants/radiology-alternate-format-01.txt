@@ -1,0 +1,78 @@
+================================================================================
+                 COMMUNITY RADIOLOGY NETWORK
+              Digital Dictation -- Voice Recognition
+================================================================================
+
+RADIOLOGY REPORT
+
+Patient: Thomas TestAmbiguous
+MRN: TEST-012
+DOB: 1957-02-14
+Sex: Male
+Age: 68
+
+Exam: PET-CT (FDG), Whole Body
+Date of Study: 2026-04-10
+Ordering MD: Dr. Sandra DemoOncologist, MD
+Radiologist: Dr. William NucMedReader, MD
+
+History: 68-year-old male with biopsy-proven ascending colon adenocarcinoma.
+Staging PET-CT.
+
+Comparison: CT abdomen/pelvis 2026-03-15.
+
+Technique: 12.2 mCi F-18 FDG administered intravenously. Uptake time 68
+minutes. Low-dose CT performed for attenuation correction and anatomic
+localization followed by whole-body PET acquisition from skull vertex to
+mid-thighs.
+
+Findings:
+
+HEAD AND NECK: No FDG-avid lesions. Physiologic brain uptake. No suspicious
+cervical lymphadenopathy.
+
+CHEST: Lungs are clear without FDG-avid pulmonary nodules or masses. No
+mediastinal or hilar lymphadenopathy. Heart is normal in size. No pleural
+effusion.
+
+ABDOMEN AND PELVIS: A large FDG-avid mass is identified in the ascending colon
+measuring 4.2 x 3.8 cm with SUV max 11.3, consistent with the known primary
+malignancy. The mass demonstrates circumferential bowel wall thickening with
+extension into the pericolonic fat.
+
+Two FDG-avid pericolonic lymph nodes are identified adjacent to the ascending
+colon mass:
+  - Pericolonic node #1: 1.4 cm, SUV max 6.8
+  - Pericolonic node #2: 1.1 cm, SUV max 5.2
+These are suspicious for metastatic nodal involvement.
+
+No FDG-avid retroperitoneal or pelvic lymphadenopathy. Liver demonstrates
+homogeneous uptake without focal FDG-avid lesions. Spleen, kidneys, and adrenal
+glands are unremarkable. Bladder activity is physiologic.
+
+MUSCULOSKELETAL: No FDG-avid osseous lesions. Mild degenerative changes of
+the lumbar spine with physiologic degenerative uptake at L3-L4 and L4-L5.
+
+Impression:
+
+1. FDG-avid ascending colon mass (SUV max 11.3) consistent with known primary
+   colorectal adenocarcinoma.
+
+2. Two FDG-avid pericolonic lymph nodes suspicious for regional nodal
+   metastases, supporting at least N1 disease.
+
+3. No evidence of distant metastatic disease. Specifically, no FDG-avid hepatic,
+   pulmonary, or osseous lesions identified.
+
+4. Of note, prior pathology findings from core biopsy (2026-03-05) confirmed
+   moderately differentiated adenocarcinoma with microsatellite stable (MSS)
+   status and KRAS G12D mutation. These molecular findings, while documented
+   here for completeness, are derived from the pathology report and are not
+   imaging findings. Correlation with the surgical pathology team is recommended
+   for integrated staging and treatment planning.
+
+5. PET-CT staging: Consistent with clinical stage IIIA (cT3 N1 M0).
+
+Dr. William NucMedReader, MD
+Board Certified Nuclear Medicine and Diagnostic Radiology
+Date: 2026-04-10

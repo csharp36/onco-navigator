@@ -1,0 +1,95 @@
+================================================================================
+                    VALLEY DIAGNOSTIC IMAGING CENTER
+                     Department of Radiology
+================================================================================
+
+                        RADIOLOGY REPORT
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    Maria SampleCase
+MRN:             TEST-003
+Date of Birth:   1970-04-03
+Sex:             Female
+Age:             55
+
+STUDY INFORMATION
+-----------------
+Examination:          CT Chest with IV Contrast
+Study Date:           2026-03-10
+Accession Number:     RAD-2026-04821
+Ordering Physician:   Dr. Thomas TestPhysician, MD (Oncology)
+Radiologist:          Dr. Linda RadioReader, MD
+
+CLINICAL INDICATION
+-------------------
+55-year-old female with newly diagnosed right upper lobe lung mass on prior
+chest X-ray. Evaluate for staging. History of 25 pack-year smoking.
+
+TECHNIQUE
+---------
+Helical CT of the chest was performed from the thoracic inlet through the
+adrenal glands following intravenous administration of 100 mL Omnipaque 350
+contrast material. Axial images were acquired at 1.25 mm slice thickness and
+reconstructed in coronal and sagittal planes. Comparison: Chest X-ray dated
+2026-02-25.
+
+FINDINGS
+--------
+LUNGS AND AIRWAYS:
+A spiculated soft tissue mass is identified in the right upper lobe measuring
+3.4 x 2.8 x 3.1 cm (axial series 4, image 87). The mass abuts the visceral
+pleura but does not demonstrate frank chest wall invasion. There is associated
+distal atelectasis of the posterior segment of the right upper lobe.
+
+A 6 mm ground-glass nodule is present in the right lower lobe (series 4, image
+198), likely representing an intrapulmonary lymph node. No additional suspicious
+pulmonary nodules are identified.
+
+MEDIASTINUM AND HILA:
+Several enlarged lymph nodes are identified:
+- Right paratracheal (station 4R): 1.8 cm short axis (previously not seen)
+- Subcarinal (station 7): 1.4 cm short axis
+- Right hilar (station 10R): 1.2 cm short axis
+
+The left hilum and left-sided mediastinal lymph node stations are unremarkable.
+No mediastinal mass. The heart is normal in size without pericardial effusion.
+The thoracic aorta and great vessels are patent without aneurysm.
+
+PLEURA:
+No pleural effusion or pneumothorax. No pleural-based masses.
+
+CHEST WALL AND SPINE:
+No suspicious osseous lesions. Mild degenerative changes of the thoracic spine.
+No chest wall soft tissue abnormality.
+
+UPPER ABDOMEN (included in field of view):
+The visualized portions of the liver, spleen, and adrenal glands are
+unremarkable. No adrenal masses.
+
+IMPRESSION
+----------
+1. Right upper lobe spiculated mass measuring 3.4 x 2.8 x 3.1 cm, highly
+   suspicious for primary lung malignancy. Tissue sampling recommended for
+   definitive diagnosis if not already obtained.
+
+2. Enlarged right paratracheal (4R), subcarinal (7), and right hilar (10R)
+   lymph nodes, concerning for metastatic nodal involvement. Clinical staging
+   suggests at least cT2a N2 disease. PET-CT recommended for complete staging.
+
+3. Small right lower lobe ground-glass nodule (6 mm), likely benign
+   intrapulmonary lymph node. Follow-up per Fleischner Society guidelines if
+   clinically indicated.
+
+4. No evidence of distant metastatic disease in the visualized chest and upper
+   abdomen.
+
+RECOMMENDATION
+--------------
+PET-CT for comprehensive staging. Consider EBUS-guided mediastinal lymph node
+sampling for pathologic confirmation of nodal involvement (stations 4R and 7).
+
+Dictated by:
+Dr. Linda RadioReader, MD
+Board Certified Diagnostic Radiology
+Date: 2026-03-10

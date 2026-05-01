@@ -1,0 +1,88 @@
+================================================================================
+                    WOMEN'S IMAGING ASSOCIATES
+                   Breast Imaging Division
+================================================================================
+
+                        RADIOLOGY REPORT
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    Linda MockData
+MRN:             TEST-004
+Date of Birth:   1962-12-01
+Sex:             Female
+Age:             63
+
+STUDY INFORMATION
+-----------------
+Examination:          Diagnostic Mammogram, Bilateral with Spot Compression
+Study Date:           2026-01-20
+Accession Number:     MAM-2026-00892
+Ordering Physician:   Dr. Susan TestGynecologist, MD
+Radiologist:          Dr. Patricia BreastImager, MD
+
+CLINICAL INDICATION
+-------------------
+63-year-old female recalled from screening mammogram (2026-01-08) for
+asymmetric density in the left breast upper outer quadrant. No palpable masses
+reported by referring physician. Family history significant for breast cancer
+(mother, age 58). Patient is not on hormone replacement therapy.
+
+COMPARISON
+----------
+Screening mammogram dated 2026-01-08. Prior annual screening mammogram dated
+2025-01-15.
+
+TECHNIQUE
+---------
+Standard bilateral diagnostic mammographic views (CC and MLO) were obtained
+with additional spot compression views of the left breast upper outer quadrant.
+Digital breast tomosynthesis (3D mammography) was performed bilaterally.
+
+BREAST COMPOSITION
+------------------
+Heterogeneously dense breast tissue (ACR density category C), which may lower
+the sensitivity of mammography.
+
+FINDINGS
+--------
+RIGHT BREAST:
+No suspicious masses, calcifications, or architectural distortion. Scattered
+benign-appearing calcifications consistent with vascular calcifications. No
+axillary lymphadenopathy.
+
+LEFT BREAST:
+A focal asymmetric density is confirmed in the upper outer quadrant at the
+10 o'clock position, approximately 6 cm from the nipple, measuring
+approximately 1.2 x 0.9 cm. On spot compression views, the density persists
+and appears more defined with irregular margins. The finding is new compared to
+prior examinations. No associated suspicious calcifications. No skin thickening
+or retraction.
+
+A cluster of punctate calcifications is noted in the left breast lower inner
+quadrant, unchanged from prior examinations, consistent with fibrocystic
+changes (benign).
+
+Left axilla: No suspicious lymphadenopathy.
+
+IMPRESSION
+----------
+Left breast focal asymmetric density at 10 o'clock, 6 cm from nipple,
+measuring 1.2 x 0.9 cm, irregular margins, new finding. This is suspicious for
+malignancy.
+
+ASSESSMENT: BI-RADS 4C (High suspicion for malignancy)
+
+RECOMMENDATION
+--------------
+Ultrasound-guided core needle biopsy of the left breast 10 o'clock finding
+is recommended. Result to be correlated with pathology.
+
+Patient was informed of the findings and recommendation by Dr. Patricia
+BreastImager at the time of the examination via telephone. Patient verbalized
+understanding and agreed to proceed with biopsy scheduling.
+
+Electronically signed:
+Dr. Patricia BreastImager, MD, FACR
+Fellowship-Trained Breast Imaging
+Date: 2026-01-20

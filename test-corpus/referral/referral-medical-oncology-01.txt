@@ -1,0 +1,120 @@
+================================================================================
+                     METRO PULMONOLOGY GROUP
+================================================================================
+
+                        REFERRAL LETTER
+
+              REFERRAL TO MEDICAL ONCOLOGY FOR
+              CHEMOTHERAPY/IMMUNOTHERAPY EVALUATION
+
+DATE OF REFERRAL: 2026-02-15
+
+TO:   Dr. Sandra DemoOncologist, MD
+      Medical Oncology
+      Regional Oncology Institute
+      800 Cancer Center Boulevard
+      Riverside, ST 00000
+
+FROM: Dr. Anthony SampleDoc, MD
+      Pulmonology
+      Metro Pulmonology Group
+      2100 Respiratory Drive, Suite 300
+      Riverside, ST 00000
+      Phone: (555) 555-0201
+      Fax: (555) 555-0202
+
+RE: PATIENT REFERRAL
+--------------------
+Patient Name:    David MockPatient
+MRN:             TEST-010
+Date of Birth:   1952-10-05
+Sex:             Male
+Age:             73
+
+REASON FOR REFERRAL
+-------------------
+Newly diagnosed non-small cell lung cancer (adenocarcinoma) with mediastinal
+lymph node involvement. Referral for systemic therapy evaluation including
+immunotherapy given PD-L1 expression.
+
+CLINICAL SUMMARY
+----------------
+Mr. MockPatient is a 73-year-old male, former smoker (45 pack-year history,
+quit 8 years ago), who presented with a 3-month history of persistent cough
+and unintentional 10-pound weight loss. Workup revealed a right upper lobe lung
+mass with mediastinal lymphadenopathy.
+
+KEY DIAGNOSTIC WORKUP:
+- Chest CT (2026-01-20): 3.8 cm right upper lobe spiculated mass with enlarged
+  right paratracheal (station 4R, 2.1 cm) and subcarinal (station 7, 1.6 cm)
+  lymph nodes.
+- PET-CT (2026-01-28): FDG-avid right upper lobe mass (SUV max 9.2) with
+  FDG-avid mediastinal lymph nodes (stations 4R, 7). No distant metastases.
+  Brain MRI negative for metastatic disease.
+- CT-guided core needle biopsy (2026-02-05): Moderately differentiated
+  adenocarcinoma. TTF-1 positive, Napsin A positive.
+- EBUS-TBNA (2026-02-10): Station 4R lymph node positive for metastatic
+  adenocarcinoma. Station 7 lymph node positive for metastatic adenocarcinoma.
+
+STAGING:
+Clinical Stage IIIA (cT2a N2 M0, AJCC 8th Edition)
+
+MOLECULAR AND BIOMARKER RESULTS:
+- PD-L1 (22C3): TPS 55%
+- EGFR: Wild type (no activating mutations)
+- ALK: Negative (IHC and FISH)
+- ROS1: Negative (IHC)
+- KRAS G12C: Negative
+- BRAF V600E: Negative
+- MET exon 14 skipping: Negative
+- NTRK fusions: Negative
+
+PULMONARY FUNCTION:
+- FEV1: 2.1 L (68% predicted)
+- DLCO: 58% predicted
+- Adequate pulmonary reserve for concurrent chemoradiation if indicated
+
+RELEVANT MEDICAL HISTORY
+-------------------------
+- COPD (moderate, GOLD Stage II), on tiotropium and albuterol PRN
+- Hypertension, controlled on amlodipine 5 mg
+- Type 2 diabetes, controlled on metformin 1000 mg BID (HbA1c 7.1%)
+- Coronary artery disease, s/p PCI with DES (2019), on aspirin and atorvastatin
+- ECOG Performance Status: 1
+
+MEDICATIONS
+-----------
+1. Tiotropium 18 mcg inhaler daily
+2. Albuterol HFA 90 mcg PRN
+3. Amlodipine 5 mg daily
+4. Metformin 1000 mg BID
+5. Aspirin 81 mg daily
+6. Atorvastatin 40 mg daily
+7. Omeprazole 20 mg daily
+
+ALLERGIES: Sulfa drugs (rash)
+
+DISCUSSION
+----------
+Given stage IIIA (N2) disease with PD-L1 TPS 55% and no targetable driver
+mutations, this patient may be a candidate for:
+1. Concurrent chemoradiation (definitive) followed by durvalumab consolidation
+   (PACIFIC regimen)
+2. Chemoimmunotherapy combination (if radiation not feasible given PFTs)
+
+The patient's cardiac history and moderate COPD should be considered in treatment
+planning. He maintains adequate performance status (ECOG 1) and has expressed
+willingness to undergo systemic therapy.
+
+I would appreciate your evaluation and treatment recommendations. Please
+coordinate with radiation oncology as well for the concurrent approach if
+deemed appropriate.
+
+Thank you for your consultation on this patient.
+
+Sincerely,
+
+Dr. Anthony SampleDoc, MD
+Board Certified Pulmonology and Critical Care Medicine
+Metro Pulmonology Group
+Date: 2026-02-15

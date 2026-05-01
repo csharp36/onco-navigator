@@ -1,0 +1,98 @@
+================================================================================
+                        GREENFIELD MEDICAL CENTER
+                    Department of Surgical Pathology
+================================================================================
+
+                          PATHOLOGY REPORT
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    Sarah TestPatient
+MRN:             TEST-001
+Date of Birth:   1965-08-14
+Sex:             Female
+Age:             60
+
+SPECIMEN INFORMATION
+--------------------
+Specimen Type:        Left breast, lumpectomy
+Date of Procedure:    2026-03-15
+Date of Report:       2026-03-18
+Ordering Physician:   Dr. Michael SyntheticDoc, MD
+Pathologist:          Dr. Rebecca LabSpecialist, MD
+
+CLINICAL HISTORY
+----------------
+60-year-old female with left breast mass identified on screening mammography
+(BI-RADS 5). Core needle biopsy performed 2026-02-20 demonstrated invasive
+carcinoma. Patient underwent left breast lumpectomy with sentinel lymph node
+biopsy for definitive surgical management.
+
+GROSS DESCRIPTION
+-----------------
+Received fresh in the operating room, labeled "left breast lumpectomy," is an
+irregular fragment of breast tissue measuring 6.2 x 4.8 x 3.1 cm. The specimen
+is oriented with a short suture marking the superior margin and a long suture
+marking the lateral margin. The cut surface reveals a firm, stellate, tan-white
+mass measuring 1.8 x 1.5 x 1.2 cm, located 0.8 cm from the closest (anterior)
+margin. The mass is well-circumscribed at its deep and lateral borders.
+Representative sections submitted in cassettes A1-A12.
+
+Also received, labeled "sentinel lymph node," are two lymph nodes measuring
+1.2 cm and 0.8 cm in greatest dimension. Each bisected and submitted entirely
+in cassettes B1-B2.
+
+MICROSCOPIC DESCRIPTION
+-----------------------
+Sections of the breast mass demonstrate an infiltrating ductal carcinoma, not
+otherwise specified (NOS), arranged in nests and cords with associated
+desmoplastic stromal reaction. The tumor cells exhibit moderate nuclear
+pleomorphism with occasional mitotic figures (8 mitoses per 10 high-power
+fields). No lymphovascular invasion is identified. Ductal carcinoma in situ
+(DCIS) of intermediate nuclear grade, solid and cribriform patterns, is present
+within and adjacent to the invasive component, comprising approximately 15% of
+the tumor volume.
+
+Margins: The closest surgical margin is the anterior margin at 0.8 cm. All
+other margins are greater than 1.0 cm. No tumor is present at the inked
+margins.
+
+Sentinel lymph nodes (0/2): Both lymph nodes are negative for metastatic
+carcinoma by H&E and immunohistochemistry (AE1/AE3).
+
+BIOMARKER RESULTS
+-----------------
+Estrogen Receptor (ER):     Positive (95% of tumor nuclei, strong intensity)
+Progesterone Receptor (PR): Positive (80% of tumor nuclei, moderate intensity)
+HER2/neu (IHC):             Negative (Score 1+)
+Ki-67 Proliferation Index:  18%
+
+DIAGNOSIS
+---------
+1. LEFT BREAST, LUMPECTOMY:
+   - Invasive ductal carcinoma, not otherwise specified (NOS)
+   - Nottingham histologic grade 2 (tubule score 3, nuclear score 2, mitotic
+     score 2; total score 7/9)
+   - Tumor size: 1.8 cm in greatest dimension
+   - Margins: Negative (closest margin 0.8 cm, anterior)
+   - Lymphovascular invasion: Not identified
+   - Associated DCIS: Present, intermediate grade
+   - pT1c (AJCC 8th Edition)
+
+2. SENTINEL LYMPH NODES (x2): Negative for metastatic carcinoma (0/2), pN0(sn)
+
+STAGING (AJCC 8th Edition)
+--------------------------
+pT1c pN0(sn) -- Pathologic Stage IA
+Prognostic Stage IA (ER+/PR+/HER2-, Grade 2)
+
+COMMENT
+-------
+Biomarker profile (ER+/PR+/HER2-) is consistent with Luminal A molecular
+subtype. Oncotype DX genomic testing may be considered for further risk
+stratification and adjuvant chemotherapy decision-making.
+
+Electronically signed:
+Dr. Rebecca LabSpecialist, MD
+Board Certified Anatomic and Clinical Pathology
+Date: 2026-03-18

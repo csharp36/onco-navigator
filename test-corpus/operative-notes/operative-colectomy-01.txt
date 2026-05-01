@@ -1,0 +1,121 @@
+================================================================================
+                    UNIVERSITY SURGICAL ASSOCIATES
+                   Division of Colorectal Surgery
+================================================================================
+
+                         OPERATIVE NOTE
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    Robert SyntheticPt
+MRN:             TEST-006
+Date of Birth:   1955-09-17
+Sex:             Male
+Age:             70
+
+SURGERY INFORMATION
+-------------------
+Date of Surgery:      2026-04-05
+Time of Surgery:      0800 - 1130
+Surgeon:              Dr. Jessica ColonSurgeon, MD, FACS, FASCRS
+First Assistant:      Dr. David TestResident, MD (PGY-5)
+Anesthesiologist:     Dr. Margaret DemoAnesthesia, MD
+Anesthesia Type:      General endotracheal anesthesia with epidural
+
+PREOPERATIVE DIAGNOSIS
+----------------------
+Ascending colon adenocarcinoma, clinical stage IIIA (cT3 N1 M0)
+
+POSTOPERATIVE DIAGNOSIS
+-----------------------
+Ascending colon adenocarcinoma, clinical stage IIIA (cT3 N1 M0)
+
+PROCEDURE PERFORMED
+-------------------
+1. Laparoscopic-assisted right hemicolectomy with en bloc mesenteric lymph node
+   dissection
+2. Extracorporeal ileocolic anastomosis (stapled, functional end-to-end)
+
+INDICATIONS
+-----------
+70-year-old male with ascending colon adenocarcinoma identified on colonoscopy
+(2026-03-01) and confirmed on biopsy. CT abdomen/pelvis demonstrated a 4.5 cm
+mass in the ascending colon with two suspicious pericolonic lymph nodes. CEA
+preoperatively: 12.4 ng/mL (elevated). No evidence of distant metastatic
+disease on CT chest/abdomen/pelvis or PET-CT. Multidisciplinary tumor board
+recommended surgical resection followed by adjuvant chemotherapy given suspected
+nodal involvement.
+
+DESCRIPTION OF PROCEDURE
+-------------------------
+The patient was brought to the operating room and placed in the supine modified
+lithotomy position with arms tucked. Sequential compression devices were applied
+bilaterally. After satisfactory induction of general endotracheal anesthesia,
+an epidural catheter was placed at T8-T9 for postoperative pain management.
+The abdomen was prepped and draped in the usual sterile fashion. A time-out was
+performed confirming patient identity, procedure, and surgical site.
+
+PORT PLACEMENT:
+Pneumoperitoneum was established via Veress needle at Palmer's point to 15 mmHg.
+A 12 mm optical trocar was placed at the umbilicus for the camera. Additional
+ports: 5 mm left lower quadrant, 5 mm suprapubic, and 12 mm left flank.
+
+EXPLORATION:
+Diagnostic laparoscopy revealed no peritoneal carcinomatosis, liver surface
+metastases, or ascites. The ascending colon mass was identified as a bulky
+lesion in the mid-ascending colon with serosal involvement. No intraperitoneal
+adhesions.
+
+MOBILIZATION:
+The right colon was mobilized in a medial-to-lateral approach. The ileocolic
+pedicle was identified and the ileocolic artery and vein were individually
+isolated, clipped, and divided. The right branch of the middle colic artery was
+identified and divided. Complete mobilization of the right colon including the
+hepatic flexure was performed with identification and preservation of the right
+ureter, duodenum (second portion), and right gonadal vessels. The greater
+omentum was detached from the transverse colon along the planned resection line.
+
+EXTRACTION AND ANASTOMOSIS:
+A 5 cm midline periumbilical extraction incision was made. The mobilized right
+colon was delivered through a wound protector. The ileum was divided 8 cm
+proximal to the ileocecal valve using a GIA 80 mm blue load stapler. The
+transverse colon was divided at the junction of the proximal and middle third
+using a GIA 80 mm blue load stapler. The right hemicolectomy specimen was
+removed and sent to pathology.
+
+A functional end-to-end (side-to-side) ileocolic anastomosis was created using
+a GIA 80 mm blue load stapler through aligned enterotomies. The common
+enterotomy was closed with a TA 60 mm blue load stapler. The anastomosis was
+inspected and noted to be patent with no tension, good blood supply, and intact
+staple lines. The mesenteric defect was closed with 3-0 Vicryl running suture.
+
+CLOSURE:
+The bowel was returned to the abdominal cavity. The extraction site fascia was
+closed with #1 PDS in a figure-of-eight fashion. Pneumoperitoneum was
+re-established and final laparoscopic inspection confirmed hemostasis, intact
+anastomosis, and no injuries. Ports were removed under direct vision. Port site
+fascia (12 mm sites) closed with 0 Vicryl. Skin closed with 4-0 Monocryl
+subcuticular sutures. Steri-Strips applied.
+
+Estimated blood loss: 120 mL.
+Fluids administered: 2,800 mL lactated Ringer's.
+Urine output: 450 mL (adequate throughout case).
+Complications: None.
+
+The patient tolerated the procedure well and was transferred to the PACU in
+stable condition. Epidural infusion initiated for postoperative pain management.
+
+SPECIMENS SENT TO PATHOLOGY
+----------------------------
+1. Right hemicolectomy specimen with en bloc mesenteric lymph nodes
+
+DISPOSITION
+-----------
+Patient admitted to the surgical floor. Enhanced Recovery After Surgery (ERAS)
+protocol initiated. Anticipated length of stay: 3-5 days. Pathology results
+expected in 5-7 business days. Follow-up in clinic at 2 weeks postoperatively.
+
+Dictated by:
+Dr. Jessica ColonSurgeon, MD, FACS, FASCRS
+Board Certified General Surgery, Fellowship-Trained Colon and Rectal Surgery
+Date: 2026-04-05

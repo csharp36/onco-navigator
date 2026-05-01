@@ -1,0 +1,79 @@
+================================================================================
+                    CENTRAL CLINICAL LABORATORY
+                  Greenfield Medical Center
+================================================================================
+
+                   LABORATORY REPORT - HEMATOLOGY
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    Jennifer FakeRecord
+MRN:             TEST-007
+Date of Birth:   1972-03-25
+Sex:             Female
+Age:             54
+
+ORDER INFORMATION
+-----------------
+Ordering Physician:   Dr. Ellen TestOncologist, MD
+Collection Date:      2026-03-18
+Collection Time:      0742
+Received Date:        2026-03-18
+Reported Date:        2026-03-18
+Specimen Type:        Whole blood (EDTA)
+Accession Number:     LAB-2026-18472
+
+CLINICAL INDICATION
+-------------------
+Breast cancer, post-chemotherapy cycle 3 (AC regimen). Pre-cycle 4 blood work.
+Evaluate for myelosuppression and chemotherapy readiness.
+
+COMPLETE BLOOD COUNT WITH DIFFERENTIAL
+---------------------------------------
+
+Test                          Result    Units       Reference Range    Flag
+---------------------------------------------------------------------------
+White Blood Cell Count (WBC)  3.2       x10^3/uL   4.5 - 11.0         L
+Red Blood Cell Count (RBC)    3.84      x10^6/uL   4.00 - 5.50        L
+Hemoglobin (Hgb)              11.2      g/dL        12.0 - 16.0        L
+Hematocrit (Hct)              33.8      %           36.0 - 46.0        L
+Mean Corpuscular Volume (MCV) 88.0      fL          80.0 - 100.0
+MCH                           29.2      pg          27.0 - 33.0
+MCHC                          33.1      g/dL        32.0 - 36.0
+Red Cell Distribution Width   14.8      %           11.5 - 14.5        H
+Platelet Count                158       x10^3/uL    150 - 400
+
+DIFFERENTIAL (Automated with Manual Review)
+--------------------------------------------
+Neutrophils (Absolute)        1.6       x10^3/uL   1.8 - 7.0          L
+Neutrophils (%)               50.0      %           40 - 70
+Lymphocytes (Absolute)        1.0       x10^3/uL   1.0 - 4.8
+Lymphocytes (%)               31.3      %           20 - 45
+Monocytes (Absolute)          0.4       x10^3/uL   0.2 - 0.9
+Monocytes (%)                 12.5      %           2 - 10             H
+Eosinophils (Absolute)        0.1       x10^3/uL   0.0 - 0.5
+Eosinophils (%)               3.1       %           1 - 5
+Basophils (Absolute)          0.1       x10^3/uL   0.0 - 0.2
+Basophils (%)                 3.1       %           0 - 2              H
+
+PERIPHERAL SMEAR REVIEW
+------------------------
+Manual review performed due to automated flag (low WBC, low ANC).
+Red blood cells: Mild anisocytosis. No significant poikilocytosis.
+White blood cells: Decreased in number. No circulating blasts identified.
+No toxic granulation or Dohle bodies. Morphology within normal limits.
+Platelets: Adequate number. Normal morphology. No clumping.
+
+COMMENT
+-------
+Mild leukopenia with neutropenia (ANC 1.6 x10^3/uL). Mild normocytic anemia
+(Hgb 11.2, MCV 88). Findings consistent with expected chemotherapy-related
+myelosuppression following AC regimen cycle 3. ANC is below 1.8 but above 1.5,
+which is the typical threshold for chemotherapy administration. Clinical
+correlation is recommended for cycle 4 dosing decision.
+
+Resulted by:
+Michelle TestTechnologist, MT(ASCP)
+Reviewed by:
+Dr. Gregory LabDirector, MD
+Date: 2026-03-18

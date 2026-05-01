@@ -1,0 +1,108 @@
+================================================================================
+                     GREENFIELD MEDICAL CENTER
+                   Department of General Surgery
+================================================================================
+
+                         OPERATIVE NOTE
+
+PATIENT INFORMATION
+-------------------
+Patient Name:    Patricia TestCase
+MRN:             TEST-005
+Date of Birth:   1968-06-30
+Sex:             Female
+Age:             57
+
+SURGERY INFORMATION
+-------------------
+Date of Surgery:      2026-03-20
+Time of Surgery:      0730 - 0915
+Surgeon:              Dr. Robert SurgiTest, MD, FACS
+First Assistant:      Dr. Emily MockAssistant, MD
+Anesthesiologist:     Dr. Frank AnesthDemo, MD
+Anesthesia Type:      General endotracheal anesthesia
+
+PREOPERATIVE DIAGNOSIS
+----------------------
+Left breast invasive ductal carcinoma, clinical stage IIA (cT2 N0 M0)
+
+POSTOPERATIVE DIAGNOSIS
+-----------------------
+Left breast invasive ductal carcinoma, clinical stage IIA (cT2 N0 M0)
+
+PROCEDURE PERFORMED
+-------------------
+1. Left breast lumpectomy with intraoperative specimen radiography
+2. Left axillary sentinel lymph node biopsy
+
+INDICATIONS
+-----------
+57-year-old female with left breast invasive ductal carcinoma diagnosed on core
+needle biopsy (2026-02-15). Tumor located at the 2 o'clock position, 4 cm from
+the nipple, measuring approximately 2.3 cm on MRI. ER+/PR+/HER2-. Multidis-
+ciplinary tumor board recommended breast-conserving surgery with sentinel lymph
+node biopsy. Risks, benefits, and alternatives discussed with patient in clinic.
+Informed consent obtained.
+
+DESCRIPTION OF PROCEDURE
+-------------------------
+The patient was brought to the operating room and placed in the supine position.
+After satisfactory induction of general endotracheal anesthesia, the left chest
+and axilla were prepped and draped in the usual sterile fashion. A time-out was
+performed confirming patient identity, procedure, and surgical site.
+
+SENTINEL LYMPH NODE BIOPSY:
+Technetium-99m sulfur colloid was injected periareolarly by the nuclear medicine
+team prior to the procedure. Using a handheld gamma probe, a hot spot was
+identified in the left axilla. A 3 cm transverse incision was made in the
+axillary skin crease. Dissection was carried through subcutaneous tissue to
+the axillary fascia. The gamma probe guided identification of two sentinel
+lymph nodes with counts of 1,840 and 620 (background 12). Both nodes were
+excised and sent fresh for intraoperative touch prep cytology. Touch prep
+was reported as NEGATIVE for metastatic carcinoma for both nodes.
+
+LUMPECTOMY:
+The left breast mass at the 2 o'clock position was localized by palpation. A
+curvilinear incision was made overlying the mass. Dissection was carried through
+subcutaneous tissue and breast parenchyma circumferentially around the mass with
+a goal of achieving 1 cm gross margins. The specimen was oriented with a short
+suture placed superiorly and a long suture placed laterally. The deep margin was
+carried to the pectoralis fascia, which was excised en bloc with the specimen.
+
+Specimen radiography confirmed the presence of the mass within the specimen with
+adequate margins. The specimen was sent to pathology in formalin.
+
+The lumpectomy cavity was irrigated with warm saline. Hemostasis was achieved
+with electrocautery. Cavity margin clips (titanium) were placed at the
+superior, inferior, medial, lateral, anterior, and deep aspects of the cavity
+for future radiation planning. The breast tissue was re-approximated with
+3-0 Vicryl interrupted sutures. Skin was closed with 4-0 Monocryl subcuticular
+suture and Dermabond.
+
+The axillary incision was closed in layers: axillary fascia with 3-0 Vicryl,
+subcutaneous tissue with 3-0 Vicryl, and skin with 4-0 Monocryl subcuticular
+suture and Dermabond.
+
+Estimated blood loss: 30 mL.
+Fluids administered: 1,200 mL lactated Ringer's.
+Complications: None.
+
+The patient tolerated the procedure well and was transferred to the PACU in
+stable condition.
+
+SPECIMENS SENT TO PATHOLOGY
+----------------------------
+1. Left breast lumpectomy, oriented (short suture superior, long suture lateral)
+2. Left axillary sentinel lymph node #1
+3. Left axillary sentinel lymph node #2
+
+DISPOSITION
+-----------
+The patient was discharged to the same-day surgery recovery unit. Follow-up
+appointment scheduled in 1 week for wound check and pathology results review.
+Drain: None placed.
+
+Dictated by:
+Dr. Robert SurgiTest, MD, FACS
+Board Certified General Surgery, Fellowship-Trained Surgical Oncology
+Date: 2026-03-20
