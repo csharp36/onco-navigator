@@ -13,6 +13,8 @@ import com.onconavigator.domain.enums.AlertStatus;
 import com.onconavigator.domain.enums.AlertType;
 import com.onconavigator.domain.enums.CareEventStatus;
 import com.onconavigator.domain.enums.CareEventType;
+import com.onconavigator.ai.model.AlertText;
+import com.onconavigator.ai.service.AlertGenerationAiService;
 import com.onconavigator.repository.AlertRepository;
 import com.onconavigator.repository.CareEventRepository;
 import com.onconavigator.repository.PathwayTemplateRepository;
@@ -65,6 +67,7 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
     private final PathwayTemplateRepository templateRepository;
     private final PhysicianOverrideRepository overrideRepository;
     private final ObjectMapper objectMapper;
+    private final AlertGenerationAiService alertGenerationAiService;
 
     public PathwayEvaluationActivityImpl(
             PatientRepository patientRepository,
@@ -72,13 +75,15 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
             AlertRepository alertRepository,
             PathwayTemplateRepository templateRepository,
             PhysicianOverrideRepository overrideRepository,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            AlertGenerationAiService alertGenerationAiService) {
         this.patientRepository = patientRepository;
         this.careEventRepository = careEventRepository;
         this.alertRepository = alertRepository;
         this.templateRepository = templateRepository;
         this.overrideRepository = overrideRepository;
         this.objectMapper = objectMapper;
+        this.alertGenerationAiService = alertGenerationAiService;
     }
 
     /**
@@ -171,7 +176,8 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                     boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
                             patientId, step.name(), AlertStatus.OPEN);
                     if (!isDuplicate) {
-                        Alert alert = buildAlert(patientId, step, AlertType.OUT_OF_ORDER);
+                        Alert alert = buildAlert(patientId, step, AlertType.OUT_OF_ORDER,
+                                patient, completedByStepId, steps);
                         alertRepository.save(alert);
                         String summary = "OUT_OF_ORDER: step '" + step.name() + "' for patient " + patientId;
                         alertsGenerated.add(summary);
@@ -205,7 +211,8 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                     boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
                             patientId, step.name(), AlertStatus.OPEN);
                     if (!isDuplicate) {
-                        Alert alert = buildAlert(patientId, step, AlertType.MISSING_EVENT);
+                        Alert alert = buildAlert(patientId, step, AlertType.MISSING_EVENT,
+                                patient, completedByStepId, steps);
                         alertRepository.save(alert);
                         String summary = "MISSING_EVENT: step '" + step.name() + "' for patient " + patientId;
                         alertsGenerated.add(summary);
@@ -222,7 +229,8 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                     boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
                             patientId, step.name(), AlertStatus.OPEN);
                     if (!isDuplicate) {
-                        Alert alert = buildAlert(patientId, step, AlertType.DELAYED_EVENT);
+                        Alert alert = buildAlert(patientId, step, AlertType.DELAYED_EVENT,
+                                patient, completedByStepId, steps);
                         alertRepository.save(alert);
                         String summary = "DELAYED_EVENT: step '" + step.name() + "' for patient " + patientId;
                         alertsGenerated.add(summary);
@@ -310,20 +318,77 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
 
     /**
      * Constructs an Alert entity from a pathway step and alert type.
-     * Uses pathway template text for descriptions — no PHI is included.
      *
-     * @param patientId the patient UUID
-     * @param step      the pathway step in deviation
-     * @param alertType the type of deviation detected
+     * <p>AI-01: Template text is the primary source for standard deviations
+     * (where {@code step.alertText()} is non-null and non-blank).
+     *
+     * <p>AI-02/AI-03: For non-standard deviations (alertText is null or blank),
+     * calls {@link AlertGenerationAiService} with zero-PHI parameters to generate
+     * a Claude-powered deviation description and suggested action.
+     *
+     * <p>AI-04: When Claude is unavailable (circuit breaker open), falls back to
+     * a generic template with the step name and window days.
+     *
+     * <p>ZERO-PHI: Only anonymized clinical context is sent to Claude:
+     * cancer type enum, step name, alert type enum, window days, and step names.
+     * NO patient identifiers (name, MRN, DOB) are referenced.
+     *
+     * @param patientId        the patient UUID
+     * @param step             the pathway step in deviation
+     * @param alertType        the type of deviation detected
+     * @param patient          the patient entity (for cancerType enum only — no PHI accessed)
+     * @param completedByStepId map of stepId to its completed care event
+     * @param steps            all steps in the pathway template
      * @return an unsaved Alert entity ready for persistence
      */
-    private Alert buildAlert(UUID patientId, PathwayStep step, AlertType alertType) {
+    private Alert buildAlert(UUID patientId, PathwayStep step, AlertType alertType,
+                              Patient patient, Map<String, CareEvent> completedByStepId,
+                              List<PathwayStep> steps) {
         Alert alert = new Alert();
         alert.setPatientId(patientId);
         alert.setAlertType(alertType);
         alert.setPathwayStepName(step.name());
-        alert.setDeviationDescription(step.alertText());
-        alert.setSuggestedAction(step.suggestedAction());
+
+        // AI-01: Template text is the primary source for standard deviations
+        if (step.alertText() != null && !step.alertText().isBlank()) {
+            alert.setDeviationDescription(step.alertText());
+            alert.setSuggestedAction(step.suggestedAction());
+        } else {
+            // AI-02/AI-03: Non-standard deviation — try Claude for generated text
+            // ZERO-PHI: Only anonymized clinical context is sent
+            List<String> completedStepNames = steps.stream()
+                    .filter(s -> completedByStepId.containsKey(s.stepId()))
+                    .map(PathwayStep::name)
+                    .toList();
+            List<String> missingStepNames = steps.stream()
+                    .filter(s -> !completedByStepId.containsKey(s.stepId()))
+                    .map(PathwayStep::name)
+                    .toList();
+
+            AlertText claudeText = alertGenerationAiService.generateAlertDescription(
+                    patient.getCancerType().name(),   // non-PHI: cancer type enum
+                    step.name(),                       // non-PHI: pathway step name
+                    alertType.name(),                  // non-PHI: deviation type enum
+                    String.valueOf(step.windowDays()), // non-PHI: time window
+                    completedStepNames,                // non-PHI: step names only
+                    missingStepNames                   // non-PHI: step names only
+            );
+
+            if (claudeText != null) {
+                // AI-02: Claude-generated description
+                alert.setDeviationDescription(claudeText.deviationDescription());
+                alert.setSuggestedAction(claudeText.suggestedAction());
+                log.info("ALERT_CLAUDE_GENERATED: patient={} step={}", patientId, step.stepId());
+            } else {
+                // AI-04: Circuit breaker fallback — use generic template
+                alert.setDeviationDescription(
+                        "Care pathway deviation detected for step: " + step.name() +
+                        ". Expected within " + step.windowDays() + " days.");
+                alert.setSuggestedAction(
+                        "Review the patient's pathway status and contact the relevant care team.");
+                log.info("ALERT_FALLBACK_TEMPLATE: patient={} step={}", patientId, step.stepId());
+            }
+        }
         return alert;
     }
 }
