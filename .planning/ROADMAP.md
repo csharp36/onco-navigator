@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: HIPAA Foundation** - Secure infrastructure, data model, encryption, and RBAC that every subsequent phase depends on
 - [x] **Phase 2: Pathway Engine** - Temporal.io durable workflows, deviation detection, and all three cancer pathway templates (completed 2026-04-30)
 - [x] **Phase 3: Working Application** - Patient data entry, alert management, and the nurse navigator dashboard (completed 2026-04-30)
-- [ ] **Phase 4: AI Document Ingestion & Alert Enhancement** - PDF drag-and-drop classification, patient matching, event pre-fill, Claude alert generation, circuit breaker
+- [x] **Phase 4: AI Document Ingestion & Alert Enhancement** - PDF drag-and-drop classification, patient matching, event pre-fill, Claude alert generation, circuit breaker (completed 2026-05-01)
 
 ## Phase Details
 
@@ -116,7 +116,7 @@ Plans:
 - [x] 04-05-PLAN.md — Frontend document infrastructure: api-client multipart, TypeScript types, TanStack Query hooks, DocumentDropZone, DocumentProcessingModal, PatientMatchSelector
 - [x] 04-06-PLAN.md — Frontend integration: PrefilledCareEventDialog, DocumentPreviewPanel, dashboard/patient detail page drop zone integration
 **Wave 4** *(blocked on Wave 3)*
-- [ ] 04-07-PLAN.md — Unit tests: classification circuit breaker, alert generation zero-PHI verification, PDF extraction, patient matching, pathway evaluation Claude branching
+- [x] 04-07-PLAN.md — Unit tests: classification circuit breaker, alert generation zero-PHI verification, PDF extraction, patient matching, pathway evaluation Claude branching
 **UI hint**: yes
 
 Cross-cutting constraints:
@@ -138,4 +138,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. HIPAA Foundation | 4/5 (01-04 awaiting checkpoint) | In Progress | - |
 | 2. Pathway Engine | 4/4 | Complete | 2026-04-30 |
 | 3. Working Application | 6/6 | Complete | 2026-04-30 |
-| 4. AI Document Ingestion & Alert Enhancement | 6/7 | In Progress | - |
+| 4. AI Document Ingestion & Alert Enhancement | 7/7 | Complete | 2026-05-01 |
