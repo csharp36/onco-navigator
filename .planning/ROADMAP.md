@@ -104,16 +104,38 @@ Cross-cutting constraints:
   6. For low-quality faxed PDFs where extraction fails, the wizard opens with blank fields for manual entry while still attaching the PDF
   7. Non-standard deviation alerts show Claude-generated plain-language descriptions (zero PHI in prompt) with circuit breaker fallback to template text
   8. When Claude API is unavailable, both document classification and alert generation fall back gracefully (manual classification dropdown, template alert text)
-**Plans**: TBD
+**Plans:** 7 plans
+Plans:
+**Wave 1** *(no dependencies -- parallel)*
+- [ ] 04-01-PLAN.md — Maven dependencies (Spring AI, Resilience4j, PDFBox, Tess4J), Flyway V9 clinical_documents table, ClinicalDocument entity, AI config/types/prompts, Dockerfile Tesseract
+- [ ] 04-02-PLAN.md — Synthetic clinical document test corpus (16 documents, 5 types, 3 cancer types) with reference dataset JSON
+**Wave 2** *(blocked on Wave 1 Plan 01)*
+- [ ] 04-03-PLAN.md — Backend extraction pipeline (PDFBox, Tess4J OCR, Claude vision), classification service, alert generation service, patient matching service, document processing orchestrator
+- [ ] 04-04-PLAN.md — Document upload controller, content streaming endpoint, CareEvent-to-document linkage, PathwayEvaluationActivityImpl Claude alert text integration
+**Wave 3** *(blocked on Wave 1 Plan 01 + Wave 2)*
+- [ ] 04-05-PLAN.md — Frontend document infrastructure: api-client multipart, TypeScript types, TanStack Query hooks, DocumentDropZone, DocumentProcessingModal, PatientMatchSelector
+- [ ] 04-06-PLAN.md — Frontend integration: PrefilledCareEventDialog, DocumentPreviewPanel, dashboard/patient detail page drop zone integration
+**Wave 4** *(blocked on Wave 3)*
+- [ ] 04-07-PLAN.md — Unit tests: classification circuit breaker, alert generation zero-PHI verification, PDF extraction, patient matching, pathway evaluation Claude branching
+**UI hint**: yes
+
+Cross-cutting constraints:
+- Two PHI boundaries: document classification (full PHI, BAA-covered) vs alert generation (zero-PHI, no BAA needed)
+- All ePHI entities use `@Audited` (Hibernate Envers) -- ClinicalDocument entity included
+- ClinicalDocument.extractedText encrypted via EncryptionConverter; content bytea relies on storage-level encryption
+- Resilience4j @CircuitBreaker on all Claude API calls with graceful fallback
+- Zod v4 API: use { error: '...' } syntax for new frontend schemas
+- PDFBox 3.x API: use Loader.loadPDF() not PDDocument.load()
+- Tesseract instances created per-call (not Spring beans) for virtual thread safety
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. HIPAA Foundation | 4/5 (01-04 awaiting checkpoint) | In Progress | - |
 | 2. Pathway Engine | 4/4 | Complete | 2026-04-30 |
 | 3. Working Application | 6/6 | Complete | 2026-04-30 |
-| 4. AI Document Ingestion & Alert Enhancement | 0/? | Not started | - |
+| 4. AI Document Ingestion & Alert Enhancement | 0/7 | Planning Complete | - |
