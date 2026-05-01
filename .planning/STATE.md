@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-05-01T21:26:48Z"
-last_activity: 2026-05-01 -- Phase 04 Plan 04 completed
+stopped_at: Completed 04-05-PLAN.md
+last_updated: "2026-05-01T21:36:04Z"
+last_activity: 2026-05-01 -- Phase 04 Plan 05 completed
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 22
-  completed_plans: 19
-  percent: 86
+  completed_plans: 20
+  percent: 91
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (ai-document-ingestion) — EXECUTING
-Plan: 5 of 7
-Status: Plan 04 complete, ready for Plan 05
-Last activity: 2026-05-01 -- Phase 04 Plan 04 completed
+Plan: 6 of 7
+Status: Plan 05 complete, ready for Plan 06
+Last activity: 2026-05-01 -- Phase 04 Plan 05 completed
 
-Progress: [████████░░] 86%
+Progress: [█████████░] 91%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [████████░░] 86%
 | Phase 04-ai-document-ingestion P02 | 9min | 2 tasks | 18 files |
 | Phase 04-ai-document-ingestion P03 | 7min | 2 tasks | 7 files |
 | Phase 04-ai-document-ingestion P04 | 4min | 2 tasks | 8 files |
+| Phase 04-ai-document-ingestion P05 | 4min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,9 @@ Recent decisions affecting current work:
 - [Phase 04-04]: CareEvent.documentId is a plain UUID column (not @ManyToOne) -- matches ClinicalDocument.careEventId pattern, avoids bidirectional relationship complexity
 - [Phase 04-04]: buildAlert method preserves AI-01 template-first behavior unchanged; Claude called only when step.alertText() is null/blank
 - [Phase 04-04]: Generic fallback template in buildAlert includes step name and window days for minimal useful context when circuit breaker is open
+- [Phase 04-05]: react-dropzone 14.3.8 installed (15.0.0 not available on npm); API compatible with useDropzone hook pattern
+- [Phase 04-05]: DocumentProcessingModal derives step state from isUploading/uploadResult booleans since backend processes steps 2-4 synchronously in single upload call
+- [Phase 04-05]: PatientMatchSelector rendered as subcomponent inside DocumentProcessingModal rather than separate dialog
 
 ### Pending Todos
 
@@ -136,5 +140,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-05-01
-Stopped at: Completed 04-04-PLAN.md
-Resume file: .planning/phases/04-ai-document-ingestion/04-05-PLAN.md
+Stopped at: Completed 04-05-PLAN.md
+Resume file: .planning/phases/04-ai-document-ingestion/04-06-PLAN.md
