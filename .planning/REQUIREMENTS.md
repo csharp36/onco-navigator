@@ -35,6 +35,14 @@ Requirements for initial release (pilot-ready proof of concept at single practic
 - [ ] **ALRT-05**: Dashboard shows count of open alerts, always visible
 - [ ] **ALRT-06**: Dashboard shows a list of all patients with assigned pathway and summary status (On Track, Alert Active, Resolved)
 
+### Document Ingestion
+
+- [ ] **DOC-01**: A test corpus of de-identified/synthetic clinical PDFs exists in the repository covering pathology reports, radiology reports, referral letters, operative notes, and lab results for breast, lung, and colorectal cancer
+- [ ] **DOC-02**: User can drag-and-drop a PDF onto the dashboard and the system classifies it into a document type using Claude AI (pathology report, radiology report, referral letter, operative note, lab result)
+- [ ] **DOC-03**: After classification, system extracts patient identifiers (MRN, name) from the document and matches to an existing patient or offers new patient creation
+- [ ] **DOC-04**: On successful patient match, a pre-filled care event wizard opens with extracted data (event type, date, relevant details) for user confirmation before saving
+- [ ] **DOC-05**: Source PDF is stored as bytea in PostgreSQL linked to the care event, with original filename, content type, and classification metadata
+
 ### AI Integration
 
 - [ ] **AI-01**: System uses template-based alert text for known deviation types as defined in pathway templates
