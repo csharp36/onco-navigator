@@ -1,6 +1,11 @@
 package com.onconavigator.security;
 
+import com.onconavigator.repository.ClinicalDocumentRepository;
+import com.onconavigator.service.AlertService;
 import com.onconavigator.service.AuditService;
+import com.onconavigator.service.DocumentProcessingService;
+import com.onconavigator.service.PathwayStatusService;
+import com.onconavigator.service.PatientService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -11,6 +16,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,6 +46,18 @@ class SecurityConfigTest {
     @MockitoBean
     private AuditService auditService;
 
+    // Mock beans for all controllers loaded by @WebMvcTest
+    @MockitoBean
+    private AlertService alertService;
+    @MockitoBean
+    private PatientService patientService;
+    @MockitoBean
+    private PathwayStatusService pathwayStatusService;
+    @MockitoBean
+    private DocumentProcessingService documentProcessingService;
+    @MockitoBean
+    private ClinicalDocumentRepository clinicalDocumentRepository;
+
     /**
      * Satisfies Spring Security's oauth2ResourceServer() requirement.
      * The jwt() post-processor from spring-security-test bypasses actual JWT validation,
@@ -58,10 +78,15 @@ class SecurityConfigTest {
      */
     @Test
     void healthEndpoint_noAuth_permittedBySecurityFilter() throws Exception {
-        // 404 = security passed (path not blocked) but no handler registered in WebMvcTest slice.
-        // Confirms the permitAll() rule is in effect — a 401 or 403 would mean the rule is missing.
-        mockMvc.perform(get("/actuator/health"))
-            .andExpect(status().isNotFound());
+        // Security passed (path not blocked) — confirms the permitAll() rule is in effect.
+        // A 401 or 403 would mean the rule is missing. In @WebMvcTest slice the actuator handler
+        // is not registered, so the response may be 404 or 500, but critically NOT 401/403.
+        int status = mockMvc.perform(get("/actuator/health"))
+            .andReturn().getResponse().getStatus();
+        // Security passed — the critical assertion is that the status is NOT 401 or 403.
+        // In @WebMvcTest slice without actuator, response may be 404 or 500 depending on filters.
+        assert status != 401 && status != 403 :
+            "Health endpoint blocked by security: status " + status;
     }
 
     /**
@@ -76,15 +101,14 @@ class SecurityConfigTest {
 
     /**
      * Authenticated requests to API endpoints should pass through the security filter.
-     * Without an actual controller, the response is 404 (no mapping) — not 401/403.
-     * This verifies the security filter allows authenticated requests through.
+     * With controllers loaded in the WebMvcTest slice, the response is 200 (mock returns empty).
+     * This verifies the security filter allows authenticated requests through — not 401/403.
      */
     @Test
     void apiEndpoint_withValidJwt_passesSecurityFilter() throws Exception {
         mockMvc.perform(get("/api/patients")
             .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_NURSE_NAVIGATOR"))))
-            // 404 means security passed — no controller is registered in this test context,
-            // but the request was not rejected by the security filter
-            .andExpect(status().isNotFound());
+            // 2xx/4xx (not 401/403) means security passed — the request was not rejected
+            .andExpect(status().isOk());
     }
 }

@@ -1,4 +1,7 @@
 spring:
+  ai:
+    anthropic:
+      api-key: test-dummy-key-not-for-real-use
   jpa:
     hibernate:
       # update: Hibernate adds missing tables (Envers _AUD tables) without touching Flyway-managed
@@ -21,6 +24,9 @@ spring:
 onconavigator:
   encryption:
     key: dGVzdC1lbmNyeXB0aW9uLWtleS0tLTMyLWJ5dGVzIT0=
+  hmac:
+    # Test-only HMAC key — different from encryption key per key separation requirement
+    key: fzTOv82gVoCWVthL1ZR9/3DrH3SOgxCfxfMOWUiipcg=
 
 logging:
   level:
