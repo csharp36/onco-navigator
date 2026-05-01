@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-05-01T21:06:26Z"
-last_activity: 2026-05-01 -- Phase 04 Plan 02 completed
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-05-01T21:17:48Z"
+last_activity: 2026-05-01 -- Phase 04 Plan 03 completed
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 22
-  completed_plans: 17
-  percent: 77
+  completed_plans: 18
+  percent: 81
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 04 (ai-document-ingestion) — EXECUTING
-Plan: 3 of 7
-Status: Plan 02 complete, ready for Plan 03
-Last activity: 2026-05-01 -- Phase 04 Plan 02 completed
+Plan: 4 of 7
+Status: Plan 03 complete, ready for Plan 04
+Last activity: 2026-05-01 -- Phase 04 Plan 03 completed
 
-Progress: [████████░░] 77%
+Progress: [████████░░] 81%
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [████████░░] 77%
 | Phase 02-pathway-engine P04 | 9min | 2 tasks | 5 files |
 | Phase 04-ai-document-ingestion P01 | 5min | 2 tasks | 12 files |
 | Phase 04-ai-document-ingestion P02 | 9min | 2 tasks | 18 files |
+| Phase 04-ai-document-ingestion P03 | 7min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,11 @@ Recent decisions affecting current work:
 - [Phase 04-01]: ClinicalDocument.careEventId is a plain UUID column (not @ManyToOne) -- document may be created before care event linkage; avoids bidirectional relationship complexity
 - [Phase 04-01]: extractedText encrypted via EncryptionConverter; content byte[] relies on storage-level encryption since converter operates on String not byte[]
 - [Phase 04-01]: onconavigator.ai.document-classification.enabled=false by default -- feature flag gates Claude calls pending Anthropic BAA
+- [Phase 04-03]: Per-call Tesseract instances (new Tesseract() per performOcr call) for virtual thread safety -- no shared bean, no pool
+- [Phase 04-03]: OCR confidence heuristic (text length >100 chars = 75) instead of Tess4J native API -- getAPI() unreliable across builds
+- [Phase 04-03]: ClaudeVisionService uses AnthropicChatModel directly for multimodal vision -- ChatClient does not support Media objects in .user() lambda
+- [Phase 04-03]: DocumentProcessingService skips persistence without patient link (patient_id NOT NULL) -- frontend handles patient selection flow
+- [Phase 04-03]: Resilience4j fallback methods are public -- CGLIB proxy requirement for @CircuitBreaker annotation processing
 
 ### Pending Todos
 
@@ -124,5 +130,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-05-01
-Stopped at: Completed 04-02-PLAN.md
-Resume file: .planning/phases/04-ai-document-ingestion/04-03-PLAN.md
+Stopped at: Completed 04-03-PLAN.md
+Resume file: .planning/phases/04-ai-document-ingestion/04-04-PLAN.md

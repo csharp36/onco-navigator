@@ -38,17 +38,17 @@ Requirements for initial release (pilot-ready proof of concept at single practic
 ### Document Ingestion
 
 - [x] **DOC-01**: A test corpus of de-identified/synthetic clinical PDFs exists in the repository covering pathology reports, radiology reports, referral letters, operative notes, and lab results for breast, lung, and colorectal cancer
-- [ ] **DOC-02**: User can drag-and-drop a PDF onto the dashboard and the system classifies it into a document type using Claude AI (pathology report, radiology report, referral letter, operative note, lab result)
-- [ ] **DOC-03**: After classification, system extracts patient identifiers (MRN, name) from the document and matches to an existing patient or offers new patient creation
+- [x] **DOC-02**: User can drag-and-drop a PDF onto the dashboard and the system classifies it into a document type using Claude AI (pathology report, radiology report, referral letter, operative note, lab result)
+- [x] **DOC-03**: After classification, system extracts patient identifiers (MRN, name) from the document and matches to an existing patient or offers new patient creation
 - [ ] **DOC-04**: On successful patient match, a pre-filled care event wizard opens with extracted data (event type, date, relevant details) for user confirmation before saving
 - [ ] **DOC-05**: Source PDF is stored as bytea in PostgreSQL linked to the care event, with original filename, content type, and classification metadata
 
 ### AI Integration
 
 - [ ] **AI-01**: System uses template-based alert text for known deviation types as defined in pathway templates
-- [ ] **AI-02**: System uses Claude API to generate plain-language alert descriptions for non-standard deviations where template text does not apply (zero PHI in prompts)
-- [ ] **AI-03**: System uses Claude API to suggest corrective actions for edge cases not covered by pathway template suggestions
-- [ ] **AI-04**: System falls back to template text when Claude API is unavailable (circuit breaker pattern)
+- [x] **AI-02**: System uses Claude API to generate plain-language alert descriptions for non-standard deviations where template text does not apply (zero PHI in prompts)
+- [x] **AI-03**: System uses Claude API to suggest corrective actions for edge cases not covered by pathway template suggestions
+- [x] **AI-04**: System falls back to template text when Claude API is unavailable (circuit breaker pattern)
 
 ### Security & Compliance
 
@@ -130,9 +130,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ALRT-05 | Phase 3 | Pending |
 | ALRT-06 | Phase 3 | Pending |
 | AI-01 | Phase 4 | Pending |
-| AI-02 | Phase 4 | Pending |
-| AI-03 | Phase 4 | Pending |
-| AI-04 | Phase 4 | Pending |
+| AI-02 | Phase 4 | Complete (04-03) |
+| AI-03 | Phase 4 | Complete (04-03) |
+| AI-04 | Phase 4 | Complete (04-03) |
 | SEC-01 | Phase 1 | Pending |
 | SEC-02 | Phase 1 | Complete (01-01) |
 | SEC-03 | Phase 1 | Complete (01-03) |
