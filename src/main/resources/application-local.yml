@@ -15,6 +15,28 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:sk-ant-placeholder}
+      chat:
+        options:
+          model: claude-sonnet-4-20250514
+          max-tokens: 1024
+          temperature: 0.1
+    retry:
+      max-attempts: 3
+      backoff:
+        initial-interval: 1s
+        multiplier: 2
+        max-interval: 10s
+      on-client-errors: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 22MB
+  http:
+    client:
+      factory: jdk
   security:
     oauth2:
       resourceserver:
@@ -50,6 +72,28 @@ onconavigator:
     # Generate with: openssl rand -base64 32
     # In production, inject from AWS Secrets Manager.
     key: zGQKsAm4szIgA0tYoYZY8dPAPWkoUMUjXp5EM9Ifohc=
+  ai:
+    document-classification:
+      enabled: false
+  tessdata:
+    path: /usr/share/tesseract-ocr/5/tessdata
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      claude-api:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 2
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        registerHealthIndicator: true
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
 
 jasypt:
   encryptor:

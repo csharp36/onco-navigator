@@ -43,6 +43,13 @@ RUN groupadd --gid 1001 onconavigator \
             --no-create-home --shell /sbin/nologin \
             onconavigator
 
+# Install Tesseract OCR native library for clinical document OCR (Phase 4).
+# Tess4J is a JNA wrapper that requires libtesseract.so at runtime.
+# eng language data is sufficient for US clinical documents.
+RUN apt-get update -q && apt-get install -y --no-install-recommends \
+    tesseract-ocr tesseract-ocr-eng libtesseract-dev \
+ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy only the built JAR from the builder stage — no JDK, no Maven, no source.
