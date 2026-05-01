@@ -32,6 +32,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function requestMultipart<T>(path: string, formData: FormData): Promise<T> {
+  const token = getAccessToken();
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    body: formData,
+    // DO NOT set Content-Type -- browser sets multipart/form-data with boundary automatically
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) throw new ApiError(response.status, await response.text());
+  return response.json() as Promise<T>;
+}
+
 export const apiClient = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body: unknown) => request<T>(path, {
@@ -47,4 +59,5 @@ export const apiClient = {
     body: JSON.stringify(body),
   }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  upload: <T>(path: string, formData: FormData): Promise<T> => requestMultipart<T>(path, formData),
 };
