@@ -10,7 +10,6 @@ import type { AlertResponse } from '@/features/alerts/types';
 import { DocumentDropZone } from '@/features/documents/DocumentDropZone';
 import { DocumentProcessingModal } from '@/features/documents/DocumentProcessingModal';
 import { PrefilledCareEventDialog } from '@/features/documents/PrefilledCareEventDialog';
-import { useUploadDocument } from '@/features/documents/api';
 import type { DocumentUploadResponse, DocumentPrefillData, DocumentType } from '@/features/documents/types';
 
 export const Route = createFileRoute('/')({
@@ -26,14 +25,14 @@ function DashboardHome() {
 
   // Document upload flow state
   const [uploadResult, setUploadResult] = useState<DocumentUploadResponse | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [processingModalOpen, setProcessingModalOpen] = useState(false);
   const [prefillData, setPrefillData] = useState<DocumentPrefillData | null>(null);
   const [prefilledDialogOpen, setPrefilledDialogOpen] = useState(false);
-  const uploadDocument = useUploadDocument();
 
   function handleUploadComplete(result: DocumentUploadResponse) {
+    setIsUploading(false);
     setUploadResult(result);
-    setProcessingModalOpen(true);
   }
 
   function handlePatientSelected(patientId: string) {
@@ -140,6 +139,11 @@ function DashboardHome() {
       {/* Document drop zone */}
       <DocumentDropZone
         variant="card"
+        onUploadStart={() => {
+          setUploadResult(null);
+          setIsUploading(true);
+          setProcessingModalOpen(true);
+        }}
         onUploadComplete={handleUploadComplete}
       />
 
@@ -188,7 +192,7 @@ function DashboardHome() {
         open={processingModalOpen}
         onOpenChange={setProcessingModalOpen}
         uploadResult={uploadResult}
-        isUploading={uploadDocument.isPending}
+        isUploading={isUploading}
         onPatientSelected={handlePatientSelected}
         onManualClassification={handleManualClassification}
         onCreateNewPatient={() => {

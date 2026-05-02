@@ -8,12 +8,14 @@ import type { DocumentUploadResponse } from './types';
 interface DocumentDropZoneProps {
   patientId?: string;
   onUploadComplete: (result: DocumentUploadResponse) => void;
+  onUploadStart?: () => void;
   variant?: 'card' | 'button';
 }
 
 export function DocumentDropZone({
   patientId,
   onUploadComplete,
+  onUploadStart,
   variant = 'card',
 }: DocumentDropZoneProps) {
   const uploadDocument = useUploadDocument();
@@ -27,6 +29,7 @@ export function DocumentDropZone({
     formData.append('file', acceptedFiles[0]);
     if (patientId) formData.append('patientId', patientId);
 
+    onUploadStart?.();
     uploadDocument.mutate(formData, {
       onSuccess: onUploadComplete,
       onError: () => {

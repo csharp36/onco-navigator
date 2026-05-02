@@ -132,6 +132,7 @@ function PatientDetailPage() {
 
   // Document upload flow state
   const [uploadResult, setUploadResult] = useState<DocumentUploadResponse | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [processingModalOpen, setProcessingModalOpen] = useState(false);
   const [prefillData, setPrefillData] = useState<DocumentPrefillData | null>(null);
   const [prefilledDialogOpen, setPrefilledDialogOpen] = useState(false);
@@ -167,6 +168,7 @@ function PatientDetailPage() {
   }, [pendingDocumentId, patientId, navigate]);
 
   function handleDocUploadComplete(result: DocumentUploadResponse) {
+    setIsUploading(false);
     setUploadResult(result);
     if (result.classificationResult) {
       // Patient already known -- skip matching, go straight to pre-filled form
@@ -386,6 +388,11 @@ function PatientDetailPage() {
                   <DocumentDropZone
                     variant="button"
                     patientId={patientId}
+                    onUploadStart={() => {
+                      setUploadResult(null);
+                      setIsUploading(true);
+                      setProcessingModalOpen(true);
+                    }}
                     onUploadComplete={handleDocUploadComplete}
                   />
                   <Button size="sm" onClick={() => setRecordEventOpen(true)}>
@@ -491,7 +498,7 @@ function PatientDetailPage() {
         open={processingModalOpen}
         onOpenChange={setProcessingModalOpen}
         uploadResult={uploadResult}
-        isUploading={false}
+        isUploading={isUploading}
         onPatientSelected={handleDocPatientSelected}
         onManualClassification={handleDocManualClassification}
         onCreateNewPatient={() => {
