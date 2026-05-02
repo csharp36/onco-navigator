@@ -226,10 +226,6 @@ function DashboardHome() {
             },
           });
         }}
-        onSearchManual={() => {
-          savePendingDocument();
-          void navigate({ to: '/patients' });
-        }}
       />
 
       {prefillData && (

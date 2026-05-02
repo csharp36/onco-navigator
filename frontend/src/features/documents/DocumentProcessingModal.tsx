@@ -38,7 +38,6 @@ interface DocumentProcessingModalProps {
   onPatientSelected: (patientId: string) => void;
   onManualClassification: (documentType: DocumentType) => void;
   onCreateNewPatient: () => void;
-  onSearchManual: () => void;
 }
 
 export function DocumentProcessingModal({
@@ -49,7 +48,6 @@ export function DocumentProcessingModal({
   onPatientSelected,
   onManualClassification,
   onCreateNewPatient,
-  onSearchManual,
 }: DocumentProcessingModalProps) {
   const [showMatchSelector, setShowMatchSelector] = useState(false);
 
@@ -223,10 +221,6 @@ export function DocumentProcessingModal({
               onConfirm={(patientId) => {
                 onPatientSelected(patientId);
                 handleClose();
-              }}
-              onReject={() => {
-                handleClose();
-                onSearchManual();
               }}
               onCreateNew={() => {
                 handleClose();

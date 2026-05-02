@@ -49,7 +49,7 @@ export function DocumentPreviewPanel({
       },
     })
       .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
         return res.blob();
       })
       .then((blob) => {
@@ -57,7 +57,8 @@ export function DocumentPreviewPanel({
           setBlobUrl(URL.createObjectURL(blob));
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Document preview fetch failed:', contentUrl, err);
         if (!revoked) setError(true);
       })
       .finally(() => {
