@@ -21,6 +21,8 @@ Onco-Navigator AI systematically watches every patient's care pathway and surfac
 
 - **Alert Management** — Nurse navigators see all open alerts sorted by clinical severity (overdue first, then missing, then out-of-order). They can drill into patient pathway status, see exactly which step is affected, and resolve alerts with documentation notes.
 
+- **Document Ingestion** — Clinical documents (pathology reports, radiology reports, operative notes, lab results, referral letters) can be dragged and dropped onto the dashboard or patient detail page. The system extracts text from PDFs, classifies the document type using Claude AI, matches it to a patient via HMAC MRN lookup or name+DOB fallback, and pre-fills a care event form with the extracted data. If Claude is unavailable, the system gracefully falls back to manual classification.
+
 - **Human-in-the-Loop** — The AI monitors and suggests. Nurses and physicians decide and act. This is non-negotiable for clinical safety, regulatory simplicity, and trust-building.
 
 ## Architecture
@@ -29,9 +31,10 @@ Onco-Navigator AI systematically watches every patient's care pathway and surfac
 |-------|-----------|---------|
 | Backend | Java 21 + Spring Boot 3.5 | REST API, business logic, security |
 | Workflow Engine | Temporal.io (self-hosted) | Durable pathway monitoring, timers, crash recovery |
+| AI | Spring AI 1.1.5 + Claude API | Document classification, alert text generation |
 | Database | PostgreSQL 16 | Patient data, events, alerts (column-encrypted PHI) |
 | Identity | Keycloak 26 | OIDC authentication, role-based access |
-| Frontend | React 19 + TypeScript + Vite | Nurse dashboard, patient management |
+| Frontend | React 19 + TypeScript + Vite | Nurse dashboard, patient management, document upload |
 | UI | shadcn/ui + Tailwind CSS v4 | Component library, responsive design |
 
 ### Security (HIPAA)
@@ -42,6 +45,8 @@ Onco-Navigator AI systematically watches every patient's care pathway and surfac
 - Keycloak JWT authentication with method-level RBAC (`@PreAuthorize`)
 - PHI redaction in all log output (UUID-only logging)
 - Separate encryption and HMAC keys (key separation principle)
+- Zero-PHI boundary on AI alert generation (no patient data sent to Claude)
+- Resilience4j circuit breakers on all Claude API calls with graceful fallbacks
 
 ## Getting Started
 
@@ -113,17 +118,23 @@ Navigate to http://localhost:5173. You'll be redirected to Keycloak for authenti
 │   ├── web/              # REST controllers + DTOs + GlobalExceptionHandler
 │   ├── workflow/         # Temporal workflow implementations
 │   ├��─ activity/         # Temporal activity implementations (deviation detection)
+│   ├── ai/              # Claude AI integration
+│   │   ├── config/      # ChatClient bean configuration
+│   │   ├── model/       # Structured output records (DocumentClassification, AlertText)
+│   │   ├── prompt/      # System prompt constants
+│   │   └── service/     # Classification, alert generation, vision services
 │   ├── security/         # SecurityConfig, HmacTokenService, EncryptionConverter
 │   └── config/           # Spring configuration classes
 ├── src/main/resources/
-│   ├── db/migration/     # Flyway SQL migrations (V1-V8)
+│   ├── db/migration/     # Flyway SQL migrations (V1-V10)
 │   └── application-local.yml  # Local dev configuration
 ├── frontend/
 │   ├── src/
 │   │   ├── routes/       # TanStack Router file-based routes
-│   │   ├── features/     # Feature modules (patients/, alerts/, dashboard/)
+│   │   ├── features/     # Feature modules (patients/, alerts/, documents/)
 │   │   ├── components/   # shadcn/ui components + layout
 │   │   └── lib/          # API client, auth utilities
+├── test-corpus/          # 16 synthetic de-identified clinical documents for evaluation
 │   └── package.json
 ├── docker-compose.yml    # Local dev infrastructure
 ├── keycloak/             # Realm export for auto-import
@@ -146,6 +157,16 @@ Navigate to http://localhost:5173. You'll be redirected to Keycloak for authenti
 2. Activity evaluates patient's care events against pathway template
 3. If deviation found: alert created with type, severity, description, and suggested action
 4. Duplicate detection prevents redundant alerts for the same patient/step
+
+### Document Ingestion
+
+1. Staff drags a clinical PDF onto the dashboard or patient detail page
+2. Backend extracts text (PDFBox), falls back to OCR (Tesseract) if PDF has no selectable text
+3. Claude classifies the document: type, cancer type, patient name, MRN, event date, key findings
+4. System matches document to a patient via HMAC MRN lookup or name+DOB fuzzy match
+5. Pre-filled care event form opens with extracted data; staff reviews and saves
+6. Document is stored as a blob linked to the care event for audit trail
+7. If Claude API is unavailable, circuit breaker trips and staff classifies manually via dropdown
 
 ### Alert Resolution
 
@@ -233,11 +254,29 @@ Audit entries are written in a `REQUIRES_NEW` transaction — even if the busine
 
 Additionally, Hibernate Envers maintains a complete revision history for all `@Audited` entities (patients, alerts, care events). Every field change is recorded with the revision timestamp and actor identity in `_AUD` shadow tables.
 
+### Business Associate Agreements (BAAs)
+
+A BAA is required with any third-party vendor that processes, stores, or transmits ePHI on behalf of a covered entity. Here's when each BAA is needed for Onco-Navigator:
+
+| Vendor | BAA Required? | When | Why |
+|--------|--------------|------|-----|
+| **AWS** | Yes — before any ePHI enters the account | Day one of production deployment | RDS stores encrypted patient data, ECS runs the application, CloudWatch Logs may contain access patterns |
+| **Anthropic (Claude API)** | Yes — if document classification sends PHI | Before enabling AI document classification in production | The classification service sends clinical document text (which contains patient identifiers) to Claude for analysis. The zero-PHI alert generation path does NOT require a BAA since it only sends de-identified deviation descriptions. |
+| **Keycloak** | No (self-hosted) | N/A | Keycloak runs on your own infrastructure — no third-party data processing |
+| **Temporal** | No (self-hosted) | N/A | Temporal Server runs on your own infrastructure with your own PostgreSQL persistence |
+
+**Key distinction:** Onco-Navigator has two separate Claude API call paths with different BAA implications:
+
+1. **Document Classification** (`DocumentClassificationService`) — Sends clinical document text to Claude, which **contains PHI** (patient names, MRN, dates, diagnoses). **Requires Anthropic BAA.** The classification feature is gated behind a feature flag (`onconavigator.ai.document-classification.enabled`) that defaults to `false` — it must be explicitly enabled after the BAA is in place.
+
+2. **Alert Text Generation** (`AlertGenerationAiService`) — Sends only de-identified deviation context (pathway step name, event type, time window) to Claude. **No PHI is included** in these prompts by design (zero-PHI boundary). This path does not require a BAA, though having one provides defense-in-depth.
+
 ### Production Deployment (AWS)
 
 For production HIPAA compliance on AWS:
 
 - **BAA required** — AWS Business Associate Agreement must be executed before any ePHI enters the account
+- **Anthropic BAA** — Required before enabling document classification (see BAA table above)
 - **RDS encryption** — KMS Customer Managed Key (CMK) for storage-level encryption
 - **Secrets Manager** — All keys and credentials injected via `spring.config.import: aws-secretsmanager:/`
 - **CloudTrail** — Mandatory for infrastructure-level audit (all AWS API calls logged)
@@ -259,7 +298,7 @@ For production HIPAA compliance on AWS:
 - **Phase 1** (Complete) — HIPAA foundation: encryption, audit, RBAC, infrastructure
 - **Phase 2** (Complete) — Pathway engine: Temporal workflows, deviation detection, pathway templates
 - **Phase 3** (Complete) — Working application: REST API, dashboard, patient management, alert queue
-- **Phase 4** (Next) — AI enhancement: Claude API for non-standard deviation alerts + AWS deployment
+- **Phase 4** (Complete) — AI document ingestion: PDF classification, patient matching, event pre-fill, Claude alert generation, circuit breakers
 
 ## License
 
