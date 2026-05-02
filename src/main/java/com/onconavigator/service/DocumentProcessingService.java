@@ -234,9 +234,11 @@ public class DocumentProcessingService {
      * Extract text from a PDF using PDFBox, with OCR and Claude vision fallbacks.
      */
     private ExtractionResult extractFromPdf(byte[] pdfBytes) {
-        // Try PDFBox text extraction first
-        if (pdfExtractionService.hasSelectableText(pdfBytes)) {
-            String text = pdfExtractionService.extractText(pdfBytes);
+        // WR-05: Combined extract+check in single PDF parse (avoids double-parsing).
+        PdfExtractionService.TextExtractionResult pdfResult =
+                pdfExtractionService.extractTextWithCheck(pdfBytes);
+        if (pdfResult.hasSelectableText()) {
+            String text = pdfResult.text();
             if (text != null && text.strip().length() > 50) {
                 return new ExtractionResult(text, null); // No confidence for PDFBox path
             }

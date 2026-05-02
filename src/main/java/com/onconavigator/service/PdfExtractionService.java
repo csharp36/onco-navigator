@@ -73,6 +73,37 @@ public class PdfExtractionService {
     }
 
     /**
+     * Result of combined text extraction and selectability check.
+     *
+     * @param text              the extracted text (may be null or empty for scanned PDFs)
+     * @param hasSelectableText true if extracted text exceeds 50 characters (text-based PDF)
+     */
+    public record TextExtractionResult(String text, boolean hasSelectableText) {}
+
+    /**
+     * Extract text and check selectability in a single PDF parse (WR-05).
+     *
+     * <p>Combines {@link #hasSelectableText(byte[])} and {@link #extractText(byte[])} into
+     * one operation, avoiding the cost of parsing the PDF twice. For large clinical documents
+     * this halves the processing time and memory usage of the text extraction step.
+     *
+     * @param fileBytes the raw PDF file bytes
+     * @return extraction result with text and selectability flag
+     */
+    public TextExtractionResult extractTextWithCheck(byte[] fileBytes) {
+        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBuffer(fileBytes))) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+            boolean selectable = text != null && text.strip().length() > 50;
+            return new TextExtractionResult(text, selectable);
+        } catch (IOException e) {
+            log.error("PDF text extraction failed: {}", e.getMessage());
+            throw new RuntimeException("PDF text extraction failed", e);
+        }
+    }
+
+    /**
      * Render the first page of a PDF as a 300 DPI RGB image.
      *
      * <p>Used as input for Tesseract OCR (scanned documents) and for PDF thumbnail
