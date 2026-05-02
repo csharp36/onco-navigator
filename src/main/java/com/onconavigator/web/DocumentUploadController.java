@@ -7,6 +7,7 @@ import com.onconavigator.web.dto.DocumentSummaryResponse;
 import com.onconavigator.web.dto.DocumentUploadResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -120,10 +121,18 @@ public class DocumentUploadController {
         }
 
         log.info("Document content retrieved: documentId={} by actor={}", documentId, jwt.getSubject());
+
+        // CR-01: Sanitize filename to prevent HTTP header injection (response splitting, XSS).
+        // Strip path separators, newlines, double-quotes, and shell-unsafe characters.
+        String safeFilename = doc.getOriginalFilename()
+                .replaceAll("[\\r\\n\"\\\\/:*?<>|]", "_");
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(doc.getContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + doc.getOriginalFilename() + "\"")
+                        ContentDisposition.inline()
+                                .filename(safeFilename)
+                                .build()
+                                .toString())
                 .body(doc.getContent());
     }
 
