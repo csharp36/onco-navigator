@@ -7,6 +7,7 @@ import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
@@ -38,9 +39,13 @@ public class ClaudeVisionService {
             "Return only the extracted text, no commentary.";
 
     private final AnthropicChatModel chatModel;
+    private final String modelId;
 
-    public ClaudeVisionService(AnthropicChatModel chatModel) {
+    public ClaudeVisionService(
+            AnthropicChatModel chatModel,
+            @Value("${spring.ai.anthropic.chat.options.model:claude-sonnet-4-20250514}") String modelId) {
         this.chatModel = chatModel;
+        this.modelId = modelId;
     }
 
     /**
@@ -66,7 +71,7 @@ public class ClaudeVisionService {
             var response = chatModel.call(new Prompt(
                     List.of(userMessage),
                     AnthropicChatOptions.builder()
-                            .model("claude-sonnet-4-20250514")
+                            .model(modelId)
                             .temperature(0.1)
                             .maxTokens(4096)
                             .build()
