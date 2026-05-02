@@ -30,6 +30,11 @@ export function PatientMatchSelector({
   onReject,
   onCreateNew,
 }: PatientMatchSelectorProps) {
+  // WR-06: Defense-in-depth — truncate and validate AI-extracted fields before display.
+  // AI classification of adversarial document content could produce unusual strings.
+  const safeName = extractedName?.slice(0, 100) ?? null;
+  const safeDob = extractedDob?.match(/^\d{4}-\d{2}-\d{2}$/) ? extractedDob : null;
+
   // EXACT match -- single patient with high confidence
   if (matchStatus === 'EXACT' && matchedPatientId && candidates.length > 0) {
     const patient = candidates[0];
@@ -75,10 +80,10 @@ export function PatientMatchSelector({
       <div className="space-y-3">
         <h4 className="text-sm font-medium">
           Select Matching Patient
-          {extractedName && (
+          {safeName && (
             <span className="text-muted-foreground font-normal">
-              {' '}-- Extracted: {extractedName}
-              {extractedDob ? `, DOB: ${extractedDob}` : ''}
+              {' '}-- Extracted: {safeName}
+              {safeDob ? `, DOB: ${safeDob}` : ''}
             </span>
           )}
         </h4>
