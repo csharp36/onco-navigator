@@ -1,7 +1,9 @@
 package com.onconavigator.web;
 
 import com.onconavigator.domain.ClinicalDocument;
+import com.onconavigator.domain.Patient;
 import com.onconavigator.repository.ClinicalDocumentRepository;
+import com.onconavigator.repository.PatientRepository;
 import com.onconavigator.service.DocumentProcessingService;
 import com.onconavigator.web.dto.DocumentSummaryResponse;
 import com.onconavigator.web.dto.DocumentUploadResponse;
@@ -16,8 +18,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -60,11 +64,14 @@ public class DocumentUploadController {
 
     private final DocumentProcessingService documentProcessingService;
     private final ClinicalDocumentRepository documentRepository;
+    private final PatientRepository patientRepository;
 
     public DocumentUploadController(DocumentProcessingService documentProcessingService,
-                                     ClinicalDocumentRepository documentRepository) {
+                                     ClinicalDocumentRepository documentRepository,
+                                     PatientRepository patientRepository) {
         this.documentProcessingService = documentProcessingService;
         this.documentRepository = documentRepository;
+        this.patientRepository = patientRepository;
     }
 
     /**
@@ -149,6 +156,34 @@ public class DocumentUploadController {
                                 .toString())
                 .header("X-Content-Type-Options", "nosniff")
                 .body(doc.getContent());
+    }
+
+    /**
+     * Link an unlinked document to a patient. Used after the create-new-patient flow
+     * where the document was uploaded before the patient existed.
+     */
+    @PatchMapping("/{documentId}/link-patient")
+    @PreAuthorize("hasRole('NURSE_NAVIGATOR') or hasRole('CARE_COORDINATOR') or hasRole('ADMIN')")
+    public DocumentSummaryResponse linkDocumentToPatient(
+            @PathVariable UUID documentId,
+            @RequestBody Map<String, UUID> body) {
+        UUID patientId = body.get("patientId");
+        if (patientId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "patientId is required");
+        }
+
+        ClinicalDocument doc = documentRepository.findById(documentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found"));
+
+        doc.setPatient(patient);
+        doc = documentRepository.save(doc);
+
+        return new DocumentSummaryResponse(
+                doc.getId(), doc.getOriginalFilename(), doc.getContentType(),
+                doc.getFileSizeBytes(), doc.getDocumentType(),
+                doc.getClassificationSource(), doc.getCareEventId(), doc.getCreatedAt());
     }
 
     /**

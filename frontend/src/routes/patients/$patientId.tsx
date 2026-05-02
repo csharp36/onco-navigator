@@ -45,7 +45,7 @@ import { DocumentDropZone } from '@/features/documents/DocumentDropZone';
 import { DocumentProcessingModal } from '@/features/documents/DocumentProcessingModal';
 import { PrefilledCareEventDialog } from '@/features/documents/PrefilledCareEventDialog';
 import { DocumentPreviewPanel } from '@/features/documents/DocumentPreviewPanel';
-import { usePatientDocuments } from '@/features/documents/api';
+import { usePatientDocuments, useLinkDocumentToPatient } from '@/features/documents/api';
 import type { DocumentUploadResponse, DocumentPrefillData, DocumentType } from '@/features/documents/types';
 
 const searchSchema = z.object({
@@ -138,25 +138,34 @@ function PatientDetailPage() {
   const [prefilledDialogOpen, setPrefilledDialogOpen] = useState(false);
   const [previewDocId, setPreviewDocId] = useState<string | null>(null);
   const { data: documents } = usePatientDocuments(patientId);
+  const linkDocument = useLinkDocumentToPatient();
 
-  // Auto-open pre-filled care event dialog when arriving with a documentId from patient creation
+  // Auto-link document and open pre-filled care event dialog when arriving from patient creation
   useEffect(() => {
     if (pendingDocumentId && patientId) {
-      setPrefillData({
-        documentId: pendingDocumentId,
-        classification: {
-          documentType: 'UNKNOWN',
-          confidence: 'low',
-          mrn: null,
-          patientName: null,
-          dateOfBirth: null,
-          eventType: null,
-          eventDate: null,
-          extractedNotes: null,
+      // Link the unlinked document to the newly created patient
+      linkDocument.mutate(
+        { documentId: pendingDocumentId, patientId },
+        {
+          onSuccess: () => {
+            setPrefillData({
+              documentId: pendingDocumentId,
+              classification: {
+                documentType: 'UNKNOWN',
+                confidence: 'low',
+                mrn: null,
+                patientName: null,
+                dateOfBirth: null,
+                eventType: null,
+                eventDate: null,
+                extractedNotes: null,
+              },
+              patientId,
+            });
+            setPrefilledDialogOpen(true);
+          },
         },
-        patientId,
-      });
-      setPrefilledDialogOpen(true);
+      );
       // Clear the search param so refresh doesn't re-trigger
       void navigate({
         to: '/patients/$patientId',
@@ -165,7 +174,7 @@ function PatientDetailPage() {
         replace: true,
       });
     }
-  }, [pendingDocumentId, patientId, navigate]);
+  }, [pendingDocumentId, patientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDocUploadComplete(result: DocumentUploadResponse) {
     setIsUploading(false);

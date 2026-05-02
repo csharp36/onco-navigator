@@ -1,6 +1,7 @@
 package com.onconavigator.security;
 
 import com.onconavigator.repository.ClinicalDocumentRepository;
+import com.onconavigator.repository.PatientRepository;
 import com.onconavigator.service.AlertService;
 import com.onconavigator.service.AuditService;
 import com.onconavigator.service.DocumentProcessingService;
@@ -57,6 +58,8 @@ class SecurityConfigTest {
     private DocumentProcessingService documentProcessingService;
     @MockitoBean
     private ClinicalDocumentRepository clinicalDocumentRepository;
+    @MockitoBean
+    private PatientRepository patientRepository;
 
     /**
      * Satisfies Spring Security's oauth2ResourceServer() requirement.

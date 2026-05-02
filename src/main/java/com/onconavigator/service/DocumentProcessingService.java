@@ -160,26 +160,14 @@ public class DocumentProcessingService {
             }
         }
 
-        // Save only if patient is linked (patient_id is NOT NULL in schema)
-        if (doc.getPatient() != null) {
-            doc = documentRepository.save(doc);
-            log.info("Document {} processed: type={} matchStatus={}", doc.getId(), documentType, matchStatus);
-            return new DocumentUploadResponse(
-                    doc.getId(),
-                    classification,
-                    matchStatus,
-                    candidates,
-                    matchedPatientId
-            );
-        }
-
-        // CR-03: Cannot persist without a patient -- return null documentId so the frontend
-        // knows the document is not yet stored. The frontend must handle documentId === null
-        // by disabling document preview and not passing it to care event creation.
-        log.info("Document processed but not persisted (no patient link): type={} matchStatus={}",
-                documentType, matchStatus);
+        // Always save the document — patient_id is now nullable (V11 migration).
+        // Documents without a patient are in "unlinked" state until the user creates
+        // or selects a patient, at which point the document is linked via PATCH.
+        doc = documentRepository.save(doc);
+        log.info("Document {} processed: type={} matchStatus={} patientLinked={}",
+                doc.getId(), documentType, matchStatus, doc.getPatient() != null);
         return new DocumentUploadResponse(
-                null,
+                doc.getId(),
                 classification,
                 matchStatus,
                 candidates,

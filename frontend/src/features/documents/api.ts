@@ -21,6 +21,17 @@ export function usePatientDocuments(patientId: string) {
   });
 }
 
+export function useLinkDocumentToPatient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, patientId }: { documentId: string; patientId: string }) =>
+      apiClient.patch<DocumentSummaryResponse>(`/documents/${documentId}/link-patient`, { patientId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+    },
+  });
+}
+
 export function getDocumentContentUrl(documentId: string): string {
   return `/api/documents/${documentId}/content`;
 }
