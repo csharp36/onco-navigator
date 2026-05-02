@@ -459,6 +459,12 @@ function PatientDetailPage() {
         isUploading={false}
         onPatientSelected={handleDocPatientSelected}
         onManualClassification={handleDocManualClassification}
+        onCreateNewPatient={() => {
+          void navigate({ to: '/patients/new' });
+        }}
+        onSearchManual={() => {
+          void navigate({ to: '/patients' });
+        }}
       />
 
       {/* ── Pre-filled care event dialog from document ─────────────────────── */}

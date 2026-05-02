@@ -74,7 +74,7 @@ onconavigator:
     key: zGQKsAm4szIgA0tYoYZY8dPAPWkoUMUjXp5EM9Ifohc=
   ai:
     document-classification:
-      enabled: false
+      enabled: ${ONCO_AI_CLASSIFICATION_ENABLED:false}
   tessdata:
     path: /usr/share/tesseract-ocr/5/tessdata
 

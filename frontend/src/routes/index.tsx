@@ -191,6 +191,12 @@ function DashboardHome() {
         isUploading={uploadDocument.isPending}
         onPatientSelected={handlePatientSelected}
         onManualClassification={handleManualClassification}
+        onCreateNewPatient={() => {
+          void navigate({ to: '/patients/new' });
+        }}
+        onSearchManual={() => {
+          void navigate({ to: '/patients' });
+        }}
       />
 
       {prefillData && (

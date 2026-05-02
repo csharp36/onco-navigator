@@ -36,6 +36,8 @@ interface DocumentProcessingModalProps {
   isUploading: boolean;
   onPatientSelected: (patientId: string) => void;
   onManualClassification: (documentType: DocumentType) => void;
+  onCreateNewPatient: () => void;
+  onSearchManual: () => void;
 }
 
 export function DocumentProcessingModal({
@@ -45,6 +47,8 @@ export function DocumentProcessingModal({
   isUploading,
   onPatientSelected,
   onManualClassification,
+  onCreateNewPatient,
+  onSearchManual,
 }: DocumentProcessingModalProps) {
   const [showMatchSelector, setShowMatchSelector] = useState(false);
 
@@ -154,11 +158,12 @@ export function DocumentProcessingModal({
                 handleClose();
               }}
               onReject={() => {
-                setShowMatchSelector(false);
+                handleClose();
+                onSearchManual();
               }}
               onCreateNew={() => {
-                // Handled by parent -- close modal to open patient creation flow
                 handleClose();
+                onCreateNewPatient();
               }}
             />
           )}
