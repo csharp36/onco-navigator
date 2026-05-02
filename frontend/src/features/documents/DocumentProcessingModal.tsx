@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -118,6 +119,72 @@ export function DocumentProcessingModal({
               );
             })}
           </div>
+
+          {/* Classification results summary -- spot-check extracted data */}
+          {isComplete && uploadResult?.classificationResult && (
+            <div className="rounded-md border bg-muted/40 p-4 space-y-2">
+              <h4 className="text-sm font-medium">Extracted Data</h4>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <span className="text-muted-foreground">Document Type</span>
+                <span className="font-medium">
+                  {uploadResult.classificationResult.documentType?.replace(/_/g, ' ') ?? 'Unknown'}
+                </span>
+
+                {uploadResult.classificationResult.patientName && (
+                  <>
+                    <span className="text-muted-foreground">Patient Name</span>
+                    <span>{uploadResult.classificationResult.patientName}</span>
+                  </>
+                )}
+
+                {uploadResult.classificationResult.mrn && (
+                  <>
+                    <span className="text-muted-foreground">MRN</span>
+                    <span>{uploadResult.classificationResult.mrn}</span>
+                  </>
+                )}
+
+                {uploadResult.classificationResult.dateOfBirth && (
+                  <>
+                    <span className="text-muted-foreground">Date of Birth</span>
+                    <span>{uploadResult.classificationResult.dateOfBirth}</span>
+                  </>
+                )}
+
+                {uploadResult.classificationResult.eventType && (
+                  <>
+                    <span className="text-muted-foreground">Event Type</span>
+                    <span>{uploadResult.classificationResult.eventType.replace(/_/g, ' ')}</span>
+                  </>
+                )}
+
+                {uploadResult.classificationResult.eventDate && (
+                  <>
+                    <span className="text-muted-foreground">Event Date</span>
+                    <span>{uploadResult.classificationResult.eventDate}</span>
+                  </>
+                )}
+
+                <span className="text-muted-foreground">Confidence</span>
+                <span>
+                  <Badge variant={
+                    uploadResult.classificationResult.confidence === 'high' ? 'secondary' : 'outline'
+                  }>
+                    {uploadResult.classificationResult.confidence}
+                  </Badge>
+                </span>
+              </div>
+
+              {uploadResult.classificationResult.extractedNotes && (
+                <div className="pt-1">
+                  <span className="text-xs text-muted-foreground">Key Findings</span>
+                  <p className="text-sm mt-0.5 line-clamp-3">
+                    {uploadResult.classificationResult.extractedNotes}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Circuit breaker fallback -- AI classification unavailable */}
           {showCircuitBreakerFallback && (
