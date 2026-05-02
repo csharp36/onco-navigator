@@ -192,7 +192,27 @@ function DashboardHome() {
         onPatientSelected={handlePatientSelected}
         onManualClassification={handleManualClassification}
         onCreateNewPatient={() => {
-          void navigate({ to: '/patients/new' });
+          const c = uploadResult?.classificationResult;
+          // Split extracted patient name into first/last for the wizard
+          const nameParts = c?.patientName?.split(/\s+/) ?? [];
+          const firstName = nameParts[0] ?? '';
+          const lastName = nameParts.slice(1).join(' ') ?? '';
+          // Map document cancer type to wizard enum (BREAST, LUNG, COLORECTAL)
+          const cancerType = c?.extractedNotes?.toUpperCase().includes('LUNG') ? 'LUNG'
+            : c?.extractedNotes?.toUpperCase().includes('BREAST') ? 'BREAST'
+            : c?.extractedNotes?.toUpperCase().includes('COLON') || c?.extractedNotes?.toUpperCase().includes('RECTAL') ? 'COLORECTAL'
+            : '';
+          void navigate({
+            to: '/patients/new',
+            search: {
+              firstName,
+              lastName,
+              dateOfBirth: c?.dateOfBirth ?? undefined,
+              mrn: c?.mrn ?? undefined,
+              cancerType,
+              documentId: uploadResult?.documentId ?? undefined,
+            },
+          });
         }}
         onSearchManual={() => {
           void navigate({ to: '/patients' });

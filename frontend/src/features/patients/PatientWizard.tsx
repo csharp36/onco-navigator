@@ -68,9 +68,22 @@ function StepIndicator({ currentStep }: { currentStep: 1 | 2 }) {
   );
 }
 
+// ─── Prefill props (from document classification) ────────────────────────────
+
+interface PatientWizardProps {
+  prefill?: {
+    firstName?: string;
+    lastName?: string;
+    dateOfBirth?: string;
+    mrn?: string;
+    cancerType?: string;
+    documentId?: string;
+  };
+}
+
 // ─── Main wizard component ────────────────────────────────────────────────────
 
-export function PatientWizard() {
+export function PatientWizard({ prefill }: PatientWizardProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [step1Data, setStep1Data] = useState<Step1Values | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -78,22 +91,22 @@ export function PatientWizard() {
   const navigate = useNavigate();
   const createPatient = useCreatePatient();
 
-  // Step 1 form
+  // Step 1 form — pre-fill from document classification if available
   const form1 = useForm<Step1Values>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      dateOfBirth: '',
-      mrn: '',
+      firstName: prefill?.firstName ?? '',
+      lastName: prefill?.lastName ?? '',
+      dateOfBirth: prefill?.dateOfBirth ?? '',
+      mrn: prefill?.mrn ?? '',
     },
   });
 
-  // Step 2 form
+  // Step 2 form — pre-fill cancer type from document classification
   const form2 = useForm<Step2Values>({
     resolver: zodResolver(step2Schema),
     defaultValues: {
-      cancerType: '',
+      cancerType: prefill?.cancerType ?? '',
       cancerStage: '',
       diagnosisDate: '',
       assignedNavigator: '',
