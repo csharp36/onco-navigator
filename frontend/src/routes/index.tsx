@@ -35,6 +35,15 @@ function DashboardHome() {
     setUploadResult(result);
   }
 
+  /** Save pending document context to sessionStorage so any patient detail page can pick it up */
+  function savePendingDocument() {
+    if (!uploadResult?.documentId) return;
+    sessionStorage.setItem('pending-document', JSON.stringify({
+      documentId: uploadResult.documentId,
+      classification: uploadResult.classificationResult,
+    }));
+  }
+
   function handlePatientSelected(patientId: string) {
     if (!uploadResult) return;
     const classification = uploadResult.classificationResult ?? {
@@ -196,19 +205,11 @@ function DashboardHome() {
         onPatientSelected={handlePatientSelected}
         onManualClassification={handleManualClassification}
         onCreateNewPatient={() => {
+          savePendingDocument();
           const c = uploadResult?.classificationResult;
-          // Save classification to sessionStorage so patient detail page can use it after creation
-          if (uploadResult?.documentId && c) {
-            sessionStorage.setItem(
-              `doc-classification-${uploadResult.documentId}`,
-              JSON.stringify(c),
-            );
-          }
-          // Split extracted patient name into first/last for the wizard
           const nameParts = c?.patientName?.split(/\s+/) ?? [];
           const firstName = nameParts[0] ?? '';
           const lastName = nameParts.slice(1).join(' ') ?? '';
-          // Map document cancer type to wizard enum (BREAST, LUNG, COLORECTAL)
           const cancerType = c?.extractedNotes?.toUpperCase().includes('LUNG') ? 'LUNG'
             : c?.extractedNotes?.toUpperCase().includes('BREAST') ? 'BREAST'
             : c?.extractedNotes?.toUpperCase().includes('COLON') || c?.extractedNotes?.toUpperCase().includes('RECTAL') ? 'COLORECTAL'
@@ -226,12 +227,14 @@ function DashboardHome() {
           });
         }}
         onSearchManual={() => {
+          savePendingDocument();
           void navigate({ to: '/patients' });
         }}
       />
 
       {prefillData && (
         <PrefilledCareEventDialog
+          key={prefillData.documentId}
           open={prefilledDialogOpen}
           onOpenChange={setPrefilledDialogOpen}
           patientId={prefillData.patientId}

@@ -140,20 +140,25 @@ function PatientDetailPage() {
   const { data: documents } = usePatientDocuments(patientId);
   const linkDocument = useLinkDocumentToPatient();
 
-  // Auto-link document and open pre-filled care event dialog when arriving from patient creation
+  // Detect pending document from sessionStorage (set by dashboard before navigating here).
+  // Works for both "Search manually" (user clicks patient from list) and "Create new patient"
+  // (patient wizard redirects here with ?documentId=).
   const [pendingDocHandled, setPendingDocHandled] = useState(false);
   useEffect(() => {
-    if (!pendingDocumentId || !patientId || pendingDocHandled) return;
+    if (pendingDocHandled) return;
+
+    // Check two sources: URL param (from create-new-patient) or sessionStorage (from search-manually)
+    const stored = sessionStorage.getItem('pending-document');
+    const pending = stored ? JSON.parse(stored) as { documentId: string; classification: DocumentPrefillData['classification'] | null } : null;
+
+    const docId = pendingDocumentId ?? pending?.documentId;
+    if (!docId || !patientId) return;
+
     setPendingDocHandled(true);
+    sessionStorage.removeItem('pending-document');
 
-    // Retrieve saved classification from sessionStorage (saved before navigating to /patients/new)
-    const savedKey = `doc-classification-${pendingDocumentId}`;
-    const savedJson = sessionStorage.getItem(savedKey);
-    const savedClassification = savedJson ? JSON.parse(savedJson) : null;
-    sessionStorage.removeItem(savedKey);
-
-    const classification = savedClassification ?? {
-      documentType: 'UNKNOWN',
+    const fallbackClassification = {
+      documentType: 'UNKNOWN' as const,
       confidence: 'low',
       mrn: null,
       patientName: null,
@@ -162,31 +167,31 @@ function PatientDetailPage() {
       eventDate: null,
       extractedNotes: null,
     };
+    const classification = pending?.classification ?? fallbackClassification;
 
-    const docId = pendingDocumentId;
-
-    // Link the unlinked document to the newly created patient, then open dialog
+    // Link the document to this patient, then open care event dialog
     linkDocument.mutate(
       { documentId: docId, patientId },
       {
         onSuccess: () => {
           setPrefillData({ documentId: docId, classification, patientId });
           setPrefilledDialogOpen(true);
-          // Clear search param after everything is set up
-          void navigate({
-            to: '/patients/$patientId',
-            params: { patientId },
-            search: {},
-            replace: true,
-          });
         },
         onError: () => {
-          // Even if link fails, still open the dialog so user can save the care event
           setPrefillData({ documentId: docId, classification, patientId });
           setPrefilledDialogOpen(true);
         },
       },
     );
+    // Clear URL param if present
+    if (pendingDocumentId) {
+      void navigate({
+        to: '/patients/$patientId',
+        params: { patientId },
+        search: {},
+        replace: true,
+      });
+    }
   }, [pendingDocumentId, patientId, pendingDocHandled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDocUploadComplete(result: DocumentUploadResponse) {
@@ -534,6 +539,7 @@ function PatientDetailPage() {
       {/* ── Pre-filled care event dialog from document ─────────────────────── */}
       {prefillData && (
         <PrefilledCareEventDialog
+          key={prefillData.documentId}
           open={prefilledDialogOpen}
           onOpenChange={setPrefilledDialogOpen}
           patientId={prefillData.patientId}
