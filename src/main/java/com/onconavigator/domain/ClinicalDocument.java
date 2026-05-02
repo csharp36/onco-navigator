@@ -1,6 +1,7 @@
 package com.onconavigator.domain;
 
 import com.onconavigator.security.EncryptionConverter;
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -75,7 +76,12 @@ public class ClinicalDocument {
      * Raw file content stored as PostgreSQL BYTEA.
      * Do NOT use @Lob — explicit columnDefinition = "bytea" avoids Hibernate OID mapping issues.
      * Do NOT apply EncryptionConverter — converter works on String, not byte[].
+     *
+     * <p>WR-01: Lazy fetch to avoid loading up to 20 MB per document when only metadata is needed
+     * (e.g., the patient document listing endpoint). Requires Hibernate bytecode enhancement
+     * or a DTO projection for the listing query to be effective.
      */
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "content", columnDefinition = "bytea", nullable = false)
     private byte[] content;
 
