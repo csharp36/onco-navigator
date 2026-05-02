@@ -43,14 +43,28 @@ const CARE_EVENT_TYPES = [
   { value: 'REFERRAL', label: 'Referral' },
   { value: 'CONSULTATION', label: 'Consultation' },
   { value: 'BIOPSY', label: 'Biopsy' },
+  { value: 'PATHOLOGY_REPORT', label: 'Pathology Report' },
   { value: 'IMAGING', label: 'Imaging' },
   { value: 'SURGERY', label: 'Surgery' },
   { value: 'CHEMOTHERAPY', label: 'Chemotherapy' },
   { value: 'RADIATION', label: 'Radiation' },
-  { value: 'PATHOLOGY', label: 'Pathology' },
+  { value: 'LAB_WORK', label: 'Lab Work' },
+  { value: 'GENETIC_TESTING', label: 'Genetic Testing' },
   { value: 'FOLLOW_UP', label: 'Follow-up' },
   { value: 'OTHER', label: 'Other' },
 ];
+
+/** Map document classification type to care event type */
+function mapDocumentTypeToEventType(documentType: string | null | undefined): string {
+  switch (documentType) {
+    case 'PATHOLOGY_REPORT': return 'PATHOLOGY_REPORT';
+    case 'RADIOLOGY_REPORT': return 'IMAGING';
+    case 'OPERATIVE_NOTE': return 'SURGERY';
+    case 'LAB_RESULT': return 'LAB_WORK';
+    case 'REFERRAL_LETTER': return 'REFERRAL';
+    default: return '';
+  }
+}
 
 const EVENT_STATUSES = [
   { value: 'SCHEDULED', label: 'Scheduled' },
@@ -81,10 +95,16 @@ export function PrefilledCareEventDialog({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
 
+  // Derive event type: use classification's eventType if valid, else map from documentType
+  const derivedEventType = prefillData.classification.eventType
+    && CARE_EVENT_TYPES.some(t => t.value === prefillData.classification.eventType)
+    ? prefillData.classification.eventType
+    : mapDocumentTypeToEventType(prefillData.classification.documentType);
+
   const form = useForm<CareEventFormValues>({
     resolver: zodResolver(careEventSchema),
     defaultValues: {
-      eventType: prefillData.classification.eventType ?? '',
+      eventType: derivedEventType,
       eventDate: prefillData.classification.eventDate ?? '',
       status: 'COMPLETED',
       notes: prefillData.classification.extractedNotes ?? '',
@@ -279,12 +299,14 @@ export function PrefilledCareEventDialog({
         </DialogContent>
       </Dialog>
 
-      <DocumentPreviewPanel
-        open={previewOpen}
-        onOpenChange={setPreviewOpen}
-        documentId={prefillData.documentId}
-        filename="document.pdf"
-      />
+      {prefillData.documentId && (
+        <DocumentPreviewPanel
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+          documentId={prefillData.documentId}
+          filename="document.pdf"
+        />
+      )}
     </>
   );
 }

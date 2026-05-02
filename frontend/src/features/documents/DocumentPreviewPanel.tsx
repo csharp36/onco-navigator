@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Download } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -9,6 +9,7 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { getDocumentContentUrl } from './api';
+import { getAccessToken } from '@/lib/auth';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -27,8 +28,36 @@ export function DocumentPreviewPanel({
   documentId,
   filename,
 }: DocumentPreviewPanelProps) {
-  const [iframeError, setIframeError] = useState(false);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const contentUrl = getDocumentContentUrl(documentId);
+
+  // Fetch the PDF as a blob with auth token so iframe can display it
+  useEffect(() => {
+    if (!open || !documentId) return;
+    setLoading(true);
+    setError(false);
+
+    const token = getAccessToken();
+    fetch(contentUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        setBlobUrl(url);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [open, documentId, contentUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -40,7 +69,7 @@ export function DocumentPreviewPanel({
 
         <div className="flex items-center gap-2 px-4">
           <Button variant="outline" size="sm" asChild>
-            <a href={contentUrl} download={filename}>
+            <a href={blobUrl ?? contentUrl} download={filename}>
               <Download className="mr-1 size-4" />
               Download Document
             </a>
@@ -48,11 +77,16 @@ export function DocumentPreviewPanel({
         </div>
 
         <div className="flex-1 px-4 pb-4">
-          {iframeError ? (
+          {loading && (
+            <div className="flex items-center justify-center h-full min-h-[600px] rounded-md border bg-muted/20">
+              <Loader2 className="size-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {error && (
             <div className="flex items-center justify-center h-full min-h-[600px] rounded-md border bg-muted/20 p-6 text-center">
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Your browser cannot display this PDF inline. Download the document to view it.
+                  Unable to load document preview. Download the document to view it.
                 </p>
                 <Button variant="outline" size="sm" asChild>
                   <a href={contentUrl} download={filename}>
@@ -62,12 +96,12 @@ export function DocumentPreviewPanel({
                 </Button>
               </div>
             </div>
-          ) : (
+          )}
+          {!loading && !error && blobUrl && (
             <iframe
-              src={contentUrl}
+              src={blobUrl}
               className="w-full h-full min-h-[600px] rounded-md border"
               title="Clinical document preview"
-              onError={() => setIframeError(true)}
             />
           )}
         </div>
