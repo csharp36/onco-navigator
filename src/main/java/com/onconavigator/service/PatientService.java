@@ -188,10 +188,13 @@ public class PatientService {
 
         CareEvent saved = careEventRepository.save(event);
 
-        // Link the document back to this care event (bidirectional association)
+        // Link the document back to this care event and patient (bidirectional association)
         if (req.documentId() != null) {
             documentRepository.findById(req.documentId()).ifPresent(doc -> {
                 doc.setCareEventId(saved.getId());
+                if (doc.getPatient() == null) {
+                    doc.setPatient(patient);
+                }
                 documentRepository.save(doc);
             });
         }
