@@ -105,10 +105,17 @@ public class DocumentPatientMatchService {
             String confidence = scoreMatch(docName, patientFullName, docDob, patient.getDateOfBirth());
 
             if (confidence != null) {
+                // CR-04: Mask MRN to show only last 4 digits (PHI minimization in API response).
+                // The full MRN is never needed in the matching UI -- last 4 is sufficient
+                // for the nurse navigator to distinguish candidates.
+                String mrn = patient.getMrn();
+                String maskedMrn = (mrn != null && mrn.length() > 4)
+                        ? "***" + mrn.substring(mrn.length() - 4)
+                        : "****";
                 candidates.add(new PatientCandidate(
                         patient.getId(),
                         patientFullName,
-                        patient.getMrn(),
+                        maskedMrn,
                         patient.getDateOfBirth(),
                         confidence
                 ));
