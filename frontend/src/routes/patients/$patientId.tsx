@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { z } from 'zod';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -47,7 +48,12 @@ import { DocumentPreviewPanel } from '@/features/documents/DocumentPreviewPanel'
 import { usePatientDocuments } from '@/features/documents/api';
 import type { DocumentUploadResponse, DocumentPrefillData, DocumentType } from '@/features/documents/types';
 
+const searchSchema = z.object({
+  documentId: z.string().optional(),
+});
+
 export const Route = createFileRoute('/patients/$patientId')({
+  validateSearch: searchSchema,
   component: PatientDetailPage,
 });
 
@@ -109,6 +115,7 @@ function PatientStatusBadge({
 
 function PatientDetailPage() {
   const { patientId } = Route.useParams();
+  const { documentId: pendingDocumentId } = Route.useSearch();
   const navigate = useNavigate();
 
   const { data: patient, isLoading: patientLoading, isError: patientError } = usePatient(patientId);
@@ -130,6 +137,34 @@ function PatientDetailPage() {
   const [prefilledDialogOpen, setPrefilledDialogOpen] = useState(false);
   const [previewDocId, setPreviewDocId] = useState<string | null>(null);
   const { data: documents } = usePatientDocuments(patientId);
+
+  // Auto-open pre-filled care event dialog when arriving with a documentId from patient creation
+  useEffect(() => {
+    if (pendingDocumentId && patientId) {
+      setPrefillData({
+        documentId: pendingDocumentId,
+        classification: {
+          documentType: 'UNKNOWN',
+          confidence: 'low',
+          mrn: null,
+          patientName: null,
+          dateOfBirth: null,
+          eventType: null,
+          eventDate: null,
+          extractedNotes: null,
+        },
+        patientId,
+      });
+      setPrefilledDialogOpen(true);
+      // Clear the search param so refresh doesn't re-trigger
+      void navigate({
+        to: '/patients/$patientId',
+        params: { patientId },
+        search: {},
+        replace: true,
+      });
+    }
+  }, [pendingDocumentId, patientId, navigate]);
 
   function handleDocUploadComplete(result: DocumentUploadResponse) {
     setUploadResult(result);

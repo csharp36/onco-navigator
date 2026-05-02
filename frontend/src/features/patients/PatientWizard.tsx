@@ -145,7 +145,11 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
 
     createPatient.mutate(payload, {
       onSuccess: (data) => {
-        navigate({ to: '/patients/$patientId', params: { patientId: data.id } });
+        navigate({
+          to: '/patients/$patientId',
+          params: { patientId: data.id },
+          search: prefill?.documentId ? { documentId: prefill.documentId } : {},
+        });
       },
       onError: () => {
         setMutationError(
