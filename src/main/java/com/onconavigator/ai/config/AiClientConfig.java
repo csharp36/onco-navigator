@@ -4,6 +4,7 @@ import com.onconavigator.ai.prompt.AlertPrompts;
 import com.onconavigator.ai.prompt.ClassificationPrompts;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,6 +23,11 @@ import org.springframework.context.annotation.Configuration;
  * in application properties (defaulting to claude-sonnet-4-20250514). The per-bean options
  * override only temperature and maxTokens.
  *
+ * <p>CR-05: Each bean creates its own ChatClient.Builder via {@code ChatClient.builder(chatModel)}
+ * to avoid shared builder state mutation. The auto-configured ChatClient.Builder is a singleton;
+ * calling {@code .defaultSystem()} on it mutates shared state, causing both clients to receive
+ * whichever system prompt was set last.
+ *
  * <p>HIPAA note: The classification client processes PHI (document text) — requires Anthropic BAA.
  * The alert generation client uses ZERO-PHI prompts — no BAA required for that call path.
  */
@@ -29,8 +35,8 @@ import org.springframework.context.annotation.Configuration;
 public class AiClientConfig {
 
     @Bean
-    ChatClient documentClassificationClient(ChatClient.Builder builder) {
-        return builder
+    ChatClient documentClassificationClient(ChatModel chatModel) {
+        return ChatClient.builder(chatModel)
                 .defaultSystem(ClassificationPrompts.SYSTEM_PROMPT)
                 .defaultOptions(AnthropicChatOptions.builder()
                         .temperature(0.1)
@@ -40,8 +46,8 @@ public class AiClientConfig {
     }
 
     @Bean
-    ChatClient alertGenerationClient(ChatClient.Builder builder) {
-        return builder
+    ChatClient alertGenerationClient(ChatModel chatModel) {
+        return ChatClient.builder(chatModel)
                 .defaultSystem(AlertPrompts.SYSTEM_PROMPT)
                 .defaultOptions(AnthropicChatOptions.builder()
                         .temperature(0.3)
