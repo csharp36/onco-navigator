@@ -45,7 +45,7 @@ import { DocumentDropZone } from '@/features/documents/DocumentDropZone';
 import { DocumentProcessingModal } from '@/features/documents/DocumentProcessingModal';
 import { PrefilledCareEventDialog } from '@/features/documents/PrefilledCareEventDialog';
 import { DocumentPreviewPanel } from '@/features/documents/DocumentPreviewPanel';
-import { usePatientDocuments, useLinkDocumentToPatient } from '@/features/documents/api';
+import { usePatientDocuments, useLinkDocumentToPatient, useDocument } from '@/features/documents/api';
 import type { DocumentUploadResponse, DocumentPrefillData, DocumentType } from '@/features/documents/types';
 
 const searchSchema = z.object({
@@ -140,58 +140,52 @@ function PatientDetailPage() {
   const { data: documents } = usePatientDocuments(patientId);
   const linkDocument = useLinkDocumentToPatient();
 
-  // Detect pending document from sessionStorage (set by dashboard before navigating here).
-  // Works for both "Search manually" (user clicks patient from list) and "Create new patient"
-  // (patient wizard redirects here with ?documentId=).
+  // Fetch document metadata from backend when arriving with a pending documentId.
+  // This is the source of truth — no sessionStorage needed.
+  const { data: pendingDoc } = useDocument(pendingDocumentId ?? undefined);
   const [pendingDocHandled, setPendingDocHandled] = useState(false);
+
   useEffect(() => {
-    if (pendingDocHandled) return;
-
-    // Check two sources: URL param (from create-new-patient) or sessionStorage (from search-manually)
-    const stored = sessionStorage.getItem('pending-document');
-    const pending = stored ? JSON.parse(stored) as { documentId: string; classification: DocumentPrefillData['classification'] | null } : null;
-
-    const docId = pendingDocumentId ?? pending?.documentId;
-    if (!docId || !patientId) return;
+    if (!pendingDocumentId || !patientId || pendingDocHandled) return;
+    if (!pendingDoc) return; // Wait for document fetch to complete
 
     setPendingDocHandled(true);
-    sessionStorage.removeItem('pending-document');
 
-    const fallbackClassification = {
-      documentType: 'UNKNOWN' as const,
-      confidence: 'low',
+    // Build classification from the stored document metadata
+    const classification = {
+      documentType: pendingDoc.documentType ?? 'UNKNOWN',
+      confidence: pendingDoc.classificationSource === 'AI' ? 'high' : 'manual',
       mrn: null,
       patientName: null,
       dateOfBirth: null,
-      eventType: null,
+      eventType: pendingDoc.documentType, // e.g. PATHOLOGY_REPORT maps to PATHOLOGY_REPORT event
       eventDate: null,
       extractedNotes: null,
     };
-    const classification = pending?.classification ?? fallbackClassification;
 
     // Link the document to this patient, then open care event dialog
     linkDocument.mutate(
-      { documentId: docId, patientId },
+      { documentId: pendingDocumentId, patientId },
       {
         onSuccess: () => {
-          setPrefillData({ documentId: docId, classification, patientId });
+          setPrefillData({ documentId: pendingDocumentId, classification, patientId });
           setPrefilledDialogOpen(true);
         },
         onError: () => {
-          setPrefillData({ documentId: docId, classification, patientId });
+          // Even if link fails, still open dialog
+          setPrefillData({ documentId: pendingDocumentId, classification, patientId });
           setPrefilledDialogOpen(true);
         },
       },
     );
-    // Clear URL param if present
-    if (pendingDocumentId) {
-      void navigate({
-        to: '/patients/$patientId',
-        params: { patientId },
-        search: {},
-        replace: true,
-      });
-    }
+
+    // Clear URL param so refresh doesn't re-trigger
+    void navigate({
+      to: '/patients/$patientId',
+      params: { patientId },
+      search: {},
+      replace: true,
+    });
   }, [pendingDocumentId, patientId, pendingDocHandled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDocUploadComplete(result: DocumentUploadResponse) {

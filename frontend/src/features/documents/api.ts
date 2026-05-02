@@ -21,6 +21,14 @@ export function usePatientDocuments(patientId: string) {
   });
 }
 
+export function useDocument(documentId: string | undefined) {
+  return useQuery({
+    queryKey: ['documents', documentId],
+    queryFn: () => apiClient.get<DocumentSummaryResponse>(`/documents/${documentId}`),
+    enabled: !!documentId,
+  });
+}
+
 export function useLinkDocumentToPatient() {
   const queryClient = useQueryClient();
   return useMutation({

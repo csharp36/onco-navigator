@@ -35,15 +35,6 @@ function DashboardHome() {
     setUploadResult(result);
   }
 
-  /** Save pending document context to sessionStorage so any patient detail page can pick it up */
-  function savePendingDocument() {
-    if (!uploadResult?.documentId) return;
-    sessionStorage.setItem('pending-document', JSON.stringify({
-      documentId: uploadResult.documentId,
-      classification: uploadResult.classificationResult,
-    }));
-  }
-
   function handlePatientSelected(patientId: string) {
     if (!uploadResult) return;
     const classification = uploadResult.classificationResult ?? {
@@ -205,7 +196,6 @@ function DashboardHome() {
         onPatientSelected={handlePatientSelected}
         onManualClassification={handleManualClassification}
         onCreateNewPatient={() => {
-          savePendingDocument();
           const c = uploadResult?.classificationResult;
           const nameParts = c?.patientName?.split(/\s+/) ?? [];
           const firstName = nameParts[0] ?? '';

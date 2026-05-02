@@ -159,6 +159,20 @@ public class DocumentUploadController {
     }
 
     /**
+     * Get document metadata by ID (no blob content).
+     */
+    @GetMapping("/{documentId}")
+    @PreAuthorize("hasRole('NURSE_NAVIGATOR') or hasRole('CARE_COORDINATOR') or hasRole('ADMIN')")
+    public DocumentSummaryResponse getDocument(@PathVariable UUID documentId) {
+        ClinicalDocument doc = documentRepository.findById(documentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
+        return new DocumentSummaryResponse(
+                doc.getId(), doc.getOriginalFilename(), doc.getContentType(),
+                doc.getFileSizeBytes(), doc.getDocumentType(),
+                doc.getClassificationSource(), doc.getCareEventId(), doc.getCreatedAt());
+    }
+
+    /**
      * Link an unlinked document to a patient. Used after the create-new-patient flow
      * where the document was uploaded before the patient existed.
      */
