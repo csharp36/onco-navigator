@@ -163,14 +163,21 @@ export function PrefilledCareEventDialog({
                 {prefillData.classification.confidence} confidence
               </span>
             </div>
-            <Button
-              variant="link"
-              size="sm"
-              className="p-0 h-auto"
-              onClick={() => setPreviewOpen(true)}
-            >
-              Preview full document
-            </Button>
+            {prefillData.documentId && (
+              <Button
+                variant="link"
+                size="sm"
+                className="p-0 h-auto"
+                onClick={() => {
+                  // Close dialog first — Radix Dialog focus trap blocks Sheet interaction
+                  onOpenChange(false);
+                  // Small delay to let dialog unmount before opening sheet
+                  setTimeout(() => setPreviewOpen(true), 150);
+                }}
+              >
+                Preview full document
+              </Button>
+            )}
           </div>
 
           <form onSubmit={form.handleSubmit(handleSubmit)} noValidate>
@@ -302,7 +309,11 @@ export function PrefilledCareEventDialog({
       {prefillData.documentId && (
         <DocumentPreviewPanel
           open={previewOpen}
-          onOpenChange={setPreviewOpen}
+          onOpenChange={(isOpen) => {
+            setPreviewOpen(isOpen);
+            // Re-open the care event dialog when preview closes
+            if (!isOpen) onOpenChange(true);
+          }}
           documentId={prefillData.documentId}
           filename="document.pdf"
         />
