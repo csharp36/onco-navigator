@@ -109,15 +109,54 @@ CANCER TYPES COVERED
   - Lung cancer:   Documents 2, 3, 10, 13
   - Colorectal:    Documents 6, 8, 12
 
+REAL-WORLD PDF TEST DOCUMENTS
+------------------------------
+In addition to synthetic text files, the corpus includes real-world PDFs
+from authoritative public sources for testing the PDF extraction pipeline
+against authentic clinical document formats.
+
+CAP Protocol Templates (cap-protocols/):
+  These are blank synoptic reporting templates published by the College of
+  American Pathologists. They represent the standardized format used by
+  pathologists nationwide. Useful for testing document structure recognition.
+  License: Free for nonprofit/research use per CAP.
+
+  1. CAP-breast-invasive-resection.pdf   Breast Invasive Carcinoma v4.10
+  2. CAP-lung-resection.pdf              Lung Resection v5.1
+  3. CAP-colorectal-resection.pdf        Colon & Rectum Resection v4.3
+
+  Source: https://www.cap.org/protocols-and-guidelines/cancer-reporting-tools/cancer-protocol-templates
+
+NCI GDC Pathology Reports (gdc-pathology/):
+  Real de-identified surgical pathology reports from The Cancer Genome Atlas
+  (TCGA) program, downloaded from the NCI Genomic Data Commons portal. These
+  are scanned PDFs from contributing academic cancer centers — OCR quality
+  varies, which is authentic clinical variability. All are open-access,
+  de-identified by TCGA prior to submission.
+
+  4. TCGA-BRCA-pathology-01.pdf   Breast cancer pathology (TCGA-BH-A18H)
+  5. TCGA-BRCA-pathology-02.pdf   Breast cancer pathology (TCGA-AN-A04A)
+  6. TCGA-LUAD-pathology-01.pdf   Lung adenocarcinoma pathology (TCGA-75-7027)
+  7. TCGA-LUAD-pathology-02.pdf   Lung adenocarcinoma pathology (TCGA-MP-A4T7)
+  8. TCGA-COAD-pathology-01.pdf   Colon adenocarcinoma pathology (TCGA-NH-A5IV)
+  9. TCGA-COAD-pathology-02.pdf   Colon adenocarcinoma pathology (TCGA-AZ-4616)
+
+  Source: https://portal.gdc.cancer.gov (Data Type: Pathology Report)
+  License: U.S. government open-access data. Attribution to TCGA required.
+
 USAGE
 -----
 These documents are intended for:
-  1. Unit testing document classification service
-  2. Integration testing the full extraction pipeline
+  1. Unit testing document classification service (synthetic text files)
+  2. Integration testing the full PDF extraction pipeline (GDC PDFs)
   3. Evaluating AI classification accuracy (E-01 through E-05 in AI-SPEC)
   4. Regression testing after prompt or model changes
+  5. Testing OCR quality on real scanned documents (GDC PDFs vary in quality)
+  6. Validating document structure recognition (CAP templates)
 
-Do NOT use real patient data for testing. Always use this synthetic corpus.
+Do NOT use real patient data for testing. The GDC pathology reports are
+de-identified by TCGA — they contain no identifiable patient information.
 
 Created: 2026-05-01
+Updated: 2026-05-01
 Project: Onco-Navigator AI
