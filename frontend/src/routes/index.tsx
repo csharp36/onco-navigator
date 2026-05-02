@@ -197,6 +197,13 @@ function DashboardHome() {
         onManualClassification={handleManualClassification}
         onCreateNewPatient={() => {
           const c = uploadResult?.classificationResult;
+          // Save classification to sessionStorage so patient detail page can use it after creation
+          if (uploadResult?.documentId && c) {
+            sessionStorage.setItem(
+              `doc-classification-${uploadResult.documentId}`,
+              JSON.stringify(c),
+            );
+          }
           // Split extracted patient name into first/last for the wizard
           const nameParts = c?.patientName?.split(/\s+/) ?? [];
           const firstName = nameParts[0] ?? '';

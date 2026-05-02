@@ -143,6 +143,23 @@ function PatientDetailPage() {
   // Auto-link document and open pre-filled care event dialog when arriving from patient creation
   useEffect(() => {
     if (pendingDocumentId && patientId) {
+      // Retrieve saved classification from sessionStorage (saved before navigating to /patients/new)
+      const savedKey = `doc-classification-${pendingDocumentId}`;
+      const savedJson = sessionStorage.getItem(savedKey);
+      const savedClassification = savedJson ? JSON.parse(savedJson) : null;
+      sessionStorage.removeItem(savedKey);
+
+      const classification = savedClassification ?? {
+        documentType: 'UNKNOWN',
+        confidence: 'low',
+        mrn: null,
+        patientName: null,
+        dateOfBirth: null,
+        eventType: null,
+        eventDate: null,
+        extractedNotes: null,
+      };
+
       // Link the unlinked document to the newly created patient
       linkDocument.mutate(
         { documentId: pendingDocumentId, patientId },
@@ -150,16 +167,7 @@ function PatientDetailPage() {
           onSuccess: () => {
             setPrefillData({
               documentId: pendingDocumentId,
-              classification: {
-                documentType: 'UNKNOWN',
-                confidence: 'low',
-                mrn: null,
-                patientName: null,
-                dateOfBirth: null,
-                eventType: null,
-                eventDate: null,
-                extractedNotes: null,
-              },
+              classification,
               patientId,
             });
             setPrefilledDialogOpen(true);

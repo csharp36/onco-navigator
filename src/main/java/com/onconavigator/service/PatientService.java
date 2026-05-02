@@ -7,6 +7,7 @@ import com.onconavigator.domain.enums.CareEventStatus;
 import com.onconavigator.domain.enums.PatientStatus;
 import com.onconavigator.repository.AlertRepository;
 import com.onconavigator.repository.CareEventRepository;
+import com.onconavigator.repository.ClinicalDocumentRepository;
 import com.onconavigator.repository.PatientRepository;
 import com.onconavigator.security.HmacTokenService;
 import com.onconavigator.web.dto.CareEventResponse;
@@ -43,17 +44,20 @@ public class PatientService {
     private final PatientRepository patientRepository;
     private final CareEventRepository careEventRepository;
     private final AlertRepository alertRepository;
+    private final ClinicalDocumentRepository documentRepository;
     private final PathwayService pathwayService;
     private final HmacTokenService hmacTokenService;
 
     public PatientService(PatientRepository patientRepository,
                           CareEventRepository careEventRepository,
                           AlertRepository alertRepository,
+                          ClinicalDocumentRepository documentRepository,
                           PathwayService pathwayService,
                           HmacTokenService hmacTokenService) {
         this.patientRepository = patientRepository;
         this.careEventRepository = careEventRepository;
         this.alertRepository = alertRepository;
+        this.documentRepository = documentRepository;
         this.pathwayService = pathwayService;
         this.hmacTokenService = hmacTokenService;
     }
@@ -183,6 +187,14 @@ public class PatientService {
         event.setCreatedBy(actorId);
 
         CareEvent saved = careEventRepository.save(event);
+
+        // Link the document back to this care event (bidirectional association)
+        if (req.documentId() != null) {
+            documentRepository.findById(req.documentId()).ifPresent(doc -> {
+                doc.setCareEventId(saved.getId());
+                documentRepository.save(doc);
+            });
+        }
 
         pathwayService.signalCareEventChanged(patientId, saved.getId());
 
