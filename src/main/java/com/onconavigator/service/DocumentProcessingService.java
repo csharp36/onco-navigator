@@ -205,6 +205,46 @@ public class DocumentProcessingService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Unsupported file type. Accepted: PDF, JPEG, PNG");
         }
+
+        // WR-07: Validate file magic bytes match declared content type.
+        // Client-provided Content-Type can be spoofed; magic bytes are authoritative.
+        byte[] header;
+        try (var is = file.getInputStream()) {
+            header = is.readNBytes(Math.min(8, (int) file.getSize()));
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot read file header");
+        }
+
+        if ("application/pdf".equals(contentType)
+                && !bytesPrefixMatch(header, new byte[]{0x25, 0x50, 0x44, 0x46})) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "File content does not match declared PDF type");
+        }
+        if ("image/png".equals(contentType)
+                && !bytesPrefixMatch(header, new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47})) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "File content does not match declared PNG type");
+        }
+        if ("image/jpeg".equals(contentType)
+                && !bytesPrefixMatch(header, new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF})) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "File content does not match declared JPEG type");
+        }
+    }
+
+    /**
+     * Check whether the given byte array starts with the specified prefix.
+     */
+    private static boolean bytesPrefixMatch(byte[] data, byte[] prefix) {
+        if (data.length < prefix.length) {
+            return false;
+        }
+        for (int i = 0; i < prefix.length; i++) {
+            if (data[i] != prefix[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
