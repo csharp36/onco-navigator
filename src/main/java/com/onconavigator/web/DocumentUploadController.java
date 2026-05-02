@@ -40,7 +40,7 @@ import java.util.UUID;
  *   <li>GET /api/documents/patient/{patientId} — lists document summaries for a patient (no blob)</li>
  * </ul>
  *
- * <p>All endpoints require {@code CARE_COORDINATOR} or {@code ADMIN} role (BOLA mitigation T-04-11).
+ * <p>All endpoints require {@code NURSE_NAVIGATOR}, {@code CARE_COORDINATOR}, or {@code ADMIN} role (BOLA mitigation T-04-11).
  * The content endpoint has additional in-method role verification as defense-in-depth.
  *
  * <p>HIPAA note: Log statements contain ONLY document UUIDs, actor UUIDs, and patient UUIDs.
@@ -80,7 +80,7 @@ public class DocumentUploadController {
      * @return upload response with document ID, classification, and match status
      */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('CARE_COORDINATOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('NURSE_NAVIGATOR') or hasRole('CARE_COORDINATOR') or hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public DocumentUploadResponse uploadDocument(
             @RequestParam("file") MultipartFile file,
@@ -106,7 +106,7 @@ public class DocumentUploadController {
      * @return document bytes with Content-Type and Content-Disposition headers
      */
     @GetMapping("/{documentId}/content")
-    @PreAuthorize("hasRole('CARE_COORDINATOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('NURSE_NAVIGATOR') or hasRole('CARE_COORDINATOR') or hasRole('ADMIN')")
     public ResponseEntity<byte[]> getDocumentContent(
             @PathVariable UUID documentId,
             @AuthenticationPrincipal Jwt jwt) {
@@ -120,7 +120,7 @@ public class DocumentUploadController {
         @SuppressWarnings("unchecked")
         List<String> roles = extractRoles(jwt);
         boolean hasPermittedRole = roles != null &&
-                (roles.contains("CARE_COORDINATOR") || roles.contains("ADMIN"));
+                (roles.contains("NURSE_NAVIGATOR") || roles.contains("CARE_COORDINATOR") || roles.contains("ADMIN"));
         if (!hasPermittedRole) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Insufficient role to access document content");
@@ -158,7 +158,7 @@ public class DocumentUploadController {
      * @return list of document summaries, ordered most recent first
      */
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasRole('CARE_COORDINATOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('NURSE_NAVIGATOR') or hasRole('CARE_COORDINATOR') or hasRole('ADMIN')")
     public List<DocumentSummaryResponse> getDocumentsForPatient(@PathVariable UUID patientId) {
         return documentRepository.findByPatient_IdOrderByCreatedAtDesc(patientId).stream()
                 .map(doc -> new DocumentSummaryResponse(
