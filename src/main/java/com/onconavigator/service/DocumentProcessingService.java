@@ -164,15 +164,22 @@ public class DocumentProcessingService {
         if (doc.getPatient() != null) {
             doc = documentRepository.save(doc);
             log.info("Document {} processed: type={} matchStatus={}", doc.getId(), documentType, matchStatus);
-        } else {
-            // Cannot persist without a patient -- return response without persisting
-            // The frontend will prompt user to select or create a patient
-            log.info("Document processed but not persisted (no patient link): type={} matchStatus={}",
-                    documentType, matchStatus);
+            return new DocumentUploadResponse(
+                    doc.getId(),
+                    classification,
+                    matchStatus,
+                    candidates,
+                    matchedPatientId
+            );
         }
 
+        // CR-03: Cannot persist without a patient -- return null documentId so the frontend
+        // knows the document is not yet stored. The frontend must handle documentId === null
+        // by disabling document preview and not passing it to care event creation.
+        log.info("Document processed but not persisted (no patient link): type={} matchStatus={}",
+                documentType, matchStatus);
         return new DocumentUploadResponse(
-                doc.getId(),
+                null,
                 classification,
                 matchStatus,
                 candidates,
