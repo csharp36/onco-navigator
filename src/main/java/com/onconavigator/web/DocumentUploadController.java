@@ -126,8 +126,8 @@ public class DocumentUploadController {
         // access control (e.g., verify doc.getPatientId() is in the user's assigned patient list).
         @SuppressWarnings("unchecked")
         List<String> roles = extractRoles(jwt);
-        boolean hasPermittedRole = roles != null &&
-                (roles.contains("NURSE_NAVIGATOR") || roles.contains("CARE_COORDINATOR") || roles.contains("ADMIN"));
+        boolean hasPermittedRole = roles != null && roles.stream().anyMatch(r ->
+                r.contains("NURSE_NAVIGATOR") || r.contains("CARE_COORDINATOR") || r.contains("ADMIN"));
         if (!hasPermittedRole) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Insufficient role to access document content");
