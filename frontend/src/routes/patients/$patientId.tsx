@@ -141,48 +141,53 @@ function PatientDetailPage() {
   const linkDocument = useLinkDocumentToPatient();
 
   // Auto-link document and open pre-filled care event dialog when arriving from patient creation
+  const [pendingDocHandled, setPendingDocHandled] = useState(false);
   useEffect(() => {
-    if (pendingDocumentId && patientId) {
-      // Retrieve saved classification from sessionStorage (saved before navigating to /patients/new)
-      const savedKey = `doc-classification-${pendingDocumentId}`;
-      const savedJson = sessionStorage.getItem(savedKey);
-      const savedClassification = savedJson ? JSON.parse(savedJson) : null;
-      sessionStorage.removeItem(savedKey);
+    if (!pendingDocumentId || !patientId || pendingDocHandled) return;
+    setPendingDocHandled(true);
 
-      const classification = savedClassification ?? {
-        documentType: 'UNKNOWN',
-        confidence: 'low',
-        mrn: null,
-        patientName: null,
-        dateOfBirth: null,
-        eventType: null,
-        eventDate: null,
-        extractedNotes: null,
-      };
+    // Retrieve saved classification from sessionStorage (saved before navigating to /patients/new)
+    const savedKey = `doc-classification-${pendingDocumentId}`;
+    const savedJson = sessionStorage.getItem(savedKey);
+    const savedClassification = savedJson ? JSON.parse(savedJson) : null;
+    sessionStorage.removeItem(savedKey);
 
-      // Link the unlinked document to the newly created patient
-      linkDocument.mutate(
-        { documentId: pendingDocumentId, patientId },
-        {
-          onSuccess: () => {
-            setPrefillData({
-              documentId: pendingDocumentId,
-              classification,
-              patientId,
-            });
-            setPrefilledDialogOpen(true);
-          },
+    const classification = savedClassification ?? {
+      documentType: 'UNKNOWN',
+      confidence: 'low',
+      mrn: null,
+      patientName: null,
+      dateOfBirth: null,
+      eventType: null,
+      eventDate: null,
+      extractedNotes: null,
+    };
+
+    const docId = pendingDocumentId;
+
+    // Link the unlinked document to the newly created patient, then open dialog
+    linkDocument.mutate(
+      { documentId: docId, patientId },
+      {
+        onSuccess: () => {
+          setPrefillData({ documentId: docId, classification, patientId });
+          setPrefilledDialogOpen(true);
+          // Clear search param after everything is set up
+          void navigate({
+            to: '/patients/$patientId',
+            params: { patientId },
+            search: {},
+            replace: true,
+          });
         },
-      );
-      // Clear the search param so refresh doesn't re-trigger
-      void navigate({
-        to: '/patients/$patientId',
-        params: { patientId },
-        search: {},
-        replace: true,
-      });
-    }
-  }, [pendingDocumentId, patientId]); // eslint-disable-line react-hooks/exhaustive-deps
+        onError: () => {
+          // Even if link fails, still open the dialog so user can save the care event
+          setPrefillData({ documentId: docId, classification, patientId });
+          setPrefilledDialogOpen(true);
+        },
+      },
+    );
+  }, [pendingDocumentId, patientId, pendingDocHandled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDocUploadComplete(result: DocumentUploadResponse) {
     setIsUploading(false);

@@ -8,7 +8,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { getDocumentContentUrl } from './api';
 import { getAccessToken } from '@/lib/auth';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -31,33 +30,51 @@ export function DocumentPreviewPanel({
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const contentUrl = getDocumentContentUrl(documentId);
+  const contentUrl = `/api/documents/${documentId}/content`;
 
   // Fetch the PDF as a blob with auth token so iframe can display it
   useEffect(() => {
     if (!open || !documentId) return;
+
+    let revoked = false;
     setLoading(true);
     setError(false);
+    setBlobUrl(null);
 
     const token = getAccessToken();
     fetch(contentUrl, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        Accept: 'application/pdf, image/*, application/octet-stream',
+      },
     })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.blob();
       })
       .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        setBlobUrl(url);
+        if (!revoked) {
+          setBlobUrl(URL.createObjectURL(blob));
+        }
       })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!revoked) setError(true);
+      })
+      .finally(() => {
+        if (!revoked) setLoading(false);
+      });
 
+    return () => {
+      revoked = true;
+    };
+  }, [open, documentId, contentUrl]);
+
+  // Clean up blob URL on unmount
+  useEffect(() => {
     return () => {
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [open, documentId, contentUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [blobUrl]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
