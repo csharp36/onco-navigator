@@ -27,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -51,6 +52,11 @@ import java.util.UUID;
 public class DocumentUploadController {
 
     private static final Logger log = LoggerFactory.getLogger(DocumentUploadController.class);
+
+    // CR-02: Whitelist of safe content types that can be served inline.
+    // Anything not on this list is forced to application/octet-stream (triggers browser download).
+    private static final Set<String> SAFE_CONTENT_TYPES = Set.of(
+            "application/pdf", "image/jpeg", "image/png");
 
     private final DocumentProcessingService documentProcessingService;
     private final ClinicalDocumentRepository documentRepository;
@@ -126,13 +132,22 @@ public class DocumentUploadController {
         // Strip path separators, newlines, double-quotes, and shell-unsafe characters.
         String safeFilename = doc.getOriginalFilename()
                 .replaceAll("[\\r\\n\"\\\\/:*?<>|]", "_");
+
+        // CR-02: Validate stored content type against whitelist before serving.
+        // Unknown/spoofed types are forced to octet-stream (triggers browser download, prevents XSS).
+        String contentType = doc.getContentType();
+        if (!SAFE_CONTENT_TYPES.contains(contentType)) {
+            contentType = "application/octet-stream";
+        }
+
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(doc.getContentType()))
+                .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.inline()
                                 .filename(safeFilename)
                                 .build()
                                 .toString())
+                .header("X-Content-Type-Options", "nosniff")
                 .body(doc.getContent());
     }
 
