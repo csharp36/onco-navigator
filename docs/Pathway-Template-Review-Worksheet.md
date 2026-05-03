@@ -62,23 +62,23 @@ For each capability, write PILOT (add it now) or DEFER (save it for later):
 
 (a) Track whether outside results (pathology, imaging, genomic tests) are in the chart BEFORE a scheduled visit — to prevent "wasted visits" where the doctor cannot make a decision:
 
-YOUR ANSWER:
+YOUR ANSWER: PILOT
 
 (b) ECHO and port placement tracking as prerequisites before chemotherapy can start — to prevent last-minute chemo cancellations:
 
-YOUR ANSWER:
+YOUR ANSWER: DEFER
 
 (c) Scheduling confirmations from outside facilities — confirming that an outside facility has actually scheduled a procedure within 5-7 days of referral:
 
-YOUR ANSWER:
+YOUR ANSWER: PILOT
 
 (d) Referral tracking — monitoring that a referral was received and prerequisite records (like mammogram reports) arrived with it:
 
-YOUR ANSWER:
+YOUR ANSWER: PILOT
 
 (e) Escalation timing — urgent alerts when a prerequisite is not completed within 48 hours of a scheduled event (like chemo start):
 
-YOUR ANSWER:
+YOUR ANSWER: PILOT
 
 ADDITIONAL NOTES:
 
@@ -91,26 +91,26 @@ CONTEXT: The system currently tracks 12 types of care events (listed in the Refe
 
 (a) IMMUNOTHERAPY — currently there is no way to distinguish immunotherapy from chemotherapy. Your lung pathway mentions immunotherapy as a treatment option.
 
-YOUR ANSWER:
+YOUR ANSWER: KEEP
 
 (b) TUMOR_BOARD — currently tracked as a generic CONSULTATION, same as a regular doctor visit. Your concept brief and lung pathway treat tumor board review as a distinct event.
 
-YOUR ANSWER:
+YOUR ANSWER: KEEP
 
 (c) PORT_PLACEMENT — currently not trackable at all. Your concept brief described port placement as a chemo prerequisite.
 
-YOUR ANSWER:
+YOUR ANSWER: KEEP
 
 (d) CARDIAC_ECHO — currently not trackable at all. Your concept brief described cardiac ECHO as a chemo prerequisite.
 
-YOUR ANSWER:
+YOUR ANSWER: KEEP
 
 (e) Any other event types you think are missing?
 
-YOUR ANSWER:
+YOUR ANSWER: YES.  EVENTS SHOULD BE EXTRACTED FROM PDF FILES IN THE EMR AND FOMR THE ACTIVE ORDER FROM THE EMR, REGARDLESS OD WHAT THE EVENT IS.
 
 ADDITIONAL NOTES:
-
+There is significant variability in the seuquence of events that need to happen.  There is no standard sequence for a type of cancer. Each patient will need a unique sequence of events.  The souce of what the events are will be a specific data found in different documents in the EMR.  This will be the MD notes, orders and nurse notes.  AI will extract and interpret these data to understabd what needs to be done in the sequence of events.  It may also have the medical literature and the steps that every patient should have and may help monitor for those as well, but this is not the primary goal of this initial system
 
 ---
 
@@ -129,9 +129,14 @@ OPTIONS:
 - (B) No — knowing whether something is Completed or not is sufficient for the pilot
 - (C) Add Scheduled only — that is the most important one
 
-YOUR ANSWER:
+YOUR ANSWER: A
 
 ADDITIONAL NOTES:
+The system should create a classification with the above terms. This is how it will determine the best corrective action
+If system detects schedule and pending. it should request a estimated date of when it shoud be completed and then start monitoring at that time.
+If a event is canceled it needs to trigger corrective action
+- Distinguish between "this hasn't happened yet" and "this is scheduled for next week". This is important because the system will have different corrective actions for these 2 events
+
 
 
 ---
@@ -145,9 +150,10 @@ OPTIONS:
 - (B) Dashboard-only is acceptable for the pilot — the practice can test with dashboard alerts first
 - (C) SMS is preferred but not a blocker — pilot can start without it
 
-YOUR ANSWER:
+YOUR ANSWER: B
 
 ADDITIONAL NOTES:
+At the end product only admin will have access to the dashboard in order to monitor and troubleshoot the system.  Users will receive teams or email notifications only.
 
 
 ---
@@ -161,9 +167,9 @@ OPTIONS:
 - (B) Stage filtering is not needed for the pilot — the pilot practice will only enroll appropriate patients manually
 - (C) Add a stage field to the patient record but do not filter pathways yet — just capture the data
 
-YOUR ANSWER:
+YOUR ANSWER: B
 
-ADDITIONAL NOTES:
+ADDITIONAL NOTES: Stage is not needed.  All patients require a unique sequence of events which will be extracted from MD notes, nurse notes and orders.
 
 
 ---
@@ -178,7 +184,7 @@ CONTEXT: The system currently assigns alert severity based on the TYPE of deviat
 This means a missing pathology report and a missing follow-up visit get the same severity. Should certain steps always be treated as higher priority regardless of deviation type?
 
 YOUR ANSWER (list any steps that should always be high priority, or write "current system is fine"):
-
+current system is fine
 
 ADDITIONAL NOTES:
 
@@ -201,13 +207,13 @@ OPTIONS:
 - (B) They need to be more specific — please rewrite them (use the space below)
 - (C) They are fine for the pilot but should be improved before full deployment
 
-YOUR ANSWER:
+YOUR ANSWER: B
 
 If you answered B, please write improved suggested actions for any steps you think need them (reference the step by pathway and number, e.g., "Breast Step 3"):
 
 
 ADDITIONAL NOTES:
-
+The communication that the system will give to the nurse should have 2 parts. 1) What is missing and 2)a suggeted action in no more then 150 characters
 
 ---
 
@@ -216,7 +222,7 @@ ADDITIONAL NOTES:
 CONTEXT: Your feature spec (requirement P-05) says optional steps should generate warnings, not full alerts. Currently, every step in every pathway is marked as REQUIRED, and there is no distinction between warnings and alerts. Are there any steps in any pathway that should be optional?
 
 YOUR ANSWER (list any steps that should be optional, or write "all steps should be required"):
-
+all steps should be required
 
 ADDITIONAL NOTES:
 
@@ -244,9 +250,9 @@ OPTIONS:
 - (D) We need both — restore closer to the original 8-step pathway
 - (E) The 6 steps are wrong in a different way (explain below)
 
-YOUR ANSWER:
+YOUR ANSWER: E
 
-ADDITIONAL NOTES:
+ADDITIONAL NOTES: The steps should be extracted from the MD notes, nurse notes and orders and not from a pre-defined general list of events.
 
 
 ---
@@ -260,7 +266,7 @@ OPTIONS:
 - (B) Rename to "Genomic Assay" or similar — the specific test should not be hard-coded
 - (C) Something else (write below)
 
-YOUR ANSWER:
+YOUR ANSWER:A
 
 ADDITIONAL NOTES:
 
@@ -276,9 +282,9 @@ OPTIONS:
 - (B) We need a separate pathway for neoadjuvant cases — it is clinically wrong to alert on surgery timing when chemo is planned first
 - (C) One pathway is fine, but some steps should be marked OPTIONAL so they do not generate false alerts for neoadjuvant patients
 
-YOUR ANSWER:
+YOUR ANSWER: A, B and C are incorrect
 
-ADDITIONAL NOTES:
+ADDITIONAL NOTES: The steps should be extracted from the MD notes, nurse notes and orders and not from a pre-defined general list of events.
 
 
 ---
@@ -287,12 +293,12 @@ ADDITIONAL NOTES:
 
 CONTEXT: Below are the time windows currently built into the breast pathway. For each one, write OK if correct, or write the number of days it SHOULD be.
 
-- Diagnosis to surgeon consultation: currently 14 days.  YOUR ANSWER:
-- Surgeon consultation to surgery: currently 30 days.  YOUR ANSWER:
-- Surgery to pathology report: currently 21 days.  YOUR ANSWER:
-- Pathology report to Oncotype DX order: currently 14 days.  YOUR ANSWER:
-- Oncotype DX result to medical oncology visit: currently 14 days.  YOUR ANSWER:
-- Medical oncology visit to treatment plan: currently 14 days.  YOUR ANSWER:
+- Diagnosis to surgeon consultation: currently 14 days.  YOUR ANSWER: OK
+- Surgeon consultation to surgery: currently 30 days.  YOUR ANSWER: N/A
+- Surgery to pathology report: currently 21 days.  YOUR ANSWER: 7 DAYS
+- Pathology report to Oncotype DX order: currently 14 days.  YOUR ANSWER: N/A
+- Oncotype DX result to medical oncology visit: currently 14 days.  YOUR ANSWER: 7 DAYS
+- Medical oncology visit to treatment plan: currently 14 days.  YOUR ANSWER: N/A
 
 ADDITIONAL NOTES:
 
@@ -306,14 +312,15 @@ CONTEXT: Below is the alert text and suggested action for each step. For each on
 Step 1 — Alert: "No surgeon visit found within 14 days of diagnosis date."
 Step 1 — Action: "Schedule surgical oncology consultation."
 YOUR ANSWER:
+Action: " Contact the surgeons office to request the date of surgery then contact the patient to inform"
 
 Step 2 — Alert: "Surgery not yet completed within 30 days of surgeon consult."
 Step 2 — Action: "Follow up with surgical team on scheduling."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 Step 3 — Alert: "No pathology report found within 21 days of surgery date."
 Step 3 — Action: "Contact pathology department."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 Step 4 — Alert: "Oncotype DX not ordered within 14 days of pathology report."
 Step 4 — Action: "Review with treating physician to confirm order."
@@ -321,11 +328,11 @@ YOUR ANSWER:
 
 Step 5 — Alert: "Oncotype result not available before medical oncology visit."
 Step 5 — Action: "Confirm Oncotype DX result timing. If result will not be available before the visit, consider rescheduling the medical oncology visit to avoid a wasted appointment."
-YOUR ANSWER:
+YOUR ANSWER: Oncotype Dx not resulted will trigger a message to the doctor 2 days after the MD visit.
 
 Step 6 — Alert: "No treatment plan documented within 14 days of medical oncology visit."
 Step 6 — Action: "Follow up with medical oncologist."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 ADDITIONAL NOTES:
 
@@ -355,9 +362,9 @@ OPTIONS:
 - (D) 14 days from diagnosis date
 - (E) Something else (explain below)
 
-YOUR ANSWER:
+YOUR ANSWER: E
 
-ADDITIONAL NOTES:
+ADDITIONAL NOTES: From the creating of the first note of MD
 
 
 ---
