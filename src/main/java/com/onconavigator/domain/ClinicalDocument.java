@@ -77,11 +77,11 @@ public class ClinicalDocument {
      * Do NOT use @Lob — explicit columnDefinition = "bytea" avoids Hibernate OID mapping issues.
      * Do NOT apply EncryptionConverter — converter works on String, not byte[].
      *
-     * <p>WR-01: Lazy fetch to avoid loading up to 20 MB per document when only metadata is needed
-     * (e.g., the patient document listing endpoint). Requires Hibernate bytecode enhancement
-     * or a DTO projection for the listing query to be effective.
+     * <p>Note: @Basic(fetch = FetchType.LAZY) on byte[] requires Hibernate bytecode enhancement
+     * plugin which is not configured. For V1 pilot scale (<500 patients), eager loading is
+     * acceptable. For V2 with larger document volumes, add hibernate-enhance-maven-plugin
+     * or use a JPQL DTO projection for listing queries.
      */
-    @Basic(fetch = FetchType.LAZY)
     @Column(name = "content", columnDefinition = "bytea", nullable = false)
     private byte[] content;
 
