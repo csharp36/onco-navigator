@@ -140,16 +140,26 @@ function PatientDetailPage() {
   const { data: documents } = usePatientDocuments(patientId);
   const linkDocument = useLinkDocumentToPatient();
 
-  // Fetch document metadata from backend when arriving with a pending documentId.
-  // This is the source of truth — no sessionStorage needed.
-  const { data: pendingDoc } = useDocument(pendingDocumentId ?? undefined);
+  // Capture documentId on first render so it survives URL param clearing
+  const [capturedDocId] = useState(() => pendingDocumentId ?? undefined);
+  const { data: pendingDoc } = useDocument(capturedDocId);
   const [pendingDocHandled, setPendingDocHandled] = useState(false);
 
   useEffect(() => {
-    if (!pendingDocumentId || !patientId || pendingDocHandled) return;
+    if (!capturedDocId || !patientId || pendingDocHandled) return;
     if (!pendingDoc) return; // Wait for document fetch to complete
 
     setPendingDocHandled(true);
+
+    // Clear URL param now that we've captured what we need
+    if (pendingDocumentId) {
+      void navigate({
+        to: '/patients/$patientId',
+        params: { patientId },
+        search: {},
+        replace: true,
+      });
+    }
 
     // Build classification from the stored document metadata
     const classification = {
@@ -158,34 +168,25 @@ function PatientDetailPage() {
       mrn: null,
       patientName: null,
       dateOfBirth: null,
-      eventType: pendingDoc.documentType, // e.g. PATHOLOGY_REPORT maps to PATHOLOGY_REPORT event
+      eventType: pendingDoc.documentType,
       eventDate: null,
       extractedNotes: null,
     };
 
     // Link the document to this patient, then open care event dialog
     linkDocument.mutate(
-      { documentId: pendingDocumentId, patientId },
+      { documentId: capturedDocId, patientId },
       {
         onSuccess: () => {
-          setPrefillData({ documentId: pendingDocumentId, classification, patientId });
+          setPrefillData({ documentId: capturedDocId, classification, patientId });
           setPrefilledDialogOpen(true);
         },
         onError: () => {
-          // Even if link fails, still open dialog
-          setPrefillData({ documentId: pendingDocumentId, classification, patientId });
+          setPrefillData({ documentId: capturedDocId, classification, patientId });
           setPrefilledDialogOpen(true);
         },
       },
     );
-
-    // Clear URL param so refresh doesn't re-trigger
-    void navigate({
-      to: '/patients/$patientId',
-      params: { patientId },
-      search: {},
-      replace: true,
-    });
   }, [pendingDocumentId, patientId, pendingDocHandled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDocUploadComplete(result: DocumentUploadResponse) {
