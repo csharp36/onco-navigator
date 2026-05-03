@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreatePatient } from '@/features/patients/api';
+import { useCreatePatient, useCreateCareEvent } from '@/features/patients/api';
+import { useLinkDocumentToPatient, useDocument } from '@/features/documents/api';
 
 // ─── Zod v4 schemas (use { error: '...' } syntax) ────────────────────────────
 
@@ -90,6 +91,20 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
 
   const navigate = useNavigate();
   const createPatient = useCreatePatient();
+  const linkDocument = useLinkDocumentToPatient();
+  const { data: pendingDoc } = useDocument(prefill?.documentId);
+
+  // Map document type to care event type
+  function docTypeToEventType(docType: string | null | undefined): string | undefined {
+    switch (docType) {
+      case 'PATHOLOGY_REPORT': return 'PATHOLOGY_REPORT';
+      case 'RADIOLOGY_REPORT': return 'IMAGING';
+      case 'OPERATIVE_NOTE': return 'SURGERY';
+      case 'LAB_RESULT': return 'LAB_WORK';
+      case 'REFERRAL_LETTER': return 'REFERRAL';
+      default: return undefined;
+    }
+  }
 
   // Step 1 form — pre-fill from document classification if available
   const form1 = useForm<Step1Values>({
@@ -144,12 +159,41 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
     };
 
     createPatient.mutate(payload, {
-      onSuccess: (data) => {
-        navigate({
-          to: '/patients/$patientId',
-          params: { patientId: data.id },
-          search: prefill?.documentId ? { documentId: prefill.documentId } : {},
-        });
+      onSuccess: async (data) => {
+        const patientId = data.id;
+        const docId = prefill?.documentId;
+
+        if (docId) {
+          try {
+            // Link document to the new patient
+            await linkDocument.mutateAsync({ documentId: docId, patientId });
+
+            // Create care event from document classification
+            const eventType = docTypeToEventType(pendingDoc?.documentType);
+            if (eventType) {
+              const token = (await import('@/lib/auth')).getAccessToken();
+              await fetch(`/api/patients/${patientId}/care-events`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                  eventType,
+                  eventDate: new Date().toISOString().split('T')[0],
+                  status: 'COMPLETED',
+                  notes: `Created from uploaded document (${pendingDoc?.originalFilename ?? 'document'})`,
+                  documentId: docId,
+                }),
+              });
+            }
+          } catch {
+            // Document linking/event creation failed — still navigate to patient
+            console.error('Failed to link document or create care event');
+          }
+        }
+
+        navigate({ to: '/patients/$patientId', params: { patientId } });
       },
       onError: () => {
         setMutationError(

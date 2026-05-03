@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { z } from 'zod';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -45,15 +44,10 @@ import { DocumentDropZone } from '@/features/documents/DocumentDropZone';
 import { DocumentProcessingModal } from '@/features/documents/DocumentProcessingModal';
 import { PrefilledCareEventDialog } from '@/features/documents/PrefilledCareEventDialog';
 import { DocumentPreviewPanel } from '@/features/documents/DocumentPreviewPanel';
-import { usePatientDocuments, useLinkDocumentToPatient, useDocument } from '@/features/documents/api';
+import { usePatientDocuments } from '@/features/documents/api';
 import type { DocumentUploadResponse, DocumentPrefillData, DocumentType } from '@/features/documents/types';
 
-const searchSchema = z.object({
-  documentId: z.string().optional(),
-});
-
 export const Route = createFileRoute('/patients/$patientId')({
-  validateSearch: searchSchema,
   component: PatientDetailPage,
 });
 
@@ -115,7 +109,6 @@ function PatientStatusBadge({
 
 function PatientDetailPage() {
   const { patientId } = Route.useParams();
-  const { documentId: pendingDocumentId } = Route.useSearch();
   const navigate = useNavigate();
 
   const { data: patient, isLoading: patientLoading, isError: patientError } = usePatient(patientId);
@@ -138,56 +131,10 @@ function PatientDetailPage() {
   const [prefilledDialogOpen, setPrefilledDialogOpen] = useState(false);
   const [previewDocId, setPreviewDocId] = useState<string | null>(null);
   const { data: documents } = usePatientDocuments(patientId);
-  const linkDocument = useLinkDocumentToPatient();
 
-  // Capture documentId on first render so it survives URL param clearing
-  const [capturedDocId] = useState(() => pendingDocumentId ?? undefined);
-  const { data: pendingDoc } = useDocument(capturedDocId);
-  const [pendingDocHandled, setPendingDocHandled] = useState(false);
-
-  useEffect(() => {
-    if (!capturedDocId || !patientId || pendingDocHandled) return;
-    if (!pendingDoc) return; // Wait for document fetch to complete
-
-    setPendingDocHandled(true);
-
-    // Clear URL param now that we've captured what we need
-    if (pendingDocumentId) {
-      void navigate({
-        to: '/patients/$patientId',
-        params: { patientId },
-        search: {},
-        replace: true,
-      });
-    }
-
-    // Build classification from the stored document metadata
-    const classification = {
-      documentType: pendingDoc.documentType ?? 'UNKNOWN',
-      confidence: pendingDoc.classificationSource === 'AI' ? 'high' : 'manual',
-      mrn: null,
-      patientName: null,
-      dateOfBirth: null,
-      eventType: pendingDoc.documentType,
-      eventDate: null,
-      extractedNotes: null,
-    };
-
-    // Link the document to this patient, then open care event dialog
-    linkDocument.mutate(
-      { documentId: capturedDocId, patientId },
-      {
-        onSuccess: () => {
-          setPrefillData({ documentId: capturedDocId, classification, patientId });
-          setPrefilledDialogOpen(true);
-        },
-        onError: () => {
-          setPrefillData({ documentId: capturedDocId, classification, patientId });
-          setPrefilledDialogOpen(true);
-        },
-      },
-    );
-  }, [pendingDocumentId, patientId, pendingDocHandled]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Note: pending document linking for the create-new-patient flow is handled
+  // by PatientWizard (links doc + creates care event before navigating here).
+  // No useEffect needed — data is already in the database when this page loads.
 
   function handleDocUploadComplete(result: DocumentUploadResponse) {
     setIsUploading(false);
