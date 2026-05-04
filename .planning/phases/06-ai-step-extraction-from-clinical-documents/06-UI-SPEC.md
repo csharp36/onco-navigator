@@ -66,7 +66,7 @@ Inherited from existing StepRow and PathwayEditor patterns — Phase 6 introduce
 Rules specific to Phase 6:
 - PROPOSED step names: `text-sm text-muted-foreground` (weight 400, muted color) — same as existing PROPOSED styling in StepRow.
 - ACTIVE/CONFIRMED step names: `text-sm font-semibold` — unchanged from existing pattern.
-- "AI Proposed" badge label: `text-xs` at weight 500 (badge default).
+- "AI Proposed" badge label: `text-xs font-semibold` (weight 600 — visually distinct from surrounding muted body text, matches badge conventions).
 - "Already covered" section header: `text-xs font-medium text-muted-foreground uppercase tracking-wide`.
 - "Already covered" item names: `text-sm text-muted-foreground`.
 
@@ -164,7 +164,7 @@ All components are shadcn official — no third-party blocks.
 Content:
 - Title: `Remove proposal for "{step name}"?`
 - Description: `This step will be marked as rejected. It won't appear in the pathway, and the AI won't re-propose it from future document uploads.`
-- Footer buttons: `Button variant="outline"` ("Cancel") and `Button variant="destructive"` ("Reject Proposal")
+- Footer buttons: `Button variant="outline"` ("Keep Proposal") and `Button variant="destructive"` ("Reject Proposal")
 
 **On confirm:** Step transitions to REJECTED status (hidden from view). TanStack Query invalidates pathway query. No toast needed — the step disappearing from the list is sufficient feedback.
 
@@ -226,7 +226,7 @@ The `EdgeEditor` will show confirmed edges after step confirmation triggers quer
 | Reject dialog title | `Remove proposal for "{step name}"?` |
 | Reject dialog description | `This step will be marked as rejected. It won't appear in the pathway, and the AI won't re-propose it from future document uploads.` |
 | Reject dialog confirm button | "Reject Proposal" |
-| Reject dialog cancel button | "Cancel" |
+| Reject dialog cancel button | "Keep Proposal" |
 | "AI Proposed" badge label | "AI Proposed" |
 | Source document label | "Source: {original filename}" |
 | PROPOSED step tooltip | "Pending confirmation — this step was proposed by AI and will not be evaluated until a nurse confirms it." (existing tooltip copy — retain unchanged) |
