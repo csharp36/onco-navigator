@@ -67,7 +67,7 @@ Rules specific to Phase 6:
 - PROPOSED step names: `text-sm text-muted-foreground` (weight 400, muted color) — same as existing PROPOSED styling in StepRow.
 - ACTIVE/CONFIRMED step names: `text-sm font-semibold` — unchanged from existing pattern.
 - "AI Proposed" badge label: `text-xs font-semibold` (weight 600 — visually distinct from surrounding muted body text, matches badge conventions).
-- "Already covered" section header: `text-xs font-medium text-muted-foreground uppercase tracking-wide`.
+- "Already covered" section header: `text-xs font-semibold text-muted-foreground uppercase tracking-wide`.
 - "Already covered" item names: `text-sm text-muted-foreground`.
 
 Source: `StepRow.tsx` `stepNameClass()` function, existing typography patterns.
@@ -184,7 +184,7 @@ Rendered below the pathway step list, above the "Add Step" button, only when the
 
 **Visual design:**
 - `Card` with `CardHeader` ("Steps already in pathway") and `CardContent`
-- Header: `text-xs font-medium text-muted-foreground uppercase tracking-wide`
+- Header: `text-xs font-semibold text-muted-foreground uppercase tracking-wide`
 - Body: flat list of step names, each as `text-sm text-muted-foreground`, separated by commas or stacked as `space-y-1`
 - Collapsible — initially collapsed. `CollapsibleTrigger` shows "N steps already tracked" summary, expands to show full list.
 - No action buttons — informational only.
