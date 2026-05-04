@@ -157,7 +157,7 @@ Plans:
 **Wave 3** *(blocked on Wave 2 Plan 03)*
 - [x] 05-05-PLAN.md — PatientPathwayController (9 REST endpoints), backend DTOs, frontend types + API hooks, TemplatePicker, wizard modification
 **Wave 4** *(blocked on Wave 2 + Wave 3)*
-- [ ] 05-06-PLAN.md — Frontend DAG visualization (PathwayDAGView, StepRow), inline editor (PathwayEditor, AddStepForm, EdgeEditor, SkipStepDialog), patient detail page integration
+- [x] 05-06-PLAN.md — Frontend DAG visualization (PathwayDAGView, StepRow), inline editor (PathwayEditor, AddStepForm, EdgeEditor, SkipStepDialog), patient detail page integration
 **UI hint**: yes
 
 Cross-cutting constraints:
