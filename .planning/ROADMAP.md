@@ -149,8 +149,8 @@ Cross-cutting constraints:
 **Plans:** 6 plans
 Plans:
 **Wave 1** *(no dependencies -- parallel)*
-- [ ] 05-01-PLAN.md — Flyway migrations (enum, 3 tables, data migration JSONB->relational), JPA entities, repositories
-- [ ] 05-02-PLAN.md — Temporal pathwayStepsChanged signal (workflow interface + impl + PathwayService method)
+- [x] 05-01-PLAN.md — Flyway migrations (enum, 3 tables, data migration JSONB->relational), JPA entities, repositories
+- [x] 05-02-PLAN.md — Temporal pathwayStepsChanged signal (workflow interface + impl + PathwayService method)
 **Wave 2** *(blocked on Wave 1)*
 - [ ] 05-03-PLAN.md — PathwayForkService (template deep copy), PatientPathwayService (step/edge CRUD + cycle detection), PatientService modification
 - [ ] 05-04-PLAN.md — DAG evaluation engine rewrite (PathwayEvaluationActivityImpl), PathwayStatusService rewrite, DTO updates
