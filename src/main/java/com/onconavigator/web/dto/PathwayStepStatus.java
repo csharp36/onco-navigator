@@ -1,28 +1,35 @@
 package com.onconavigator.web.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
- * Status of a single step within a patient's current pathway (per D-08).
+ * Status of a single step within a patient's per-patient pathway (Phase 5 DAG).
  *
- * <p>Provides the data needed to render one row in the patient's pathway timeline on
- * the dashboard. Each step's status is evaluated by PatientService against the care
- * events recorded for the patient.
+ * <p>Provides the data needed to render one node in the patient's pathway DAG visualization
+ * on the dashboard. Each step carries its DAG position (depth, sortOrder), lifecycle status,
+ * timing information, and the prerequisite step IDs needed for edge rendering.
  *
- * @param stepId          identifier matching the pathway template step (e.g., BREAST_01)
- * @param stepNumber      1-indexed ordinal position in the pathway sequence
- * @param stepName        human-readable name for dashboard display
- * @param status          one of: "COMPLETED", "OVERDUE", "MISSING", "UPCOMING"
- * @param completionDate  date the corresponding care event was recorded; null if not completed
- * @param timingInfo      human-readable timing description (e.g., "14 days late", "Due in 3 days")
- * @param hasActiveAlert  true if there is an OPEN or ACKNOWLEDGED alert for this step
+ * @param stepId              UUID of the per-patient pathway step
+ * @param stepName            human-readable step name
+ * @param status              step lifecycle status: ACTIVE, COMPLETED, PROPOSED, SKIPPED
+ * @param depth               DAG depth (0 = root, 1 = depends on root, etc.)
+ * @param sortOrder           position in topological sort order
+ * @param completionDate      date the step was marked completed; null if not completed
+ * @param timingInfo          human-readable timing (e.g., "Due in 3 days", "14 days overdue")
+ * @param hasActiveAlert      true if an OPEN alert exists for this step
+ * @param skipReason          reason if status is SKIPPED; null otherwise
+ * @param prerequisiteStepIds UUIDs of prerequisite steps (for frontend edge rendering)
  */
 public record PathwayStepStatus(
         String stepId,
-        int stepNumber,
         String stepName,
         String status,
+        int depth,
+        int sortOrder,
         LocalDate completionDate,
         String timingInfo,
-        boolean hasActiveAlert
+        boolean hasActiveAlert,
+        String skipReason,
+        List<String> prerequisiteStepIds
 ) {}
