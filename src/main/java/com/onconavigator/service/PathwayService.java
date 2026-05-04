@@ -104,6 +104,29 @@ public class PathwayService {
     }
 
     /**
+     * Sends a pathway steps changed signal to a running patient pathway workflow.
+     *
+     * <p>The signal causes the workflow to wake from its 24-hour timer immediately and
+     * re-evaluate the patient's pathway state against the current per-patient steps and edges.
+     *
+     * <p>Called after step add/edit/remove/skip and edge add/remove operations (D-01, D-09).
+     * Also called after template fork during patient creation (D-05).
+     *
+     * <p>If no workflow is running for this patient, the signal is silently dropped by Temporal.
+     *
+     * @param patientId UUID of the patient whose workflow should be signaled -- no PHI
+     */
+    public void signalPathwayStepsChanged(UUID patientId) {
+        PatientPathwayWorkflow workflow = workflowClient.newWorkflowStub(
+                PatientPathwayWorkflow.class,
+                TemporalConfig.PATHWAY_WORKFLOW_ID_PREFIX + patientId);
+
+        workflow.pathwayStepsChanged();
+
+        log.info("Sent pathwayStepsChanged signal for patient {}", patientId);
+    }
+
+    /**
      * Sends a deactivation signal to a running patient pathway workflow.
      *
      * <p>The workflow will close all OPEN alerts for the patient and then terminate (D-08).
