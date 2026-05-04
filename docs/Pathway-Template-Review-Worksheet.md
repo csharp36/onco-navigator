@@ -324,7 +324,7 @@ YOUR ANSWER: OK
 
 Step 4 — Alert: "Oncotype DX not ordered within 14 days of pathology report."
 Step 4 — Action: "Review with treating physician to confirm order."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 Step 5 — Alert: "Oncotype result not available before medical oncology visit."
 Step 5 — Action: "Confirm Oncotype DX result timing. If result will not be available before the visit, consider rescheduling the medical oncology visit to avoid a wasted appointment."
@@ -378,7 +378,7 @@ OPTIONS:
 - (B) Biopsy should be an explicit step — add it to the pathway (tell us where in the sequence)
 - (C) It depends on the case — sometimes biopsy is pre-diagnosis, sometimes post
 
-YOUR ANSWER:
+YOUR ANSWER: A
 
 If you answered B, where should biopsy go in the sequence (before which step)?
 
@@ -397,7 +397,7 @@ OPTIONS:
 - (C) No — the order should be reversed (imaging first, then consultation)
 - (D) Something else (explain below)
 
-YOUR ANSWER:
+YOUR ANSWER:A
 
 ADDITIONAL NOTES:
 
@@ -408,7 +408,7 @@ ADDITIONAL NOTES:
 
 CONTEXT: Step 4 (Multidisciplinary Tumor Board Review) has a 30-day window from diagnosis date. Is this the right amount of time?
 
-YOUR ANSWER (OK, or write the correct number of days):
+YOUR ANSWER (OK, or write the correct number of days): OK
 
 
 ADDITIONAL NOTES:
@@ -425,7 +425,7 @@ OPTIONS:
 - (B) We need separate pathways — SCLC and NSCLC are too different to share a sequence
 - (C) One pathway is OK but some steps should be marked optional for SCLC cases
 
-YOUR ANSWER:
+YOUR ANSWER: A
 
 ADDITIONAL NOTES:
 
@@ -448,6 +448,11 @@ YOUR ANSWER (list any steps that should be added, or write "no changes needed"):
 
 
 ADDITIONAL NOTES:
+PFT shouod be added but not always needed
+Brain MRI should be part of imaging, not a separate step
+Mediastinoscopy may be added, almost never needed
+Biopsy should be a separate step. Sometimes ptients have a biopsy already in the first visit, sometimes they dont and medical oncology orders it
+Radiation ONcology consultation is the correct term and should be a separate step
 
 
 ---
@@ -456,12 +461,12 @@ ADDITIONAL NOTES:
 
 CONTEXT: Below are the time windows currently built into the lung pathway. For each one, write OK if correct, or write the number of days it SHOULD be.
 
-- Diagnosis to thoracic consultation: currently 14 days.  YOUR ANSWER:
-- Diagnosis to staging imaging: currently 21 days.  YOUR ANSWER:
-- [See PW-LU-001] to biomarker testing: currently 14 days.  YOUR ANSWER:
-- Diagnosis to tumor board: currently 30 days.  YOUR ANSWER:
-- Tumor board to med onc visit: currently 14 days.  YOUR ANSWER:
-- Med onc visit to treatment plan: currently 14 days.  YOUR ANSWER:
+- Diagnosis to thoracic consultation: currently 14 days.  YOUR ANSWER:OK
+- Diagnosis to staging imaging: currently 21 days.  YOUR ANSWER:14 days
+- [See PW-LU-001] to biomarker testing: currently 14 days.  YOUR ANSWER: OK
+- Diagnosis to tumor board: currently 30 days.  YOUR ANSWER: OK
+- Tumor board to med onc visit: currently 14 days.  YOUR ANSWER: 7 days
+- Med onc visit to treatment plan: currently 14 days.  YOUR ANSWER: OK
 
 ADDITIONAL NOTES:
 
@@ -474,27 +479,27 @@ CONTEXT: Below is the alert text and suggested action for each step. For each on
 
 Step 1 — Alert: "No thoracic consultation found within 14 days of diagnosis."
 Step 1 — Action: "Schedule thoracic surgery or pulmonology consult."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 Step 2 — Alert: "Staging imaging not completed within 21 days of diagnosis."
 Step 2 — Action: "Confirm imaging order with treating team."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 Step 3 — Alert: "Biomarker testing not ordered within 14 days of biopsy confirmation."
 Step 3 — Action: "Review with treating physician."
-YOUR ANSWER (note: the alert text references "biopsy confirmation" which may need to change based on your answer to PW-LU-001):
+YOUR ANSWER (note: the alert text references "biopsy confirmation" which may need to change based on your answer to PW-LU-001): OK
 
 Step 4 — Alert: "Tumor board review not documented within 30 days of diagnosis."
 Step 4 — Action: "Schedule case presentation."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 Step 5 — Alert: "Medical oncology visit not scheduled within 14 days of tumor board review."
 Step 5 — Action: "Schedule consultation."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 Step 6 — Alert: "No treatment plan documented within 14 days of medical oncology visit."
 Step 6 — Action: "Follow up with medical oncologist."
-YOUR ANSWER:
+YOUR ANSWER: OK
 
 ADDITIONAL NOTES:
 
@@ -522,9 +527,9 @@ OPTIONS:
 - (B) The 21-day clock should start from PATHOLOGY RESULTS (keep the current build — the oncologist needs these results before the visit)
 - (C) Something else (explain below)
 
-YOUR ANSWER:
+YOUR ANSWER: C
 
-ADDITIONAL NOTES:
+ADDITIONAL NOTES: The clock should start once the the referral PDF is received.  From there a the first visit in the practice with medical oncology should happen in less then 7 days.  The first should happen regardless of results, but if the system notices that there are no notes from the referring doctor, no pathology, surgery report, imaging and labs it should notify the nurse to look for those.  If they are not available or do not exit (because for example the patient did not have surgery yet) then the 1st visit should still be scheduled.  This is different then follow-up visits where in certain situations the physician may elect to re-schedule a visit if a certain data set is not available (for example a returning patient with breast cancer to review oncotypeDx and discuss the need for adjuvant chemotherapy when the oncotypeDX is not yet available)
 
 
 ---
@@ -538,7 +543,7 @@ OPTIONS:
 - (B) Split into two steps — one IMAGING step for CT, one LAB_WORK step for CEA
 - (C) CEA is not important enough to track separately for the pilot
 
-YOUR ANSWER:
+YOUR ANSWER:B
 
 ADDITIONAL NOTES:
 
@@ -551,7 +556,7 @@ CONTEXT: Step 3 (Surgery) has a 45-day window measured from DIAGNOSIS DATE. This
 
 Is 45 days the right number? And should the clock start from diagnosis, or from a specific earlier step (like staging completion or surgical consultation)?
 
-YOUR ANSWER (write the correct number of days AND what the clock should start from):
+YOUR ANSWER (write the correct number of days AND what the clock should start from):30 days. The clock should start from when the referral is received.
 
 
 ADDITIONAL NOTES:
@@ -568,7 +573,7 @@ OPTIONS:
 - (B) We need separate pathways for colon and rectal cancer
 - (C) One pathway is OK but we need to add a note or optional step for neoadjuvant therapy
 
-YOUR ANSWER:
+YOUR ANSWER: B
 
 ADDITIONAL NOTES:
 
@@ -584,7 +589,7 @@ OPTIONS:
 - (B) Split into two steps — surgical pathology and MSI/MMR are different processes with different timelines
 - (C) MSI/MMR is not relevant enough to track separately for the pilot
 
-YOUR ANSWER:
+YOUR ANSWER: B
 
 ADDITIONAL NOTES:
 
@@ -602,7 +607,7 @@ Possible additions to consider:
 - Genetic counseling (for Lynch syndrome if MSI-high)
 - Other?
 
-YOUR ANSWER (list any steps that should be added, or write "no changes needed"):
+YOUR ANSWER (list any steps that should be added, or write "no changes needed"): no changes needed
 
 
 ADDITIONAL NOTES:
@@ -614,12 +619,12 @@ ADDITIONAL NOTES:
 
 CONTEXT: Below are the time windows currently built into the colorectal pathway. For each one, write OK if correct, or write the number of days it SHOULD be.
 
-- Diagnosis to surgical consultation: currently 14 days.  YOUR ANSWER:
-- Diagnosis to staging workup: currently 21 days.  YOUR ANSWER:
-- Diagnosis to surgery: currently 45 days.  YOUR ANSWER:
-- Surgery to pathology/MSI: currently 21 days.  YOUR ANSWER:
-- [See PW-CR-001] to med onc visit: currently 21 days.  YOUR ANSWER:
-- Med onc visit to treatment plan: currently 14 days.  YOUR ANSWER:
+- Diagnosis to surgical consultation: currently 14 days.  YOUR ANSWER: OK
+- Diagnosis to staging workup: currently 21 days.  YOUR ANSWER: 14 days
+- Diagnosis to surgery: currently 45 days.  YOUR ANSWER: OK
+- Surgery to pathology/MSI: currently 21 days.  YOUR ANSWER: 7 days
+- [See PW-CR-001] to med onc visit: currently 21 days.  YOUR ANSWER: OK
+- Med onc visit to treatment plan: currently 14 days.  YOUR ANSWER: OK
 
 ADDITIONAL NOTES:
 
@@ -632,27 +637,27 @@ CONTEXT: Below is the alert text and suggested action for each step. For each on
 
 Step 1 — Alert: "No surgical consultation found within 14 days of diagnosis."
 Step 1 — Action: "Schedule surgical oncology consult."
-YOUR ANSWER:
+YOUR ANSWER:OK
 
 Step 2 — Alert: "Staging workup not completed within 21 days of diagnosis."
 Step 2 — Action: "Confirm orders with treating team."
-YOUR ANSWER:
+YOUR ANSWER:OK
 
 Step 3 — Alert: "Surgery not yet performed within 45 days of diagnosis."
 Step 3 — Action: "Follow up with surgical team on scheduling."
-YOUR ANSWER:
+YOUR ANSWER:OK
 
 Step 4 — Alert: "Pathology or MSI not documented within 21 days of surgery."
 Step 4 — Action: "Contact pathology."
-YOUR ANSWER:
+YOUR ANSWER:OK
 
 Step 5 — Alert: "Medical oncology visit not scheduled within 21 days of surgery."
 Step 5 — Action: "Schedule post-surgical oncology consultation."
-YOUR ANSWER:
+YOUR ANSWER:OK
 
 Step 6 — Alert: "No treatment plan documented within 14 days of medical oncology visit."
 Step 6 — Action: "Follow up with medical oncologist."
-YOUR ANSWER:
+YOUR ANSWER:OK
 
 ADDITIONAL NOTES:
 
