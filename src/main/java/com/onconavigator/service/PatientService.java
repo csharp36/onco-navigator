@@ -46,6 +46,7 @@ public class PatientService {
     private final AlertRepository alertRepository;
     private final ClinicalDocumentRepository documentRepository;
     private final PathwayService pathwayService;
+    private final PathwayForkService pathwayForkService;
     private final HmacTokenService hmacTokenService;
 
     public PatientService(PatientRepository patientRepository,
@@ -53,12 +54,14 @@ public class PatientService {
                           AlertRepository alertRepository,
                           ClinicalDocumentRepository documentRepository,
                           PathwayService pathwayService,
+                          PathwayForkService pathwayForkService,
                           HmacTokenService hmacTokenService) {
         this.patientRepository = patientRepository;
         this.careEventRepository = careEventRepository;
         this.alertRepository = alertRepository;
         this.documentRepository = documentRepository;
         this.pathwayService = pathwayService;
+        this.pathwayForkService = pathwayForkService;
         this.hmacTokenService = hmacTokenService;
     }
 
@@ -91,14 +94,26 @@ public class PatientService {
 
         Patient saved = patientRepository.save(patient);
 
+        // D-07: Template picker — fork template or create empty pathway
+        if ("empty".equals(req.effectivePathwayMode())) {
+            pathwayForkService.createEmptyPathway(saved, actorId);
+        } else {
+            pathwayForkService.forkFromTemplate(saved, actorId);
+        }
+
         try {
             pathwayService.startPathwayMonitoring(saved.getId(), saved.getCancerType());
+            // Signal workflow to evaluate forked steps immediately (template mode only)
+            if (!"empty".equals(req.effectivePathwayMode())) {
+                pathwayService.signalPathwayStepsChanged(saved.getId());
+            }
         } catch (WorkflowExecutionAlreadyStarted e) {
             log.warn("Pathway workflow already started for patient {} — idempotent, ignoring",
                     saved.getId());
         }
 
-        log.info("Created patient {} and started pathway monitoring", saved.getId());
+        log.info("Created patient {} with pathway mode '{}' and started monitoring",
+                saved.getId(), req.effectivePathwayMode());
 
         return toPatientResponse(saved);
     }

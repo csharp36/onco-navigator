@@ -15,6 +15,13 @@ import java.util.UUID;
  * Never log these fields.
  *
  * <p>Per D-01: manual patient registration is the V1 data entry path (no EMR integration).
+ *
+ * <p>The optional {@code pathwayMode} field controls how the per-patient pathway DAG is
+ * initialised at enrollment time (D-07):
+ * <ul>
+ *   <li>{@code "template"} (default) — deep-copies the cancer-type template into per-patient rows
+ *   <li>{@code "empty"} — creates a pathway with no steps; AI extraction populates it
+ * </ul>
  */
 public record CreatePatientRequest(
         @NotBlank(message = "First name is required") String firstName,
@@ -25,5 +32,18 @@ public record CreatePatientRequest(
         @NotBlank(message = "Cancer stage is required") String cancerStage,
         @NotNull(message = "Diagnosis date is required") LocalDate diagnosisDate,
         UUID assignedNavigatorId,
-        String treatingPhysician
-) {}
+        String treatingPhysician,
+        String pathwayMode  // "template" (default) or "empty" per D-07
+) {
+    /**
+     * Returns the effective pathway mode, defaulting to "template" for backward compatibility.
+     *
+     * <p>Callers that do not provide {@code pathwayMode} (e.g., existing API clients) continue
+     * to receive template-based pathway initialisation without any change.
+     *
+     * @return "template" or "empty"
+     */
+    public String effectivePathwayMode() {
+        return pathwayMode == null || pathwayMode.isBlank() ? "template" : pathwayMode;
+    }
+}

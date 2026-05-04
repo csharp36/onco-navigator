@@ -51,6 +51,21 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
             UUID patientId, String pathwayStepName, AlertStatus status);
 
     /**
+     * Find all alerts for a patient's specific pathway step with a given status.
+     *
+     * <p>Used when removing or skipping a step from a patient's pathway: any OPEN alerts
+     * for that step must be resolved so they don't appear as actionable items after the
+     * step is gone (per deleteStep and skipStep cascade-resolve requirement).
+     *
+     * @param patientId       the patient UUID
+     * @param pathwayStepName the name of the pathway step
+     * @param status          the alert status to filter by (typically OPEN)
+     * @return matching alerts
+     */
+    List<Alert> findByPatientIdAndPathwayStepNameAndStatus(
+            UUID patientId, String pathwayStepName, AlertStatus status);
+
+    /**
      * Find alerts by status, ordered by clinical severity then creation time.
      *
      * <p>Severity ordering (per ALRT-01): DELAYED_EVENT (overdue, highest urgency) → 1,
