@@ -152,8 +152,8 @@ Plans:
 - [x] 05-01-PLAN.md — Flyway migrations (enum, 3 tables, data migration JSONB->relational), JPA entities, repositories
 - [x] 05-02-PLAN.md — Temporal pathwayStepsChanged signal (workflow interface + impl + PathwayService method)
 **Wave 2** *(blocked on Wave 1)*
-- [ ] 05-03-PLAN.md — PathwayForkService (template deep copy), PatientPathwayService (step/edge CRUD + cycle detection), PatientService modification
-- [ ] 05-04-PLAN.md — DAG evaluation engine rewrite (PathwayEvaluationActivityImpl), PathwayStatusService rewrite, DTO updates
+- [x] 05-03-PLAN.md — PathwayForkService (template deep copy), PatientPathwayService (step/edge CRUD + cycle detection), PatientService modification
+- [x] 05-04-PLAN.md — DAG evaluation engine rewrite (PathwayEvaluationActivityImpl), PathwayStatusService rewrite, DTO updates
 **Wave 3** *(blocked on Wave 2 Plan 03)*
 - [ ] 05-05-PLAN.md — PatientPathwayController (9 REST endpoints), backend DTOs, frontend types + API hooks, TemplatePicker, wizard modification
 **Wave 4** *(blocked on Wave 2 + Wave 3)*
