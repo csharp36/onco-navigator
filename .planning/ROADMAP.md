@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Pathway Engine** - Temporal.io durable workflows, deviation detection, and all three cancer pathway templates (completed 2026-04-30)
 - [x] **Phase 3: Working Application** - Patient data entry, alert management, and the nurse navigator dashboard (completed 2026-04-30)
 - [x] **Phase 4: AI Document Ingestion & Alert Enhancement** - PDF drag-and-drop classification, patient matching, event pre-fill, Claude alert generation, circuit breaker (completed 2026-05-01)
-- [ ] **Phase 5: Per-Patient Pathway Instances + DAG Foundation** - Mutable per-patient pathways forked from templates, DAG evaluation engine replacing linear iteration
+- [x] **Phase 5: Per-Patient Pathway Instances + DAG Foundation** - Mutable per-patient pathways forked from templates, DAG evaluation engine replacing linear iteration (completed 2026-05-04)
 - [ ] **Phase 6: AI Step Extraction from Clinical Documents** - Claude extracts pathway steps from MD notes, orders, and nurse notes; proposed steps require nurse confirmation
 - [ ] **Phase 7: Referral Trigger + Enhanced Timing** - Referral PDF as pathway clock trigger, event status awareness (Scheduled/Pending/Cancelled), results-before-visit and 48-hour escalation alerts
 - [ ] **Phase 8: Template Inheritance** - Extensible pathway templates with parent/child inheritance (e.g., rectal inherits from colorectal)
@@ -240,7 +240,7 @@ Phase 1 → 2 → 3 → 4 → 5 ──┬── 6 → 7
 | 2. Pathway Engine | 4/4 | Complete | 2026-04-30 |
 | 3. Working Application | 6/6 | Complete | 2026-04-30 |
 | 4. AI Document Ingestion & Alert Enhancement | 7/7 | Complete | 2026-05-01 |
-| 5. Per-Patient Pathway + DAG Foundation | 0/6 | Planned | - |
+| 5. Per-Patient Pathway + DAG Foundation | 6/6 | Complete | 2026-05-04 |
 | 6. AI Step Extraction | 0/0 | Not Started | - |
 | 7. Referral Trigger + Enhanced Timing | 0/0 | Not Started | - |
 | 8. Template Inheritance | 0/0 | Not Started | - |
