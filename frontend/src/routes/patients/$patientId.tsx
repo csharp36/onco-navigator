@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
-  AlertTriangle,
-  CheckCircle2,
-  Circle,
-  Clock,
+  Check,
   FileText,
+  Pencil,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +35,9 @@ import {
   useDeactivatePatient,
   useUpdateCareEventStatus,
 } from '@/features/patients/api';
-import type { CareEventResponse, PathwayStepStatus } from '@/features/patients/types';
+import type { CareEventResponse } from '@/features/patients/types';
+import { PathwayDAGView } from '@/features/patients/PathwayDAGView';
+import { PathwayEditor } from '@/features/patients/PathwayEditor';
 import { QuickAddCareEventDialog } from '@/features/patients/QuickAddCareEventDialog';
 import { hasRole } from '@/lib/auth';
 import { DocumentDropZone } from '@/features/documents/DocumentDropZone';
@@ -58,24 +58,6 @@ const DEACTIVATION_REASONS = [
   { value: 'Transferred to Another Practice', label: 'Transferred to Another Practice' },
   { value: 'Withdrawn from Care', label: 'Withdrawn from Care' },
 ];
-
-// ─── Pathway step icon ────────────────────────────────────────────────────────
-
-function PathwayStepIcon({ step }: { step: PathwayStepStatus }) {
-  if (step.hasActiveAlert) {
-    return <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />;
-  }
-  switch (step.status) {
-    case 'COMPLETED':
-      return <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />;
-    case 'OVERDUE':
-    case 'MISSING':
-      return <Clock className="h-5 w-5 text-amber-500 shrink-0" />;
-    case 'UPCOMING':
-    default:
-      return <Circle className="h-5 w-5 text-muted-foreground shrink-0" />;
-  }
-}
 
 // ─── Care event status badge ──────────────────────────────────────────────────
 
@@ -118,6 +100,7 @@ function PatientDetailPage() {
   const deactivatePatient = useDeactivatePatient();
   const updateCareEventStatus = useUpdateCareEventStatus(patientId);
 
+  const [isEditingPathway, setIsEditingPathway] = useState(false);
   const [recordEventOpen, setRecordEventOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [deactivationReason, setDeactivationReason] = useState('');
@@ -306,45 +289,38 @@ function PatientDetailPage() {
 
         {/* ── Left: Pathway visualization ─────────────────────────────────── */}
         <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold">Pathway Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pathwayLoading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
-              ) : !pathwayStatus || pathwayStatus.steps.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  No pathway template found for this patient.
-                </p>
-              ) : (
-                <ol className="space-y-1">
-                  {pathwayStatus.steps.map((step) => (
-                    <li
-                      key={step.stepId}
-                      className={`flex items-start gap-3 rounded-md p-3 min-h-[44px] ${
-                        step.hasActiveAlert ? 'bg-amber-50' : ''
-                      }`}
-                    >
-                      <PathwayStepIcon step={step} />
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm leading-snug">
-                          {step.stepNumber}. {step.stepName}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {step.timingInfo}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </CardContent>
-          </Card>
+          <div aria-live="polite">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-xl font-semibold">Pathway Status</CardTitle>
+                <Button
+                  variant={isEditingPathway ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setIsEditingPathway(!isEditingPathway)}
+                  aria-label={isEditingPathway ? 'Done editing pathway' : 'Edit pathway'}
+                >
+                  {isEditingPathway ? (
+                    <><Check className="h-4 w-4 mr-1" /> Done Editing</>
+                  ) : (
+                    <><Pencil className="h-4 w-4 mr-1" /> Edit Pathway</>
+                  )}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isEditingPathway ? (
+                  <PathwayEditor
+                    patientId={patientId}
+                    steps={pathwayStatus?.steps ?? []}
+                  />
+                ) : (
+                  <PathwayDAGView
+                    steps={pathwayStatus?.steps ?? []}
+                    isLoading={pathwayLoading}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* ── Right: Care events list ──────────────────────────────────────── */}
