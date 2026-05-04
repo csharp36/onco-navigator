@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: true
 preset: new-york
 created: 2026-05-04
+revised: 2026-05-04
 ---
 
 # Phase 5 --- UI Design Contract
@@ -52,14 +53,16 @@ Exceptions:
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 (regular) | 1.5 |
-| Label | 14px | 500 (medium) | 1.4 |
+| Label / Step Name | 14px | 600 (semibold) | 1.4 |
 | Heading | 20px | 600 (semibold) | 1.2 |
 | Display | 28px | 600 (semibold) | 1.2 |
 
-Source: Existing codebase uses `text-sm` (14px) for step names and event details, `text-xl font-semibold` (20px/600) for card headings, `text-3xl font-semibold tracking-tight` (28px-ish/600) for page titles. This contract codifies the established pattern.
+Weights declared: **2** -- 400 (regular) and 600 (semibold). No other weights are permitted.
+
+Source: Existing codebase uses `text-sm` (14px) for step names and event details, `text-xl font-semibold` (20px/600) for card headings, `text-3xl font-semibold tracking-tight` (28px-ish/600) for page titles. This contract codifies the established pattern and collapses the previous `font-medium` (500) usage into `font-semibold` (600) for consistency.
 
 Additional typography rules for Phase 5:
-- Step name in view mode: 14px / weight 500 / `leading-snug` (matches existing `font-medium text-sm leading-snug`)
+- Step name in view mode: 14px / weight 600 / `leading-snug` (use `font-semibold text-sm leading-snug` -- replaces previous `font-medium`)
 - Step name in edit mode: 14px / weight 400 / standard line-height (editable input inherits body style)
 - Branching indicators (`---`, `---`): 14px / weight 400 / `font-mono` / `text-muted-foreground`
 - Timing info below step name: 12px (`text-xs`) / weight 400 / `text-muted-foreground`
@@ -114,6 +117,10 @@ Parallel steps at the same depth level are grouped visually with branching indic
 - Connector color: `text-muted-foreground` (oklch 0.556 0 0).
 - No horizontal lines or SVG connectors --- purely indentation + text characters, matching D-13 decision for tablet friendliness.
 
+### Focal Point
+
+**Primary focal point (patient detail screen):** PathwayDAGView step list with status icons in the left column. The status icon column (leftmost element per step row) is the primary scanning axis -- nurses scan vertically down the icon column to identify which steps need attention. Green checkmarks are "done," blue circles are "in progress," red triangles are "needs action."
+
 ---
 
 ## Copywriting Contract
@@ -141,7 +148,12 @@ Parallel steps at the same depth level are grouped visually with branching indic
 | SKIPPED step label | "Skipped" (Badge, variant outline) |
 | SKIPPED reason prompt | "Reason for skipping (required)" |
 | Add step button | "Add Step" |
+| Add step form submit | "Add Step" |
+| Add step form dismiss | "Discard" |
+| Inline step edit submit | "Save Step" |
+| Inline step edit dismiss | "Discard" |
 | Add dependency button | "Add Dependency" |
+| Add dependency submit | "Add Dependency" |
 | Step edit: name field | "Step Name" |
 | Step edit: event type field | "Expected Event Type" |
 | Step edit: time window field | "Time Window (days)" |
@@ -239,17 +251,17 @@ Parallel steps at the same depth level are grouped visually with branching indic
 
 **Step editing:**
 - Each step row in editor mode gets two icon buttons on the right: `Pencil` (edit) and `Trash2` (remove).
-- Edit icon: step row transforms into inline edit fields (step name Input, event type Select, time window Input). "Save" and "Cancel" text buttons below the fields.
+- Edit icon: step row transforms into inline edit fields (step name Input, event type Select, time window Input). "Save Step" and "Discard" text buttons below the fields.
 - Remove icon: opens `Dialog` confirmation with destructive copy.
-- "Add Step" button at the bottom of the step list: expands to show `AddStepForm` inline (not a dialog). Form has: Step Name (required Input), Expected Event Type (Select from known types), Time Window in days (number Input, optional). "Add" and "Cancel" buttons.
+- "Add Step" button at the bottom of the step list: expands to show `AddStepForm` inline (not a dialog). Form has: Step Name (required Input), Expected Event Type (Select from known types), Time Window in days (number Input, optional). "Add Step" and "Discard" buttons.
 - New steps are added as root steps (depth 0) by default. The nurse can add edges afterward via EdgeEditor.
 
 **Edge editing (EdgeEditor):**
 - Rendered below the step list in editor mode.
 - Collapsible section with header "Dependencies" and a toggle chevron.
 - Shows existing edges as a list: "[Source Step] must complete before [Target Step]" with a `X` remove button.
-- "Add Dependency" button: shows two Select dropdowns ("After step:" and "Before step:") and an "Add" button.
-- Cycle detection: if the new edge would create a cycle, show inline error message with the cycle detection copy from Copywriting Contract. The "Add" button is disabled.
+- "Add Dependency" button: shows two Select dropdowns ("After step:" and "Before step:") and an "Add Dependency" button.
+- Cycle detection: if the new edge would create a cycle, show inline error message with the cycle detection copy from Copywriting Contract. The "Add Dependency" button is disabled.
 - Edge removal: immediate, no confirmation dialog (reversible by re-adding).
 
 **Optimistic updates:**
@@ -313,6 +325,8 @@ No third-party registries. No third-party blocks.
 | Branching indicators | Decorative only, use `aria-hidden="true"`. Step depth conveyed via `aria-level` attribute on step row |
 | PROPOSED tooltip | Tooltip trigger via `Tooltip` component (keyboard accessible via focus) |
 | Color not sole indicator | Status communicated via icon shape (CheckCircle2 vs Circle vs MinusCircle vs AlertTriangle) AND text (timing info, "Skipped" badge), not color alone |
+| Edit icon button label | `aria-label="Edit [Step Name]"` on the Pencil icon button in each step row (editor mode). Dynamic -- interpolates the step name so screen readers distinguish between rows |
+| Remove icon button label | `aria-label="Remove [Step Name]"` on the Trash2 icon button in each step row (editor mode). Dynamic -- interpolates the step name so screen readers distinguish between rows |
 
 ---
 
