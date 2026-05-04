@@ -2,7 +2,7 @@
 
 ## Overview
 
-Four phases deliver a HIPAA-compliant oncology care pathway monitoring system. Phase 1 locks in the security and infrastructure foundation that cannot be retrofitted. Phase 2 builds the durable Temporal workflow engine and deviation detection logic that gives the system its core value. Phase 3 wires everything together into a working application — data entry, alert management, and the nurse dashboard. Phase 4 layers in Claude AI alert generation and validates production deployment.
+Nine phases deliver a HIPAA-compliant oncology care pathway monitoring system. Phases 1-4 established the foundation: security infrastructure, Temporal workflow engine, working dashboard, and AI document ingestion. Phases 5-9 evolve the pathway architecture from static per-cancer-type templates to per-patient DAG pathways driven by AI extraction from clinical documents — a paradigm shift based on oncologist clinical review (2026-05-04) confirming that "there is no standard sequence for a type of cancer; each patient will need a unique sequence of events."
 
 ## Phases
 
@@ -16,6 +16,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Pathway Engine** - Temporal.io durable workflows, deviation detection, and all three cancer pathway templates (completed 2026-04-30)
 - [x] **Phase 3: Working Application** - Patient data entry, alert management, and the nurse navigator dashboard (completed 2026-04-30)
 - [x] **Phase 4: AI Document Ingestion & Alert Enhancement** - PDF drag-and-drop classification, patient matching, event pre-fill, Claude alert generation, circuit breaker (completed 2026-05-01)
+- [ ] **Phase 5: Per-Patient Pathway Instances + DAG Foundation** - Mutable per-patient pathways forked from templates, DAG evaluation engine replacing linear iteration
+- [ ] **Phase 6: AI Step Extraction from Clinical Documents** - Claude extracts pathway steps from MD notes, orders, and nurse notes; proposed steps require nurse confirmation
+- [ ] **Phase 7: Referral Trigger + Enhanced Timing** - Referral PDF as pathway clock trigger, event status awareness (Scheduled/Pending/Cancelled), results-before-visit and 48-hour escalation alerts
+- [ ] **Phase 8: Template Inheritance** - Extensible pathway templates with parent/child inheritance (e.g., rectal inherits from colorectal)
+- [ ] **Phase 9: Alert Format + Notification Foundation** - Two-part alerts (what's missing + action ≤150 chars), Teams/email notification infrastructure
 
 ## Phase Details
 
@@ -128,10 +133,106 @@ Cross-cutting constraints:
 - PDFBox 3.x API: use Loader.loadPDF() not PDDocument.load()
 - Tesseract instances created per-call (not Spring beans) for virtual thread safety
 
+### Phase 5: Per-Patient Pathway Instances + DAG Foundation
+**Goal**: Each patient gets their own mutable pathway that starts from a template (or empty) and can diverge. The evaluation engine traverses a directed acyclic graph instead of a linear list.
+**Depends on**: Phase 4
+**Requirements**: PW-ALL-002 (AI extraction model), PW-BR-001 (per-patient steps), PW-BR-003 (no fixed linear sequence)
+**Success Criteria** (what must be TRUE):
+  1. A new patient can be created with either "Start from template" (forks template into per-patient steps) or "Build from documents" (empty pathway)
+  2. Per-patient pathway steps are stored relationally (not JSONB) with individual audit trails via Hibernate Envers
+  3. DAG edges (prerequisites) between steps are stored in a separate edges table and support parallel paths
+  4. The evaluation engine performs topological sort and evaluates all "ready" steps (prerequisites satisfied) rather than iterating linearly
+  5. Existing patients are migrated via Flyway data migration to per-patient rows (D-08 clean cutover, no legacy JSONB fallback)
+  6. The frontend renders pathway steps in a tiered-by-depth layout showing parallel steps at the same level
+
+**Schema**: 3 new tables (patient_pathways, patient_pathway_steps, patient_pathway_edges) — all additive, no changes to existing tables
+**Plans:** 6 plans
+Plans:
+**Wave 1** *(no dependencies -- parallel)*
+- [ ] 05-01-PLAN.md — Flyway migrations (enum, 3 tables, data migration JSONB->relational), JPA entities, repositories
+- [ ] 05-02-PLAN.md — Temporal pathwayStepsChanged signal (workflow interface + impl + PathwayService method)
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 05-03-PLAN.md — PathwayForkService (template deep copy), PatientPathwayService (step/edge CRUD + cycle detection), PatientService modification
+- [ ] 05-04-PLAN.md — DAG evaluation engine rewrite (PathwayEvaluationActivityImpl), PathwayStatusService rewrite, DTO updates
+**Wave 3** *(blocked on Wave 2 Plan 03)*
+- [ ] 05-05-PLAN.md — PatientPathwayController (9 REST endpoints), backend DTOs, frontend types + API hooks, TemplatePicker, wizard modification
+**Wave 4** *(blocked on Wave 2 + Wave 3)*
+- [ ] 05-06-PLAN.md — Frontend DAG visualization (PathwayDAGView, StepRow), inline editor (PathwayEditor, AddStepForm, EdgeEditor, SkipStepDialog), patient detail page integration
+**UI hint**: yes
+
+Cross-cutting constraints:
+- All new entities use `@Audited` (Hibernate Envers)
+- No PHI in Temporal workflow payloads — UUID-only approach maintained
+- Cycle detection runs at step modification time, not every evaluation cycle
+- PROPOSED steps (from future AI extraction) are skipped during evaluation until confirmed
+- SKIPPED replaces physician_overrides (D-04) — existing overrides migrated during data migration
+- All clinical roles can edit per-patient pathways (D-03) — no role restriction on step/edge CRUD
+
+### Phase 6: AI Step Extraction from Clinical Documents
+**Goal**: When a clinical document is uploaded for a patient, Claude AI extracts ordered/planned care events and proposes them as new pathway steps. A nurse must confirm before steps become active.
+**Depends on**: Phase 5
+**Requirements**: PW-ALL-002 (events extracted from documents), PW-BR-001 (steps from MD notes/orders/nurse notes)
+**Success Criteria** (what must be TRUE):
+  1. After document classification and patient matching, the system calls Claude to extract pathway-relevant events from the document text
+  2. Extracted steps appear in the patient's pathway as PROPOSED with source=AI_EXTRACTED and a link to the source document
+  3. A nurse can confirm or reject each proposed step from the patient detail page
+  4. Confirmed steps become active in the DAG evaluation; rejected steps are excluded
+  5. The system never auto-confirms AI-extracted steps — human-in-the-loop is non-negotiable
+  6. A new `pathwayStepsChanged` Temporal signal triggers re-evaluation when steps are confirmed
+
+Cross-cutting constraints:
+- Step extraction sends full document text to Claude (PHI — same BAA scope as document classification)
+- Patient pathway step names/statuses sent as context are non-PHI
+- Resilience4j @CircuitBreaker on extraction calls with fallback to manual step entry
+- Feature flag gates extraction (same pattern as document classification)
+
+### Phase 7: Referral Trigger + Enhanced Timing + Status-Aware Evaluation
+**Goal**: The pathway clock starts from referral PDF receipt. The evaluation engine understands event statuses (Scheduled, Pending, Cancelled) and generates new alert types for results-before-visit, scheduling confirmation, and deadline escalation.
+**Depends on**: Phase 6
+**Requirements**: PW-ALL-001 (results-before-visit, scheduling confirmations, referral tracking, escalation), PW-ALL-003 (event status tracking), PW-CR-001 (clock from referral)
+**Success Criteria** (what must be TRUE):
+  1. A patient record tracks `referral_received_at` timestamp, set when a referral document is uploaded
+  2. Pathway steps can use `REFERRAL_DATE` as an anchor type for time window calculation
+  3. Care events track `expected_completion_date`, `scheduling_confirmed`, and `external_facility_name`
+  4. The system generates a RESULTS_NOT_READY alert when results won't be available before a scheduled visit
+  5. The system generates a SCHEDULING_UNCONFIRMED alert when an outside facility hasn't confirmed within 7 days
+  6. The system generates a DEADLINE_APPROACHING alert 48 hours before a deadline
+  7. A CANCELLED event triggers an immediate corrective action alert
+  8. A SCHEDULED/PENDING event with expected_completion_date in the past triggers a DELAYED alert
+
+### Phase 8: Template Inheritance
+**Goal**: Pathway templates become extensible with parent/child relationships. A child template inherits all parent steps and can override, add, or remove specific steps.
+**Depends on**: Phase 5
+**Requirements**: PW-CR-004 (separate colon vs rectal pathways)
+**Success Criteria** (what must be TRUE):
+  1. A pathway template can declare a `parent_template_id` to inherit from another template
+  2. Child templates contain only overridden/added steps; parent steps provide the baseline
+  3. At instantiation time, parent and child steps are merged correctly (child overrides by stepId match)
+  4. Multiple templates can exist per cancer type (the active root template is used by default)
+  5. A "Rectal Cancer" child template exists inheriting from "Colorectal Cancer" with neoadjuvant-specific modifications
+  6. The patient creation wizard shows available templates including child templates for the selected cancer type
+
+### Phase 9: Alert Format + Notification Foundation
+**Goal**: Alerts use the oncologist-specified two-part format (what's missing + suggested action ≤150 chars). Infrastructure for Teams/email notifications is established.
+**Depends on**: Phase 5
+**Requirements**: PW-ALL-007 (two-part alerts ≤150 chars), PW-ALL-004 (end state: Teams/email, dashboard for admin only)
+**Success Criteria** (what must be TRUE):
+  1. Each alert has a separate `missing_summary` field describing what is missing
+  2. The `suggested_action` field is constrained to 150 characters at the service level
+  3. A `notification_preferences` table stores per-user notification channel preferences
+  4. A `NotificationService` interface exists with channel-specific implementations
+  5. Initial implementation is log-only; Teams/email connectors are deferred to a future milestone
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4
+Phases 1-4 execute sequentially. Phase 5 follows Phase 4. After Phase 5, phases 6/8/9 can run in parallel. Phase 7 depends on Phase 6.
+
+```
+Phase 1 → 2 → 3 → 4 → 5 ──┬── 6 → 7
+                            ├── 8
+                            └── 9
+```
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -139,3 +240,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 2. Pathway Engine | 4/4 | Complete | 2026-04-30 |
 | 3. Working Application | 6/6 | Complete | 2026-04-30 |
 | 4. AI Document Ingestion & Alert Enhancement | 7/7 | Complete | 2026-05-01 |
+| 5. Per-Patient Pathway + DAG Foundation | 0/6 | Planned | - |
+| 6. AI Step Extraction | 0/0 | Not Started | - |
+| 7. Referral Trigger + Enhanced Timing | 0/0 | Not Started | - |
+| 8. Template Inheritance | 0/0 | Not Started | - |
+| 9. Alert Format + Notifications | 0/0 | Not Started | - |
