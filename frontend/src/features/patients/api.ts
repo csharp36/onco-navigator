@@ -4,6 +4,8 @@ import type {
   PatientResponse, CreatePatientRequest, CareEventResponse,
   CreateCareEventRequest, UpdateCareEventStatusRequest,
   DeactivatePatientRequest, PathwayStatusResponse,
+  PatientPathwayStep, PatientPathwayEdge,
+  CreateStepRequest, CreateEdgeRequest,
 } from './types';
 
 export function usePatients(mrn?: string) {
@@ -89,5 +91,120 @@ export function usePathwayStatus(patientId: string) {
   return useQuery({
     queryKey: ['patients', patientId, 'pathway-status'],
     queryFn: () => apiClient.get<PathwayStatusResponse>(`/patients/${patientId}/pathway-status`),
+  });
+}
+
+// ── Phase 5: Pathway Step/Edge CRUD Hooks ──────────────────────────────────
+
+export function usePathwaySteps(patientId: string) {
+  return useQuery({
+    queryKey: ['patients', patientId, 'pathway-steps'],
+    queryFn: () => apiClient.get<PatientPathwayStep[]>(
+      `/patients/${patientId}/pathway/steps`),
+  });
+}
+
+export function usePathwayEdges(patientId: string) {
+  return useQuery({
+    queryKey: ['patients', patientId, 'pathway-edges'],
+    queryFn: () => apiClient.get<PatientPathwayEdge[]>(
+      `/patients/${patientId}/pathway/edges`),
+  });
+}
+
+export function useCreateStep(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateStepRequest) =>
+      apiClient.post<PatientPathwayStep>(
+        `/patients/${patientId}/pathway/steps`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-edges'] });
+    },
+  });
+}
+
+export function useUpdateStep(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ stepId, data }: { stepId: string; data: CreateStepRequest }) =>
+      apiClient.put<PatientPathwayStep>(
+        `/patients/${patientId}/pathway/steps/${stepId}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+    },
+  });
+}
+
+export function useDeleteStep(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (stepId: string) =>
+      apiClient.delete<void>(`/patients/${patientId}/pathway/steps/${stepId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-edges'] });
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['alerts', 'count'] });
+    },
+  });
+}
+
+export function useSkipStep(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ stepId, reason }: { stepId: string; reason: string }) =>
+      apiClient.patch<PatientPathwayStep>(
+        `/patients/${patientId}/pathway/steps/${stepId}/skip`, { reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['alerts', 'count'] });
+    },
+  });
+}
+
+export function useUnskipStep(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (stepId: string) =>
+      apiClient.patch<PatientPathwayStep>(
+        `/patients/${patientId}/pathway/steps/${stepId}/unskip`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+    },
+  });
+}
+
+export function useCreateEdge(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateEdgeRequest) =>
+      apiClient.post<PatientPathwayEdge>(
+        `/patients/${patientId}/pathway/edges`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-edges'] });
+    },
+  });
+}
+
+export function useDeleteEdge(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (edgeId: string) =>
+      apiClient.delete<void>(`/patients/${patientId}/pathway/edges/${edgeId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-edges'] });
+    },
   });
 }

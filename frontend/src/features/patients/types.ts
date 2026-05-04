@@ -24,6 +24,7 @@ export interface CreatePatientRequest {
   diagnosisDate: string;
   assignedNavigatorId?: string;
   treatingPhysician?: string;
+  pathwayMode?: 'template' | 'empty';
 }
 
 export interface CareEventResponse {
@@ -58,12 +59,66 @@ export interface PathwayStatusResponse {
   steps: PathwayStepStatus[];
 }
 
+// ── Phase 5: Per-Patient Pathway DAG Types ──────────────────────────────────
+
+export type PathwayStepStatusEnum = 'ACTIVE' | 'PROPOSED' | 'COMPLETED' | 'SKIPPED';
+
 export interface PathwayStepStatus {
   stepId: string;
-  stepNumber: number;
   stepName: string;
-  status: 'COMPLETED' | 'OVERDUE' | 'MISSING' | 'UPCOMING';
+  status: PathwayStepStatusEnum;
+  depth: number;
+  sortOrder: number;
   completionDate: string | null;
   timingInfo: string;
   hasActiveAlert: boolean;
+  skipReason: string | null;
+  prerequisiteStepIds: string[];
+}
+
+export interface PatientPathwayStep {
+  id: string;
+  pathwayId: string;
+  name: string;
+  description: string | null;
+  eventType: string | null;
+  windowDays: number | null;
+  required: boolean;
+  status: PathwayStepStatusEnum;
+  skipReason: string | null;
+  alertText: string | null;
+  suggestedAction: string | null;
+  completedAt: string | null;
+  completedCareEventId: string | null;
+  depth: number;
+  sortOrder: number;
+  prerequisiteStepIds: string[];
+  createdAt: string;
+}
+
+export interface PatientPathwayEdge {
+  id: string;
+  pathwayId: string;
+  sourceStepId: string;
+  targetStepId: string;
+  createdAt: string;
+}
+
+export interface CreateStepRequest {
+  name: string;
+  description?: string;
+  eventType?: string;
+  windowDays?: number;
+  required: boolean;
+  alertText?: string;
+  suggestedAction?: string;
+}
+
+export interface CreateEdgeRequest {
+  sourceStepId: string;
+  targetStepId: string;
+}
+
+export interface SkipStepRequest {
+  reason: string;
 }

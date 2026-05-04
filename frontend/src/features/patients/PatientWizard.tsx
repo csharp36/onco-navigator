@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { useCreatePatient, useCreateCareEvent } from '@/features/patients/api';
 import { useLinkDocumentToPatient, useDocument } from '@/features/documents/api';
+import { TemplatePicker } from './TemplatePicker';
 
 // ─── Zod v4 schemas (use { error: '...' } syntax) ────────────────────────────
 
@@ -88,6 +89,7 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [step1Data, setStep1Data] = useState<Step1Values | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [pathwayMode, setPathwayMode] = useState<'template' | 'empty'>('template');
 
   const navigate = useNavigate();
   const createPatient = useCreatePatient();
@@ -156,6 +158,7 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
       diagnosisDate: values.diagnosisDate,
       // assignedNavigatorId is UUID on backend — V1 has no user directory, omit it
       treatingPhysician: values.treatingPhysician || undefined,
+      pathwayMode,
     };
 
     createPatient.mutate(payload, {
@@ -293,9 +296,10 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
               <div className="grid gap-2">
                 <Label htmlFor="cancerType">Cancer Type</Label>
                 <Select
-                  onValueChange={(value) =>
-                    form2.setValue('cancerType', value, { shouldValidate: true })
-                  }
+                  onValueChange={(value) => {
+                    form2.setValue('cancerType', value, { shouldValidate: true });
+                    setPathwayMode('template');
+                  }}
                   defaultValue={form2.getValues('cancerType')}
                 >
                   <SelectTrigger
@@ -317,6 +321,13 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
                   </p>
                 )}
               </div>
+
+              {/* Pathway Setup (D-07) */}
+              <TemplatePicker
+                cancerType={form2.watch('cancerType') || null}
+                value={pathwayMode}
+                onChange={setPathwayMode}
+              />
 
               {/* Cancer Stage */}
               <div className="grid gap-2">

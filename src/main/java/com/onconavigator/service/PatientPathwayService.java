@@ -97,6 +97,21 @@ public class PatientPathwayService {
                 .toList();
     }
 
+    /**
+     * Returns all edges for a patient's pathway.
+     *
+     * @param patientId the patient UUID
+     * @return list of edge response DTOs
+     * @throws ResponseStatusException 404 if no pathway exists for this patient
+     */
+    @Transactional(readOnly = true)
+    public List<PathwayEdgeResponse> getEdges(UUID patientId) {
+        PatientPathway pathway = requirePathway(patientId);
+        return edgeRepository.findByPathway_Id(pathway.getId()).stream()
+                .map(this::toEdgeResponse)
+                .toList();
+    }
+
     // ---- Step mutations ----
 
     /**
