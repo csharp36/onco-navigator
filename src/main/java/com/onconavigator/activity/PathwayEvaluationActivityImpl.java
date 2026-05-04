@@ -1,25 +1,26 @@
 package com.onconavigator.activity;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onconavigator.ai.model.AlertText;
+import com.onconavigator.ai.service.AlertGenerationAiService;
 import com.onconavigator.domain.Alert;
 import com.onconavigator.domain.CareEvent;
 import com.onconavigator.domain.Patient;
-import com.onconavigator.domain.PathwayTemplate;
-import com.onconavigator.domain.dto.AnchorType;
+import com.onconavigator.domain.PatientPathway;
+import com.onconavigator.domain.PatientPathwayEdge;
+import com.onconavigator.domain.PatientPathwayStep;
 import com.onconavigator.domain.dto.PathwayEvaluationResult;
-import com.onconavigator.domain.dto.PathwayStep;
 import com.onconavigator.domain.enums.AlertStatus;
 import com.onconavigator.domain.enums.AlertType;
 import com.onconavigator.domain.enums.CareEventStatus;
 import com.onconavigator.domain.enums.CareEventType;
-import com.onconavigator.ai.model.AlertText;
-import com.onconavigator.ai.service.AlertGenerationAiService;
+import com.onconavigator.domain.enums.PathwayStepStatus;
 import com.onconavigator.repository.AlertRepository;
 import com.onconavigator.repository.CareEventRepository;
-import com.onconavigator.repository.PathwayTemplateRepository;
+import com.onconavigator.repository.PatientPathwayEdgeRepository;
+import com.onconavigator.repository.PatientPathwayRepository;
+import com.onconavigator.repository.PatientPathwayStepRepository;
 import com.onconavigator.repository.PatientRepository;
-import com.onconavigator.repository.PhysicianOverrideRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -29,31 +30,35 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
- * Evaluates a patient's care pathway against the template, detecting missing, delayed, and
+ * Evaluates a patient's per-patient pathway DAG, detecting missing, delayed, and
  * out-of-order events. All database access happens here — the workflow passes only the patient UUID.
  *
- * <p>PHI note: This activity logs only patient UUIDs and step names. Never log patient names,
+ * <p>PHI note: This activity logs only patient UUIDs and step UUIDs. Never log patient names,
  * DOBs, or MRNs. PHI fields on {@link Patient} are not referenced in any log statement.
  *
- * <p>Deviation detection:
+ * <p>Deviation detection (Phase 5 DAG-based):
  * <ul>
- *   <li>MISSING_EVENT (PATH-03): Required step has no care event and elapsed time exceeds windowDays</li>
- *   <li>DELAYED_EVENT (PATH-04): A care event exists for a step but is not COMPLETED and time has elapsed</li>
- *   <li>OUT_OF_ORDER (PATH-05): A care event exists for a step whose prerequisites are not yet completed</li>
+ *   <li>MISSING_EVENT: Required ACTIVE step, no matching care event, time window exceeded</li>
+ *   <li>DELAYED_EVENT: A care event exists for a step but is not COMPLETED and time has elapsed</li>
+ *   <li>OUT_OF_ORDER: A care event exists for a step whose prerequisites are not yet completed</li>
  * </ul>
  *
- * <p>Physician overrides (PATH-08): A step with an override record in physician_overrides is skipped
- * entirely — no alert is generated regardless of deviation type.
+ * <p>Step readiness (D-11): A step is "ready" for evaluation only when ALL prerequisite
+ * steps have status COMPLETED or SKIPPED. Root steps (no prerequisites) anchor to
+ * the patient's diagnosis date. Steps with prerequisites anchor to the LATEST
+ * prerequisite completion date.
  *
- * <p>Deduplication (PATH-06): Before creating any alert, an existence check confirms no OPEN alert
+ * <p>Deduplication: Before creating any alert, an existence check confirms no OPEN alert
  * already exists for (patient, step name). Idempotent — safe for Temporal retries.
  */
 @Component
@@ -64,8 +69,9 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
     private final PatientRepository patientRepository;
     private final CareEventRepository careEventRepository;
     private final AlertRepository alertRepository;
-    private final PathwayTemplateRepository templateRepository;
-    private final PhysicianOverrideRepository overrideRepository;
+    private final PatientPathwayRepository pathwayRepository;
+    private final PatientPathwayStepRepository stepRepository;
+    private final PatientPathwayEdgeRepository edgeRepository;
     private final ObjectMapper objectMapper;
     private final AlertGenerationAiService alertGenerationAiService;
 
@@ -73,15 +79,17 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
             PatientRepository patientRepository,
             CareEventRepository careEventRepository,
             AlertRepository alertRepository,
-            PathwayTemplateRepository templateRepository,
-            PhysicianOverrideRepository overrideRepository,
+            PatientPathwayRepository pathwayRepository,
+            PatientPathwayStepRepository stepRepository,
+            PatientPathwayEdgeRepository edgeRepository,
             ObjectMapper objectMapper,
             AlertGenerationAiService alertGenerationAiService) {
         this.patientRepository = patientRepository;
         this.careEventRepository = careEventRepository;
         this.alertRepository = alertRepository;
-        this.templateRepository = templateRepository;
-        this.overrideRepository = overrideRepository;
+        this.pathwayRepository = pathwayRepository;
+        this.stepRepository = stepRepository;
+        this.edgeRepository = edgeRepository;
         this.objectMapper = objectMapper;
         this.alertGenerationAiService = alertGenerationAiService;
     }
@@ -89,12 +97,13 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
     /**
      * {@inheritDoc}
      *
-     * <p>Evaluation order per step:
+     * <p>Evaluation order per ready step:
      * <ol>
-     *   <li>Check physician override — skip step if found (PATH-08)</li>
-     *   <li>Check if step is COMPLETED — mark and move on</li>
-     *   <li>Detect OUT_OF_ORDER — event exists but prerequisites are incomplete (PATH-05)</li>
-     *   <li>Detect MISSING_EVENT / DELAYED_EVENT based on anchor date and windowDays (PATH-03, PATH-04)</li>
+     *   <li>Query per-patient ACTIVE steps from relational tables</li>
+     *   <li>Load DAG edges to determine prerequisite relationships</li>
+     *   <li>Identify "ready" steps: ACTIVE steps where all prerequisites are COMPLETED or SKIPPED</li>
+     *   <li>For each ready step: detect OUT_OF_ORDER, MISSING_EVENT, DELAYED_EVENT deviations</li>
+     *   <li>Time window anchors to latest prerequisite completion date; root steps use diagnosis date</li>
      * </ol>
      */
     @Override
@@ -104,150 +113,137 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new IllegalArgumentException("Patient not found: " + patientId));
 
-        // 2. Fetch care events (ordered most-recent first by repository contract)
+        // 2. Find per-patient pathway
+        PatientPathway pathway = pathwayRepository.findByPatient_Id(patientId).orElse(null);
+
+        // Empty pathway (D-06 "Build from documents"): no steps to evaluate
+        if (pathway == null) {
+            log.info("No pathway found for patient {}, skipping evaluation", patientId);
+            return new PathwayEvaluationResult(false, List.of());
+        }
+
+        // 3. Query ACTIVE steps only (PROPOSED steps skipped, SKIPPED steps skipped, COMPLETED already done)
+        List<PatientPathwayStep> activeSteps = stepRepository.findByPathway_IdAndStatus(
+                pathway.getId(), PathwayStepStatus.ACTIVE);
+
+        if (activeSteps.isEmpty()) {
+            // All steps are either COMPLETED, SKIPPED, or PROPOSED
+            // Check if any steps exist at all and whether they are all terminal
+            List<PatientPathwayStep> allSteps = stepRepository.findByPathway_Id(pathway.getId());
+            boolean allComplete = !allSteps.isEmpty() && allSteps.stream()
+                    .allMatch(s -> s.getStatus() == PathwayStepStatus.COMPLETED
+                               || s.getStatus() == PathwayStepStatus.SKIPPED);
+            return new PathwayEvaluationResult(allComplete, List.of());
+        }
+
+        // 4. Query edges for the pathway
+        List<PatientPathwayEdge> edges = edgeRepository.findByPathway_Id(pathway.getId());
+
+        // 5. Build set of COMPLETED and SKIPPED step IDs (for prerequisite resolution)
+        List<PatientPathwayStep> completedSteps = stepRepository.findByPathway_IdAndStatus(
+                pathway.getId(), PathwayStepStatus.COMPLETED);
+        Set<UUID> completedStepIds = completedSteps.stream()
+                .map(PatientPathwayStep::getId).collect(Collectors.toSet());
+
+        // SKIPPED steps are treated as "satisfied" prerequisites
+        List<PatientPathwayStep> skippedSteps = stepRepository.findByPathway_IdAndStatus(
+                pathway.getId(), PathwayStepStatus.SKIPPED);
+        Set<UUID> satisfiedStepIds = new HashSet<>(completedStepIds);
+        skippedSteps.forEach(s -> satisfiedStepIds.add(s.getId()));
+
+        // 6. Build prerequisite map: for each target step, find its prerequisite step IDs
+        Map<UUID, Set<UUID>> prerequisites = new HashMap<>();
+        for (PatientPathwayEdge edge : edges) {
+            prerequisites.computeIfAbsent(edge.getTargetStepId(), k -> new HashSet<>())
+                    .add(edge.getSourceStepId());
+        }
+
+        // 7. Identify "ready" steps: ACTIVE steps where ALL prerequisites are satisfied
+        List<PatientPathwayStep> readySteps = activeSteps.stream()
+                .filter(step -> {
+                    Set<UUID> prereqs = prerequisites.getOrDefault(step.getId(), Set.of());
+                    return prereqs.isEmpty() || satisfiedStepIds.containsAll(prereqs);
+                })
+                .toList();
+
+        // 8. Fetch all care events for the patient
         List<CareEvent> careEvents = careEventRepository.findByPatient_IdOrderByEventDateDesc(patientId);
 
-        // 3. Fetch pathway template for this cancer type
-        PathwayTemplate template = templateRepository.findByCancerType(patient.getCancerType())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No pathway template found for patient (templateId lookup failed)"));
+        // Build event type -> completed events map
+        Map<CareEventType, List<CareEvent>> completedEventsByType = careEvents.stream()
+                .filter(e -> e.getStatus() == CareEventStatus.COMPLETED)
+                .collect(Collectors.groupingBy(CareEvent::getEventType));
 
-        // 4. Deserialize JSONB template data into typed step list
-        List<PathwayStep> steps;
-        try {
-            steps = objectMapper.readValue(template.getTemplateData(), new TypeReference<>() {});
-        } catch (Exception e) {
-            throw new IllegalStateException(
-                    "Failed to deserialize pathway template (templateId=" + template.getId() + ")", e);
-        }
-
-        // 5. Build helper structures
-        //    - eventsByType: all care events grouped by care event type
-        //    - completedByStepId: the COMPLETED care event for each step (matched by eventType)
-        //    - completedStepIds: set of step IDs that have a COMPLETED care event
-        Map<CareEventType, List<CareEvent>> eventsByType = new EnumMap<>(CareEventType.class);
-        for (CareEvent event : careEvents) {
-            eventsByType.computeIfAbsent(event.getEventType(), k -> new ArrayList<>()).add(event);
-        }
-
-        Map<String, CareEvent> completedByStepId = new java.util.HashMap<>();
-        Set<String> completedStepIds = new HashSet<>();
-
-        // Pre-scan to identify completed steps (needed for prerequisite and anchor lookups)
-        for (PathwayStep step : steps) {
-            List<CareEvent> eventsForType = eventsByType.getOrDefault(step.eventType(), List.of());
-            for (CareEvent event : eventsForType) {
-                if (event.getStatus() == CareEventStatus.COMPLETED) {
-                    completedByStepId.put(step.stepId(), event);
-                    completedStepIds.add(step.stepId());
-                    break; // First COMPLETED event for this type is sufficient
-                }
-            }
-        }
-
-        // 6. Evaluate each step in order
+        // 9. For each ready step, detect deviations
         List<String> alertsGenerated = new ArrayList<>();
+        for (PatientPathwayStep step : readySteps) {
+            if (step.getEventType() == null) continue; // Steps without event type skip matching
 
-        for (PathwayStep step : steps) {
+            // Find matching care events (by eventType)
+            List<CareEvent> matchingCompleted = completedEventsByType.getOrDefault(step.getEventType(), List.of());
 
-            // a. Check physician override (PATH-08)
-            if (overrideRepository.existsByPatientIdAndPathwayStepId(patientId, step.stepId())) {
-                log.debug("Override exists for patient {} step {}, skipping evaluation",
-                        patientId, step.stepId());
-                continue;
-            }
+            // Check if step already has an explicit link or has a matching completed event
+            boolean hasMatch = step.getCompletedCareEventId() != null || !matchingCompleted.isEmpty();
 
-            // b. Skip if this step is already COMPLETED
-            if (completedStepIds.contains(step.stepId())) {
-                continue;
-            }
-
-            // c. Detect OUT_OF_ORDER (PATH-05):
-            //    An event exists for this step's type (in any non-CANCELLED status),
-            //    but one or more prerequisites are not yet in completedStepIds.
-            List<CareEvent> eventsForType = eventsByType.getOrDefault(step.eventType(), List.of());
-            boolean eventExists = eventsForType.stream()
-                    .anyMatch(e -> e.getStatus() != CareEventStatus.CANCELLED);
-
-            if (eventExists && !step.prerequisites().isEmpty()) {
-                boolean prerequisitesMissing = step.prerequisites().stream()
-                        .anyMatch(prereq -> !completedStepIds.contains(prereq));
-                if (prerequisitesMissing) {
-                    boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
-                            patientId, step.name(), AlertStatus.OPEN);
-                    if (!isDuplicate) {
-                        Alert alert = buildAlert(patientId, step, AlertType.OUT_OF_ORDER,
-                                patient, completedByStepId, steps);
-                        alertRepository.save(alert);
-                        String summary = "OUT_OF_ORDER: step '" + step.name() + "' for patient " + patientId;
-                        alertsGenerated.add(summary);
-                        log.info("ALERT_CREATED: patient={} step={} type=OUT_OF_ORDER",
-                                patientId, step.stepId());
-                    }
-                    // Do not double-alert with MISSING/DELAYED for the same step in the same
-                    // evaluation run — one alert type per step per cycle prevents nurse navigator
-                    // confusion and avoids conflicting guidance on the same deviation.
-                    continue;
-                }
-            }
-
-            // d. Detect MISSING_EVENT / DELAYED_EVENT (PATH-03, PATH-04)
-            //    Only for required steps — optional steps do not generate timing alerts.
-            if (!step.required()) {
-                continue;
-            }
-
-            LocalDate anchorDate = resolveAnchorDate(step, patient, completedByStepId, steps);
-            if (anchorDate == null) {
-                // Cannot compute anchor — prerequisite step not yet completed; skip timing check
-                continue;
-            }
-
-            long elapsedDays = ChronoUnit.DAYS.between(anchorDate, LocalDate.now());
-
-            if (!eventExists) {
-                // No care event at all for this step
-                if (elapsedDays > step.windowDays()) {
-                    boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
-                            patientId, step.name(), AlertStatus.OPEN);
-                    if (!isDuplicate) {
-                        Alert alert = buildAlert(patientId, step, AlertType.MISSING_EVENT,
-                                patient, completedByStepId, steps);
-                        alertRepository.save(alert);
-                        String summary = "MISSING_EVENT: step '" + step.name() + "' for patient " + patientId;
-                        alertsGenerated.add(summary);
-                        log.info("ALERT_CREATED: patient={} step={} type=MISSING_EVENT elapsedDays={}",
-                                patientId, step.stepId(), elapsedDays);
-                    }
-                }
+            // Resolve anchor date (D-11):
+            // - Root steps (no prerequisites): anchor to diagnosis date
+            // - Steps with prerequisites: anchor to LATEST prerequisite completion date
+            Set<UUID> prereqs = prerequisites.getOrDefault(step.getId(), Set.of());
+            LocalDate anchorDate;
+            if (prereqs.isEmpty()) {
+                anchorDate = patient.getDiagnosisDate();
             } else {
-                // Event exists but step is not COMPLETED — check for delayed event
-                boolean hasScheduledOrPending = eventsForType.stream()
-                        .anyMatch(e -> e.getStatus() == CareEventStatus.SCHEDULED
-                                || e.getStatus() == CareEventStatus.PENDING);
-                if (hasScheduledOrPending && elapsedDays > step.windowDays()) {
-                    boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
-                            patientId, step.name(), AlertStatus.OPEN);
-                    if (!isDuplicate) {
-                        Alert alert = buildAlert(patientId, step, AlertType.DELAYED_EVENT,
-                                patient, completedByStepId, steps);
-                        alertRepository.save(alert);
-                        String summary = "DELAYED_EVENT: step '" + step.name() + "' for patient " + patientId;
-                        alertsGenerated.add(summary);
-                        log.info("ALERT_CREATED: patient={} step={} type=DELAYED_EVENT elapsedDays={}",
-                                patientId, step.stepId(), elapsedDays);
-                    }
+                anchorDate = completedSteps.stream()
+                        .filter(cs -> prereqs.contains(cs.getId()))
+                        .map(cs -> cs.getCompletedAt() != null ? cs.getCompletedAt().toLocalDate() : null)
+                        .filter(Objects::nonNull)
+                        .max(LocalDate::compareTo)
+                        .orElse(patient.getDiagnosisDate()); // Fallback to diagnosis date
+            }
+
+            if (anchorDate == null) continue; // Cannot evaluate without anchor
+
+            long daysSinceAnchor = ChronoUnit.DAYS.between(anchorDate, LocalDate.now());
+
+            // OUT_OF_ORDER: step has a care event but not all prerequisites are completed
+            if (hasMatch && !prereqs.isEmpty() && !completedStepIds.containsAll(prereqs)) {
+                String summary = createAlertIfNotDuplicate(patient, step, AlertType.OUT_OF_ORDER,
+                        "Out of order: " + step.getName() + " completed before prerequisites");
+                if (summary != null) {
+                    alertsGenerated.add(summary);
+                }
+                // One alert type per step per cycle — skip MISSING/DELAYED for the same step
+                continue;
+            }
+
+            // MISSING_EVENT: required step, no matching care event, time window exceeded
+            if (step.isRequired() && !hasMatch && step.getWindowDays() != null
+                    && daysSinceAnchor > step.getWindowDays()) {
+                String summary = createAlertIfNotDuplicate(patient, step, AlertType.MISSING_EVENT,
+                        "Missing: " + step.getName() + " (expected within " + step.getWindowDays() + " days)");
+                if (summary != null) {
+                    alertsGenerated.add(summary);
+                }
+            }
+
+            // DELAYED_EVENT: event exists but not completed, time window exceeded
+            List<CareEvent> nonCompletedMatches = careEvents.stream()
+                    .filter(e -> e.getEventType() == step.getEventType()
+                              && e.getStatus() != CareEventStatus.COMPLETED)
+                    .toList();
+            if (!nonCompletedMatches.isEmpty() && step.getWindowDays() != null
+                    && daysSinceAnchor > step.getWindowDays()) {
+                String summary = createAlertIfNotDuplicate(patient, step, AlertType.DELAYED_EVENT,
+                        "Delayed: " + step.getName() + " (scheduled but not completed)");
+                if (summary != null) {
+                    alertsGenerated.add(summary);
                 }
             }
         }
 
-        // 7. allStepsComplete: every step (required or optional) has a COMPLETED care event
-        boolean allStepsComplete = steps.stream()
-                .allMatch(step -> completedStepIds.contains(step.stepId()));
-
-        // 8. Log evaluation result (PATH-07)
-        log.info("PATHWAY_EVALUATION: patient={} stepsEvaluated={} alertsGenerated={} allComplete={}",
-                patientId, steps.size(), alertsGenerated.size(), allStepsComplete);
+        boolean allStepsComplete = activeSteps.isEmpty();
+        log.info("PATHWAY_EVALUATION: patient={} readySteps={} alertsGenerated={} allComplete={}",
+                patientId, readySteps.size(), alertsGenerated.size(), allStepsComplete);
 
         return new PathwayEvaluationResult(allStepsComplete, alertsGenerated);
     }
@@ -275,120 +271,87 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
     // ---- Private helpers ----
 
     /**
-     * Resolves the anchor date for a pathway step based on its {@link AnchorType}.
+     * Creates an alert if no open alert already exists for this patient and step name.
      *
-     * @param step              the step requiring an anchor date
-     * @param patient           the patient (used for DIAGNOSIS_DATE anchor)
-     * @param completedByStepId map of stepId to its completed care event
-     * @param steps             all steps in the pathway (for PREVIOUS_STEP lookup)
-     * @return the anchor date, or {@code null} if the anchor step is not yet completed
+     * <p>Deduplication uses {@code existsByPatientIdAndPathwayStepNameAndStatus} to
+     * avoid creating duplicate OPEN alerts on Temporal retries.
+     *
+     * @param patient            the patient entity
+     * @param step               the pathway step in deviation
+     * @param alertType          the type of deviation detected
+     * @param defaultDescription fallback description if AI generation fails
+     * @return alert summary string if created, null if duplicate
      */
-    private LocalDate resolveAnchorDate(
-            PathwayStep step,
-            Patient patient,
-            Map<String, CareEvent> completedByStepId,
-            List<PathwayStep> steps) {
+    private String createAlertIfNotDuplicate(Patient patient, PatientPathwayStep step,
+            AlertType alertType, String defaultDescription) {
+        boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
+                patient.getId(), step.getName(), AlertStatus.OPEN);
+        if (isDuplicate) return null;
 
-        return switch (step.anchorType()) {
-            case DIAGNOSIS_DATE -> patient.getDiagnosisDate();
-            case PREVIOUS_STEP -> {
-                // Find the step with stepNumber == this step's stepNumber - 1
-                int previousStepNumber = step.stepNumber() - 1;
-                String previousStepId = steps.stream()
-                        .filter(s -> s.stepNumber() == previousStepNumber)
-                        .map(PathwayStep::stepId)
-                        .findFirst()
-                        .orElse(null);
-                if (previousStepId == null) {
-                    yield null; // No previous step found — first step in pathway
-                }
-                CareEvent previousCompleted = completedByStepId.get(previousStepId);
-                yield previousCompleted != null ? previousCompleted.getEventDate() : null;
-            }
-            case SPECIFIC_STEP -> {
-                String anchorStepId = step.anchorStepId();
-                if (anchorStepId == null) {
-                    yield null;
-                }
-                CareEvent anchorCompleted = completedByStepId.get(anchorStepId);
-                yield anchorCompleted != null ? anchorCompleted.getEventDate() : null;
-            }
-        };
+        // Build alert text: use step's alertText if available, or try AI, or use default
+        String description = buildAlertDescription(step, alertType, defaultDescription, patient);
+
+        Alert alert = new Alert();
+        alert.setPatientId(patient.getId());
+        alert.setAlertType(alertType);
+        alert.setPathwayStepName(step.getName());
+        alert.setDeviationDescription(description);
+        alert.setSuggestedAction(step.getSuggestedAction() != null
+                ? step.getSuggestedAction() : "Review patient pathway and take corrective action.");
+        alert.setStatus(AlertStatus.OPEN);
+        alertRepository.save(alert);
+
+        log.info("ALERT_CREATED: patient={} step={} type={}", alertType, patient.getId(), step.getId());
+        return alertType.name() + ": step '" + step.getName() + "' for patient " + patient.getId();
     }
 
     /**
-     * Constructs an Alert entity from a pathway step and alert type.
+     * Builds the alert deviation description for a pathway step deviation.
      *
-     * <p>AI-01: Template text is the primary source for standard deviations
-     * (where {@code step.alertText()} is non-null and non-blank).
+     * <p>AI-01: Template text ({@code step.getAlertText()}) is the primary source for
+     * standard deviations where it is non-null and non-blank.
      *
-     * <p>AI-02/AI-03: For non-standard deviations (alertText is null or blank),
-     * calls {@link AlertGenerationAiService} with zero-PHI parameters to generate
-     * a Claude-powered deviation description and suggested action.
+     * <p>AI-02/AI-03: For non-standard deviations, calls {@link AlertGenerationAiService}
+     * with zero-PHI parameters to generate a Claude-powered deviation description.
      *
-     * <p>AI-04: When Claude is unavailable (circuit breaker open), falls back to
-     * a generic template with the step name and window days.
+     * <p>AI-04: When Claude is unavailable (circuit breaker open), falls back to the
+     * {@code defaultDescription} parameter.
      *
      * <p>ZERO-PHI: Only anonymized clinical context is sent to Claude:
      * cancer type enum, step name, alert type enum, window days, and step names.
      * NO patient identifiers (name, MRN, DOB) are referenced.
      *
-     * @param patientId        the patient UUID
-     * @param step             the pathway step in deviation
-     * @param alertType        the type of deviation detected
-     * @param patient          the patient entity (for cancerType enum only — no PHI accessed)
-     * @param completedByStepId map of stepId to its completed care event
-     * @param steps            all steps in the pathway template
-     * @return an unsaved Alert entity ready for persistence
+     * @param step               the pathway step in deviation
+     * @param alertType          the type of deviation
+     * @param defaultDescription fallback description
+     * @param patient            patient entity (for cancerType enum only — no PHI accessed)
+     * @return the alert description string
      */
-    private Alert buildAlert(UUID patientId, PathwayStep step, AlertType alertType,
-                              Patient patient, Map<String, CareEvent> completedByStepId,
-                              List<PathwayStep> steps) {
-        Alert alert = new Alert();
-        alert.setPatientId(patientId);
-        alert.setAlertType(alertType);
-        alert.setPathwayStepName(step.name());
-
+    private String buildAlertDescription(PatientPathwayStep step, AlertType alertType,
+            String defaultDescription, Patient patient) {
         // AI-01: Template text is the primary source for standard deviations
-        if (step.alertText() != null && !step.alertText().isBlank()) {
-            alert.setDeviationDescription(step.alertText());
-            alert.setSuggestedAction(step.suggestedAction());
-        } else {
-            // AI-02/AI-03: Non-standard deviation — try Claude for generated text
-            // ZERO-PHI: Only anonymized clinical context is sent
-            List<String> completedStepNames = steps.stream()
-                    .filter(s -> completedByStepId.containsKey(s.stepId()))
-                    .map(PathwayStep::name)
-                    .toList();
-            List<String> missingStepNames = steps.stream()
-                    .filter(s -> !completedByStepId.containsKey(s.stepId()))
-                    .map(PathwayStep::name)
-                    .toList();
-
-            AlertText claudeText = alertGenerationAiService.generateAlertDescription(
-                    patient.getCancerType().name(),   // non-PHI: cancer type enum
-                    step.name(),                       // non-PHI: pathway step name
-                    alertType.name(),                  // non-PHI: deviation type enum
-                    String.valueOf(step.windowDays()), // non-PHI: time window
-                    completedStepNames,                // non-PHI: step names only
-                    missingStepNames                   // non-PHI: step names only
-            );
-
-            if (claudeText != null) {
-                // AI-02: Claude-generated description
-                alert.setDeviationDescription(claudeText.deviationDescription());
-                alert.setSuggestedAction(claudeText.suggestedAction());
-                log.info("ALERT_CLAUDE_GENERATED: patient={} step={}", patientId, step.stepId());
-            } else {
-                // AI-04: Circuit breaker fallback — use generic template
-                alert.setDeviationDescription(
-                        "Care pathway deviation detected for step: " + step.name() +
-                        ". Expected within " + step.windowDays() + " days.");
-                alert.setSuggestedAction(
-                        "Review the patient's pathway status and contact the relevant care team.");
-                log.info("ALERT_FALLBACK_TEMPLATE: patient={} step={}", patientId, step.stepId());
-            }
+        if (step.getAlertText() != null && !step.getAlertText().isBlank()) {
+            return step.getAlertText();
         }
-        return alert;
+
+        // AI-02/AI-03: Non-standard deviation — try Claude for generated text
+        // ZERO-PHI: Only anonymized clinical context is sent
+        AlertText claudeText = alertGenerationAiService.generateAlertDescription(
+                patient.getCancerType().name(),           // non-PHI: cancer type enum
+                step.getName(),                           // non-PHI: pathway step name
+                alertType.name(),                         // non-PHI: deviation type enum
+                step.getWindowDays() != null ? String.valueOf(step.getWindowDays()) : "unknown",
+                List.of(),                                // no completed step names available here
+                List.of()                                 // no missing step names available here
+        );
+
+        if (claudeText != null) {
+            log.info("ALERT_CLAUDE_GENERATED: patient={} step={}", patient.getId(), step.getId());
+            return claudeText.deviationDescription();
+        }
+
+        // AI-04: Circuit breaker fallback — use default description
+        log.info("ALERT_FALLBACK_TEMPLATE: patient={} step={}", patient.getId(), step.getId());
+        return defaultDescription;
     }
 }
