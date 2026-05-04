@@ -58,6 +58,22 @@ public interface PatientPathwayWorkflow {
     void deactivatePatient(String reason);
 
     /**
+     * Signals that the patient's pathway steps or edges have been modified.
+     *
+     * <p>Causes the workflow to wake from its 24-hour timer immediately and re-evaluate
+     * the pathway. Used after step add/edit/remove/skip and edge add/remove operations (D-01, D-09).
+     *
+     * <p>This signal carries no parameters -- the evaluation activity queries the database
+     * directly for the current step/edge state. No PHI enters Temporal's event history (T-02-06).
+     *
+     * <p>Replay safety: Adding a new @SignalMethod is additive and safe for running workflows.
+     * Temporal ignores unrecognized signals on older workflow versions. The signal handler uses
+     * the same signalReceived boolean as careEventChanged, so the main loop logic is unchanged.
+     */
+    @SignalMethod
+    void pathwayStepsChanged();
+
+    /**
      * Returns the current monitoring status of this patient's pathway workflow.
      *
      * @return "MONITORING" if actively monitoring, "COMPLETE" if all steps finished (D-09),

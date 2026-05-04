@@ -136,6 +136,17 @@ public class PatientPathwayWorkflowImpl implements PatientPathwayWorkflow {
     /**
      * {@inheritDoc}
      *
+     * <p>Sets the signal flag to wake the 24-hour timer early, same as careEventChanged.
+     * The evaluation activity will query the database for the current step/edge state.
+     */
+    @Override
+    public void pathwayStepsChanged() {
+        signalReceived = true;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * <p>Sets the deactivation flag. The reason string is not stored — it is not
      * needed for cleanup and must not be logged (SEC-06 compliance).
      */
