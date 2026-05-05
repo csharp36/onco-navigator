@@ -182,6 +182,56 @@ export function useUnskipStep(patientId: string) {
   });
 }
 
+// ── Phase 6: AI-proposed step confirm/reject hooks ──────────────────────────
+
+export function useConfirmStep(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (stepId: string) =>
+      apiClient.post<PatientPathwayStep>(
+        `/patients/${patientId}/pathway/steps/${stepId}/confirm`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-edges'] });
+    },
+  });
+}
+
+export function useRejectStep(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (stepId: string) =>
+      apiClient.patch<PatientPathwayStep>(
+        `/patients/${patientId}/pathway/steps/${stepId}/reject`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-steps'] });
+      queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
+    },
+  });
+}
+
+/**
+ * Fetches alreadyCoveredEventTypes for a specific document.
+ * Used to display the "Already covered" informational section (D-10).
+ * Only called when PROPOSED steps exist with a sourceDocumentId.
+ */
+export function useDocumentAlreadyCovered(documentId: string | null) {
+  return useQuery({
+    queryKey: ['documents', documentId, 'already-covered'],
+    queryFn: () =>
+      apiClient.get<{ alreadyCoveredEventTypes: string | null }>(
+        `/documents/${documentId}`),
+    enabled: !!documentId,
+    select: (data) => {
+      const raw = data?.alreadyCoveredEventTypes;
+      if (!raw) return [];
+      return raw.split(',').filter(Boolean);
+    },
+    staleTime: Infinity,  // Static data -- document extraction results don't change
+  });
+}
+
 export function useCreateEdge(patientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
