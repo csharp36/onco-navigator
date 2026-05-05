@@ -29,6 +29,10 @@ const careEventSchema = z.object({
   eventDate: z.string().min(1, { error: 'Event date is required.' }),
   status: z.string().min(1, { error: 'Status is required.' }),
   notes: z.string().optional(),
+  // Phase 7: scheduling coordination fields (D-07, D-10, D-13)
+  expectedCompletionDate: z.string().optional(),
+  schedulingConfirmed: z.boolean().default(false),
+  externalFacilityName: z.string().optional(),
 });
 
 type CareEventFormValues = z.infer<typeof careEventSchema>;
@@ -79,16 +83,24 @@ export function QuickAddCareEventDialog({
       eventDate: '',
       status: '',
       notes: '',
+      expectedCompletionDate: '',
+      schedulingConfirmed: false,
+      externalFacilityName: '',
     },
   });
 
   function handleSubmit(values: CareEventFormValues) {
+    const isScheduledOrPending = values.status === 'SCHEDULED' || values.status === 'PENDING';
     createCareEvent.mutate(
       {
         eventType: values.eventType,
         eventDate: values.eventDate,
         status: values.status as 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'PENDING',
         notes: values.notes || undefined,
+        // Phase 7: pass scheduling fields conditionally
+        expectedCompletionDate: isScheduledOrPending ? (values.expectedCompletionDate || undefined) : undefined,
+        schedulingConfirmed: isScheduledOrPending ? values.schedulingConfirmed : undefined,
+        externalFacilityName: values.externalFacilityName || undefined,
       },
       {
         onSuccess: () => {
@@ -202,6 +214,48 @@ export function QuickAddCareEventDialog({
                 rows={2}
                 placeholder="Optional notes about this event"
                 {...form.register('notes')}
+              />
+            </div>
+
+            {/* Phase 7: Scheduling fields -- shown for SCHEDULED or PENDING only */}
+            {(form.watch('status') === 'SCHEDULED' || form.watch('status') === 'PENDING') && (
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="expectedCompletionDate">
+                    Expected Completion Date{' '}
+                    <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <Input
+                    id="expectedCompletionDate"
+                    type="date"
+                    {...form.register('expectedCompletionDate')}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="schedulingConfirmed"
+                    type="checkbox"
+                    {...form.register('schedulingConfirmed')}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  <Label htmlFor="schedulingConfirmed">
+                    Scheduling confirmed with external facility
+                  </Label>
+                </div>
+              </>
+            )}
+
+            {/* External facility name -- always visible (optional) */}
+            <div className="grid gap-2">
+              <Label htmlFor="externalFacilityName">
+                External Facility{' '}
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <Input
+                id="externalFacilityName"
+                type="text"
+                placeholder="e.g., Memorial Hospital Radiology"
+                {...form.register('externalFacilityName')}
               />
             </div>
 
