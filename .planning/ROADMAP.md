@@ -247,7 +247,7 @@ Plans:
 **Wave 1** *(no dependencies)*
 - [x] 08-01-PLAN.md — Flyway V19/V20 migrations (template inheritance schema, rectal seed), PathwayTemplate entity, TemplateDiff DTOs, repository changes, TemplateMergeService with unit tests
 **Wave 2** *(blocked on Wave 1)*
-- [ ] 08-02-PLAN.md — PathwayForkService merge integration, PathwayTemplateController REST endpoint, CreatePatientRequest templateId, PatientService changes, fork service tests
+- [x] 08-02-PLAN.md — PathwayForkService merge integration, PathwayTemplateController REST endpoint, CreatePatientRequest templateId, PatientService changes, fork service tests
 **Wave 3** *(blocked on Wave 2)*
 - [ ] 08-03-PLAN.md — Frontend TemplatePicker rewrite with variant selection, PatientWizard templateId integration, usePathwayTemplates hook, PathwayTemplateResponse type
 

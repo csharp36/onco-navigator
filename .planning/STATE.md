@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 08-01 (template inheritance schema + merge engine)
-last_updated: "2026-05-05T20:12:00.000Z"
-last_activity: 2026-05-05 -- Phase 8 Plan 01 complete (schema, DTOs, merge engine)
+stopped_at: Completed 08-02 (fork service merge integration + template endpoint)
+last_updated: "2026-05-05T20:21:00.000Z"
+last_activity: 2026-05-05 -- Phase 8 Plan 02 complete (fork service, REST endpoint, tests)
 progress:
   total_phases: 9
   completed_phases: 7
   total_plans: 40
-  completed_plans: 38
-  percent: 95
+  completed_plans: 39
+  percent: 97
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 08 — EXECUTING
-Plan: 1 of 3
+Plan: 2 of 3
 Status: Executing
-Last activity: 2026-05-05 -- Phase 8 Plan 01 complete (schema, DTOs, merge engine)
+Last activity: 2026-05-05 -- Phase 8 Plan 02 complete (fork service, REST endpoint, tests)
 
-Progress: [█████████░] 95% (38/40 plans)
+Progress: [█████████░] 97% (39/40 plans)
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [█████████░] 95% (38/40 plans)
 | Phase 04-ai-document-ingestion P06 | 4min | 2 tasks | 5 files |
 | Phase 04-ai-document-ingestion P07 | 8min | 2 tasks | 6 files |
 | Phase 08-template-inheritance P01 | 8min | 2 tasks | 12 files |
+| Phase 08-template-inheritance P02 | 6min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -132,6 +133,8 @@ Recent decisions affecting current work:
 - [Phase 04-07]: PdfExtractionServiceTest creates PDFs in-memory via PDFBox 3.x API -- no external fixture files needed
 - [Phase 08-01]: V20 rectal template edge change uses remove {"from": "CRC_01", "to": "CRC_03"} matching actual V6 seed data (CRC_03 has prerequisites ["CRC_01"], not ["CRC_02"])
 - [Phase 08-01]: PathwayForkService updated immediately to use findByCancerTypeAndParentTemplateIdIsNull -- single caller, no deferred fix needed
+- [Phase 08-02]: PatientService and CreatePatientRequest changes included in Task 1 commit (Rule 3: compilation dependency -- PathwayForkService new 3-param signature breaks compile without both)
+- [Phase 08-02]: PathwayForkService catch block re-throws ResponseStatusException and IllegalStateException to preserve HTTP status codes through the generic Exception catch
 
 ### Pending Todos
 
@@ -151,6 +154,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-05T20:12:00Z
-Stopped at: Completed 08-01 (template inheritance schema + merge engine)
-Resume file: .planning/phases/08-template-inheritance/08-02-PLAN.md
+Last session: 2026-05-05T20:21:00Z
+Stopped at: Completed 08-02 (fork service merge integration + template endpoint)
+Resume file: .planning/phases/08-template-inheritance/08-03-PLAN.md
