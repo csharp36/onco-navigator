@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Per-Patient Pathway Instances + DAG Foundation** - Mutable per-patient pathways forked from templates, DAG evaluation engine replacing linear iteration (completed 2026-05-04)
 - [x] **Phase 6: AI Step Extraction from Clinical Documents** - Claude extracts pathway steps from MD notes, orders, and nurse notes; proposed steps require nurse confirmation (completed 2026-05-05)
 - [x] **Phase 7: Referral Trigger + Enhanced Timing** - Referral PDF as pathway clock trigger, event status awareness (Scheduled/Pending/Cancelled), results-before-visit and 48-hour escalation alerts (completed 2026-05-05)
-- [ ] **Phase 8: Template Inheritance** - Extensible pathway templates with parent/child inheritance (e.g., rectal inherits from colorectal)
+- [x] **Phase 8: Template Inheritance** - Extensible pathway templates with parent/child inheritance (e.g., rectal inherits from colorectal) (completed 2026-05-05)
 - [ ] **Phase 9: Alert Format + Notification Foundation** - Two-part alerts (what's missing + action ≤150 chars), Teams/email notification infrastructure
 
 ## Phase Details
@@ -249,7 +249,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1)*
 - [x] 08-02-PLAN.md — PathwayForkService merge integration, PathwayTemplateController REST endpoint, CreatePatientRequest templateId, PatientService changes, fork service tests
 **Wave 3** *(blocked on Wave 2)*
-- [ ] 08-03-PLAN.md — Frontend TemplatePicker rewrite with variant selection, PatientWizard templateId integration, usePathwayTemplates hook, PathwayTemplateResponse type
+- [x] 08-03-PLAN.md — Frontend TemplatePicker rewrite with variant selection, PatientWizard templateId integration, usePathwayTemplates hook, PathwayTemplateResponse type
 
 Cross-cutting constraints:
 - No CancerType enum changes (D-01) — colon/rectal distinction at template level only
@@ -290,5 +290,5 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 5. Per-Patient Pathway + DAG Foundation | 6/6 | Complete | 2026-05-04 |
 | 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
 | 7. Referral Trigger + Enhanced Timing | 4/4 | Complete | 2026-05-05 |
-| 8. Template Inheritance | 1/3 | In Progress | - |
+| 8. Template Inheritance | 3/3 | Complete | 2026-05-05 |
 | 9. Alert Format + Notifications | 0/0 | Not Started | - |
