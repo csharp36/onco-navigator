@@ -46,17 +46,21 @@ import java.util.stream.Collectors;
  * <p>PHI note: This activity logs only patient UUIDs and step UUIDs. Never log patient names,
  * DOBs, or MRNs. PHI fields on {@link Patient} are not referenced in any log statement.
  *
- * <p>Deviation detection (Phase 5 DAG-based):
+ * <p>Deviation detection (Phase 5 DAG-based, Phase 7 status-aware):
  * <ul>
- *   <li>MISSING_EVENT: Required ACTIVE step, no matching care event, time window exceeded</li>
- *   <li>DELAYED_EVENT: A care event exists for a step but is not COMPLETED and time has elapsed</li>
  *   <li>OUT_OF_ORDER: A care event exists for a step whose prerequisites are not yet completed</li>
+ *   <li>CANCELLED_EVENT: A care event for a step has been cancelled (immediate corrective alert)</li>
+ *   <li>DELAYED_EVENT: A SCHEDULED/PENDING event's expectedCompletionDate has passed</li>
+ *   <li>DEADLINE_APPROACHING: A step's time window expires within 48 hours</li>
+ *   <li>SCHEDULING_UNCONFIRMED: Scheduling not confirmed 7 days after referral (root) or eventDate</li>
+ *   <li>MISSING_EVENT: Required ACTIVE step, no matching care event, time window exceeded</li>
+ *   <li>RESULTS_NOT_READY: Pending results expected after an upcoming visit within 14 days</li>
  * </ul>
  *
  * <p>Step readiness (D-11): A step is "ready" for evaluation only when ALL prerequisite
  * steps have status COMPLETED or SKIPPED. Root steps (no prerequisites) anchor to
- * the patient's diagnosis date. Steps with prerequisites anchor to the LATEST
- * prerequisite completion date.
+ * the patient's referralReceivedAt (with diagnosisDate fallback per D-03). Steps with
+ * prerequisites anchor to the LATEST prerequisite completion date.
  *
  * <p>Deduplication: Before creating any alert, an existence check confirms no OPEN alert
  * already exists for (patient, step name). Idempotent — safe for Temporal retries.
@@ -174,6 +178,10 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                 .filter(e -> e.getStatus() == CareEventStatus.COMPLETED)
                 .collect(Collectors.groupingBy(CareEvent::getEventType));
 
+        // All care events indexed by eventType (includes non-completed) — for Phase 7 status-aware branching
+        Map<CareEventType, List<CareEvent>> allEventsByType = careEvents.stream()
+                .collect(Collectors.groupingBy(CareEvent::getEventType));
+
         // 9. For each ready step, detect deviations
         List<String> alertsGenerated = new ArrayList<>();
         for (PatientPathwayStep step : readySteps) {
@@ -191,7 +199,7 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
             Set<UUID> prereqs = prerequisites.getOrDefault(step.getId(), Set.of());
             LocalDate anchorDate;
             if (prereqs.isEmpty()) {
-                anchorDate = patient.getDiagnosisDate();
+                anchorDate = resolveRootAnchor(patient); // D-03: referral date primary, diagnosis fallback
             } else {
                 anchorDate = completedSteps.stream()
                         .filter(cs -> prereqs.contains(cs.getId()))
@@ -216,27 +224,146 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                 continue;
             }
 
-            // MISSING_EVENT: required step, no matching care event, time window exceeded
-            if (step.isRequired() && !hasMatch && step.getWindowDays() != null
-                    && daysSinceAnchor > step.getWindowDays()) {
-                String summary = createAlertIfNotDuplicate(patient, step, AlertType.MISSING_EVENT,
-                        "Missing: " + step.getName() + " (expected within " + step.getWindowDays() + " days)");
-                if (summary != null) {
-                    alertsGenerated.add(summary);
+            // ---- Phase 7: Status-aware evaluation (replaces flat MISSING/DELAYED blocks) ----
+
+            // Find the best matching care event for this step's eventType (prefer non-COMPLETED to detect in-progress)
+            List<CareEvent> stepEvents = allEventsByType.getOrDefault(step.getEventType(), List.of());
+            CareEvent activeEvent = stepEvents.stream()
+                    .filter(e -> e.getStatus() != CareEventStatus.COMPLETED)
+                    .findFirst()
+                    .orElse(null);
+
+            if (activeEvent != null) {
+                CareEventStatus eventStatus = activeEvent.getStatus();
+
+                if (eventStatus == CareEventStatus.CANCELLED) {
+                    // D-05: CANCELLED triggers immediate corrective alert
+                    String desc = step.getName() + " was cancelled. Reschedule or update the patient's pathway.";
+                    String summary = createAlertIfNotDuplicate(patient, step, AlertType.CANCELLED_EVENT, desc);
+                    if (summary != null) alertsGenerated.add(summary);
+                    continue; // Pitfall 7: mutually exclusive with DELAYED_EVENT
+                }
+
+                if (eventStatus == CareEventStatus.SCHEDULED || eventStatus == CareEventStatus.PENDING) {
+                    // D-04: Suppress MISSING_EVENT — step is in progress
+
+                    // D-06: DEADLINE_APPROACHING check (48-hour warning before window expires)
+                    if (step.getWindowDays() != null && anchorDate != null) {
+                        long daysLeft = step.getWindowDays() - daysSinceAnchor;
+                        if (daysLeft >= 0 && daysLeft <= 2) {
+                            String desc = step.getName() + " is due within 48 hours. Window expires in " + daysLeft + " day(s).";
+                            String summary = createAlertIfNotDuplicate(patient, step, AlertType.DEADLINE_APPROACHING, desc);
+                            if (summary != null) alertsGenerated.add(summary);
+                        }
+                    }
+
+                    // D-04: DELAYED via expectedCompletionDate — past-due SCHEDULED/PENDING fires DELAYED_EVENT
+                    if (activeEvent.getExpectedCompletionDate() != null
+                            && LocalDate.now().isAfter(activeEvent.getExpectedCompletionDate())) {
+                        String desc = "Delayed: " + step.getName() + " (expected by " + activeEvent.getExpectedCompletionDate() + ")";
+                        String summary = createAlertIfNotDuplicate(patient, step, AlertType.DELAYED_EVENT, desc);
+                        if (summary != null) alertsGenerated.add(summary);
+                    }
+
+                    // D-11/D-12: SCHEDULING_UNCONFIRMED — 7-day clock from referral (root) or eventDate (subsequent)
+                    boolean notConfirmed = !Boolean.TRUE.equals(activeEvent.getSchedulingConfirmed());
+                    if (notConfirmed) {
+                        LocalDate confirmDeadline;
+                        if (prereqs.isEmpty() && patient.getReferralReceivedAt() != null) {
+                            // D-11: Initial referral — 7 days from referral_received_at
+                            confirmDeadline = patient.getReferralReceivedAt().toLocalDate().plusDays(7);
+                        } else {
+                            // D-12: Subsequent procedures — 7 days from care event eventDate
+                            confirmDeadline = activeEvent.getEventDate() != null
+                                    ? activeEvent.getEventDate().plusDays(7) : null;
+                        }
+                        if (confirmDeadline != null && LocalDate.now().isAfter(confirmDeadline)) {
+                            String facilityInfo = activeEvent.getExternalFacilityName() != null
+                                    ? activeEvent.getExternalFacilityName() : "the outside facility";
+                            String desc = "Scheduling not confirmed with " + facilityInfo + " for " + step.getName() + ".";
+                            String summary = createAlertIfNotDuplicate(patient, step, AlertType.SCHEDULING_UNCONFIRMED, desc);
+                            if (summary != null) alertsGenerated.add(summary);
+                        }
+                    }
+
+                    continue; // Step is in progress — no MISSING_EVENT
+                }
+            } else {
+                // No non-completed event found for this step's eventType
+                // Check if step has a completed event (already satisfied)
+                boolean hasCompletedEvent = completedEventsByType.containsKey(step.getEventType())
+                        && !completedEventsByType.get(step.getEventType()).isEmpty();
+
+                if (!hasCompletedEvent) {
+                    // MISSING_EVENT check (existing logic, preserved)
+                    if (step.isRequired() && step.getWindowDays() != null
+                            && anchorDate != null && daysSinceAnchor > step.getWindowDays()) {
+                        String desc = "Missing: " + step.getName() + " (expected within " + step.getWindowDays() + " days)";
+                        String summary = createAlertIfNotDuplicate(patient, step, AlertType.MISSING_EVENT, desc);
+                        if (summary != null) alertsGenerated.add(summary);
+                    } else if (step.getWindowDays() != null && anchorDate != null) {
+                        // D-06: DEADLINE_APPROACHING for steps with no event at all
+                        long daysLeft = step.getWindowDays() - daysSinceAnchor;
+                        if (daysLeft >= 0 && daysLeft <= 2) {
+                            String desc = step.getName() + " window expires in " + daysLeft + " day(s). No event recorded yet.";
+                            String summary = createAlertIfNotDuplicate(patient, step, AlertType.DEADLINE_APPROACHING, desc);
+                            if (summary != null) alertsGenerated.add(summary);
+                        }
+                    }
                 }
             }
+        }
 
-            // DELAYED_EVENT: event exists but not completed, time window exceeded
-            List<CareEvent> nonCompletedMatches = careEvents.stream()
-                    .filter(e -> e.getEventType() == step.getEventType()
-                              && e.getStatus() != CareEventStatus.COMPLETED)
-                    .toList();
-            if (!nonCompletedMatches.isEmpty() && step.getWindowDays() != null
-                    && daysSinceAnchor > step.getWindowDays()) {
-                String summary = createAlertIfNotDuplicate(patient, step, AlertType.DELAYED_EVENT,
-                        "Delayed: " + step.getName() + " (scheduled but not completed)");
-                if (summary != null) {
-                    alertsGenerated.add(summary);
+        // ---- D-08/D-09: Cross-event RESULTS_NOT_READY check (once per patient, not per step) ----
+        LocalDate today = LocalDate.now();
+        LocalDate lookaheadCutoff = today.plusDays(14); // D-09: 14-day lookahead
+
+        // Upcoming visits within 14 days: SCHEDULED/PENDING CONSULTATION or FOLLOW_UP events
+        List<CareEvent> upcomingVisits = careEvents.stream()
+                .filter(e -> e.getEventType() == CareEventType.CONSULTATION
+                          || e.getEventType() == CareEventType.FOLLOW_UP)
+                .filter(e -> e.getStatus() == CareEventStatus.SCHEDULED
+                          || e.getStatus() == CareEventStatus.PENDING)
+                .filter(e -> e.getEventDate() != null
+                          && !e.getEventDate().isBefore(today)
+                          && !e.getEventDate().isAfter(lookaheadCutoff))
+                .toList();
+
+        if (!upcomingVisits.isEmpty()) {
+            LocalDate earliestVisit = upcomingVisits.stream()
+                    .map(CareEvent::getEventDate)
+                    .min(LocalDate::compareTo)
+                    .orElse(null);
+
+            if (earliestVisit != null) {
+                boolean resultsNotReady = careEvents.stream()
+                        .filter(e -> e.getEventType() == CareEventType.PATHOLOGY_REPORT
+                                  || e.getEventType() == CareEventType.LAB_WORK
+                                  || e.getEventType() == CareEventType.IMAGING)
+                        .filter(e -> e.getStatus() == CareEventStatus.SCHEDULED
+                                  || e.getStatus() == CareEventStatus.PENDING)
+                        .filter(e -> e.getExpectedCompletionDate() != null)
+                        .anyMatch(e -> e.getExpectedCompletionDate().isAfter(earliestVisit));
+
+                if (resultsNotReady) {
+                    // Patient-level alert: use sentinel step name for dedup (Pitfall 4)
+                    boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
+                            patient.getId(), "__RESULTS_NOT_READY__", AlertStatus.OPEN);
+                    if (!isDuplicate) {
+                        Alert rnrAlert = new Alert();
+                        rnrAlert.setPatientId(patient.getId());
+                        rnrAlert.setAlertType(AlertType.RESULTS_NOT_READY);
+                        rnrAlert.setPathwayStepName("__RESULTS_NOT_READY__");
+                        rnrAlert.setDeviationDescription(
+                                "Pending test results are not expected before an upcoming visit. "
+                                + "Review with physician whether the visit should proceed or be rescheduled.");
+                        rnrAlert.setSuggestedAction(
+                                "Contact the ordering facility for an estimated result date.");
+                        rnrAlert.setStatus(AlertStatus.OPEN);
+                        alertRepository.save(rnrAlert);
+                        alertsGenerated.add("RESULTS_NOT_READY: patient " + patient.getId());
+                        log.info("ALERT_CREATED: patient={} type=RESULTS_NOT_READY", patient.getId());
+                    }
                 }
             }
         }
@@ -353,5 +480,22 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
         // AI-04: Circuit breaker fallback — use default description
         log.info("ALERT_FALLBACK_TEMPLATE: patient={} step={}", patient.getId(), step.getId());
         return defaultDescription;
+    }
+
+    /**
+     * Resolves the root anchor date for pathway steps with no prerequisites.
+     *
+     * <p>D-03: referralReceivedAt is the primary time anchor when set.
+     * Falls back to diagnosisDate for patients enrolled before referral tracking
+     * or patients created without a referral PDF.
+     *
+     * @param patient the patient entity
+     * @return the anchor date for root steps, never null (diagnosisDate is always set)
+     */
+    private LocalDate resolveRootAnchor(Patient patient) {
+        if (patient.getReferralReceivedAt() != null) {
+            return patient.getReferralReceivedAt().toLocalDate();
+        }
+        return patient.getDiagnosisDate();
     }
 }
