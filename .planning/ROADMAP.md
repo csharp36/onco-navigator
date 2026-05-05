@@ -245,7 +245,7 @@ Cross-cutting constraints:
 **Plans:** 3 plans
 Plans:
 **Wave 1** *(no dependencies)*
-- [ ] 08-01-PLAN.md — Flyway V19/V20 migrations (template inheritance schema, rectal seed), PathwayTemplate entity, TemplateDiff DTOs, repository changes, TemplateMergeService with unit tests
+- [x] 08-01-PLAN.md — Flyway V19/V20 migrations (template inheritance schema, rectal seed), PathwayTemplate entity, TemplateDiff DTOs, repository changes, TemplateMergeService with unit tests
 **Wave 2** *(blocked on Wave 1)*
 - [ ] 08-02-PLAN.md — PathwayForkService merge integration, PathwayTemplateController REST endpoint, CreatePatientRequest templateId, PatientService changes, fork service tests
 **Wave 3** *(blocked on Wave 2)*
@@ -290,5 +290,5 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 5. Per-Patient Pathway + DAG Foundation | 6/6 | Complete | 2026-05-04 |
 | 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
 | 7. Referral Trigger + Enhanced Timing | 4/4 | Complete | 2026-05-05 |
-| 8. Template Inheritance | 0/3 | Planned | - |
+| 8. Template Inheritance | 1/3 | In Progress | - |
 | 9. Alert Format + Notifications | 0/0 | Not Started | - |

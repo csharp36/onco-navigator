@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_execute
-stopped_at: Phase 8 planned (3 plans)
-last_updated: "2026-05-05T20:00:00.000Z"
-last_activity: 2026-05-05 -- Phase 8 planned (3 plans, 3 waves)
+status: executing
+stopped_at: Completed 08-01 (template inheritance schema + merge engine)
+last_updated: "2026-05-05T20:12:00.000Z"
+last_activity: 2026-05-05 -- Phase 8 Plan 01 complete (schema, DTOs, merge engine)
 progress:
   total_phases: 9
   completed_phases: 7
   total_plans: 40
-  completed_plans: 37
-  percent: 92
+  completed_plans: 38
+  percent: 95
 ---
 
 # Project State
@@ -25,13 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 
 ## Current Position
 
-Phase: 08 — PLANNED
-Plan: 0 of 3
-Status: Ready to execute
-Last activity: 2026-05-05 -- Phase 8 planned (3 plans, 3 waves)
-Last activity: 2026-05-05 -- Phase 7 execution complete (4/4 plans)
+Phase: 08 — EXECUTING
+Plan: 1 of 3
+Status: Executing
+Last activity: 2026-05-05 -- Phase 8 Plan 01 complete (schema, DTOs, merge engine)
 
-Progress: [████████░░] 78% (7/9 phases)
+Progress: [█████████░] 95% (38/40 plans)
 
 ## Performance Metrics
 
@@ -65,6 +64,7 @@ Progress: [████████░░] 78% (7/9 phases)
 | Phase 04-ai-document-ingestion P05 | 4min | 2 tasks | 9 files |
 | Phase 04-ai-document-ingestion P06 | 4min | 2 tasks | 5 files |
 | Phase 04-ai-document-ingestion P07 | 8min | 2 tasks | 6 files |
+| Phase 08-template-inheritance P01 | 8min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -130,6 +130,8 @@ Recent decisions affecting current work:
 - [Phase 04-07]: PathwayEvaluationActivityImplTest created as separate test class from PathwayEvaluationActivityTest -- Claude integration tests separated from baseline deviation detection tests
 - [Phase 04-07]: Zero-PHI boundary verified by both ArgumentCaptor assertions and method signature reflection -- two complementary approaches for PHI leak detection
 - [Phase 04-07]: PdfExtractionServiceTest creates PDFs in-memory via PDFBox 3.x API -- no external fixture files needed
+- [Phase 08-01]: V20 rectal template edge change uses remove {"from": "CRC_01", "to": "CRC_03"} matching actual V6 seed data (CRC_03 has prerequisites ["CRC_01"], not ["CRC_02"])
+- [Phase 08-01]: PathwayForkService updated immediately to use findByCancerTypeAndParentTemplateIdIsNull -- single caller, no deferred fix needed
 
 ### Pending Todos
 
@@ -149,6 +151,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-05T19:02:28.374Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-template-inheritance/08-CONTEXT.md
+Last session: 2026-05-05T20:12:00Z
+Stopped at: Completed 08-01 (template inheritance schema + merge engine)
+Resume file: .planning/phases/08-template-inheritance/08-02-PLAN.md
