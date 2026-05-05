@@ -269,6 +269,24 @@ Cross-cutting constraints:
   3. A `notification_preferences` table stores per-user notification channel preferences
   4. A `NotificationService` interface exists with channel-specific implementations
   5. Initial implementation is log-only; Teams/email connectors are deferred to a future milestone
+**Plans:** 4 plans
+Plans:
+**Wave 1** *(no dependencies)*
+- [ ] 09-01-PLAN.md — Flyway V21-V23 (alert missing_summary, notification_preferences, notification_log), JPA entities, enum, repositories, Alert entity extension, AlertText 3-component record, AlertResponse DTO, frontend type
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 09-02-PLAN.md — NotificationService interface, LoggingNotificationService, NotificationPreferenceService, NotificationPayload, AlertPrompts MISSING_SUMMARY extension, AlertGenerationAiService parsing, cap150 enforcement, notification dispatch hooks
+- [ ] 09-03-PLAN.md — DigestDispatchWorkflow + Activity (Temporal Schedule), DigestScheduleRegistrar startup bean, application-local.yml activity-beans update
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 09-04-PLAN.md — Unit tests: preference merge, severity filter, quiet hours, dispatch routing, digest queue drain, MISSING_SUMMARY parsing, 150-char cap
+
+Cross-cutting constraints:
+- No PHI in Temporal workflow history — notification dispatch receives PHI as method params within activities, never as Temporal activity inputs
+- notification_log.rendered_content encrypted via EncryptionConverter (AES-GCM) — same pattern as Patient PHI fields
+- notification_pending_queue.rendered_content_encrypted also uses EncryptionConverter
+- @Audited on NotificationLog (contains encrypted PHI); NOT @Audited on NotificationPreference (no PHI)
+- 150-char enforcement at service layer (cap150 helper), not DB CHECK constraint (D-02)
+- PHI-safe logging: only alert UUID and user UUID in log statements, never patientName/patientMrn
+- DigestDispatchActivityImpl must be in explicit activity-beans list (auto-discovery does not work)
 
 ## Progress
 
@@ -291,4 +309,4 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
 | 7. Referral Trigger + Enhanced Timing | 4/4 | Complete | 2026-05-05 |
 | 8. Template Inheritance | 3/3 | Complete | 2026-05-05 |
-| 9. Alert Format + Notifications | 0/0 | Not Started | - |
+| 9. Alert Format + Notifications | 0/4 | Planned | - |
