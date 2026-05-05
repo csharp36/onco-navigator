@@ -70,6 +70,10 @@ public class Patient {
     @Column(name = "diagnosis_date", nullable = false)
     private LocalDate diagnosisDate;
 
+    /** Phase 7: Timestamp when the referral PDF was received (pathway clock trigger). Not PHI. */
+    @Column(name = "referral_received_at")
+    private OffsetDateTime referralReceivedAt;
+
     @Column(name = "assigned_navigator_id")
     private UUID assignedNavigatorId;
 
@@ -173,6 +177,14 @@ public class Patient {
 
     public void setDiagnosisDate(LocalDate diagnosisDate) {
         this.diagnosisDate = diagnosisDate;
+    }
+
+    public OffsetDateTime getReferralReceivedAt() {
+        return referralReceivedAt;
+    }
+
+    public void setReferralReceivedAt(OffsetDateTime referralReceivedAt) {
+        this.referralReceivedAt = referralReceivedAt;
     }
 
     public UUID getAssignedNavigatorId() {

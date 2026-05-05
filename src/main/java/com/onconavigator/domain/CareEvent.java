@@ -74,6 +74,18 @@ public class CareEvent {
     @Column(name = "pathway_step_id")
     private String pathwayStepId;
 
+    /** Phase 7: Expected date for this event to complete (scheduling coordination). */
+    @Column(name = "expected_completion_date")
+    private LocalDate expectedCompletionDate;
+
+    /** Phase 7: Whether scheduling at the external facility has been confirmed by the nurse. */
+    @Column(name = "scheduling_confirmed")
+    private Boolean schedulingConfirmed = Boolean.FALSE;
+
+    /** Phase 7: Name of the external facility performing this care event. */
+    @Column(name = "external_facility_name")
+    private String externalFacilityName;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -159,6 +171,30 @@ public class CareEvent {
 
     public void setPathwayStepId(String pathwayStepId) {
         this.pathwayStepId = pathwayStepId;
+    }
+
+    public LocalDate getExpectedCompletionDate() {
+        return expectedCompletionDate;
+    }
+
+    public void setExpectedCompletionDate(LocalDate expectedCompletionDate) {
+        this.expectedCompletionDate = expectedCompletionDate;
+    }
+
+    public Boolean getSchedulingConfirmed() {
+        return schedulingConfirmed;
+    }
+
+    public void setSchedulingConfirmed(Boolean schedulingConfirmed) {
+        this.schedulingConfirmed = schedulingConfirmed;
+    }
+
+    public String getExternalFacilityName() {
+        return externalFacilityName;
+    }
+
+    public void setExternalFacilityName(String externalFacilityName) {
+        this.externalFacilityName = externalFacilityName;
     }
 
     public OffsetDateTime getCreatedAt() {
