@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: AI Document Ingestion & Alert Enhancement** - PDF drag-and-drop classification, patient matching, event pre-fill, Claude alert generation, circuit breaker (completed 2026-05-01)
 - [x] **Phase 5: Per-Patient Pathway Instances + DAG Foundation** - Mutable per-patient pathways forked from templates, DAG evaluation engine replacing linear iteration (completed 2026-05-04)
 - [x] **Phase 6: AI Step Extraction from Clinical Documents** - Claude extracts pathway steps from MD notes, orders, and nurse notes; proposed steps require nurse confirmation (completed 2026-05-05)
-- [ ] **Phase 7: Referral Trigger + Enhanced Timing** - Referral PDF as pathway clock trigger, event status awareness (Scheduled/Pending/Cancelled), results-before-visit and 48-hour escalation alerts
+- [x] **Phase 7: Referral Trigger + Enhanced Timing** - Referral PDF as pathway clock trigger, event status awareness (Scheduled/Pending/Cancelled), results-before-visit and 48-hour escalation alerts (completed 2026-05-05)
 - [ ] **Phase 8: Template Inheritance** - Extensible pathway templates with parent/child inheritance (e.g., rectal inherits from colorectal)
 - [ ] **Phase 9: Alert Format + Notification Foundation** - Two-part alerts (what's missing + action ≤150 chars), Teams/email notification infrastructure
 
