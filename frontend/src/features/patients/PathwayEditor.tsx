@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +39,9 @@ import {
   useUnskipStep,
   useCreateEdge,
   useDeleteEdge,
+  useConfirmStep,
+  useRejectStep,
+  useDocumentAlreadyCovered,
 } from './api';
 import type { PathwayStepStatus } from './types';
 
@@ -160,6 +169,11 @@ export function PathwayEditor({ patientId, steps }: PathwayEditorProps) {
   } | null>(null);
   const [addEdgeError, setAddEdgeError] = useState<string | null>(null);
 
+  // Phase 6: reject dialog state and show-rejected toggle
+  const [rejectingStepId, setRejectingStepId] = useState<string | null>(null);
+  const [rejectingStepName, setRejectingStepName] = useState<string>('');
+  const [showRejected, setShowRejected] = useState(false);
+
   // Mutations
   const createStep = useCreateStep(patientId);
   const updateStep = useUpdateStep(patientId);
@@ -168,9 +182,20 @@ export function PathwayEditor({ patientId, steps }: PathwayEditorProps) {
   const unskipStep = useUnskipStep(patientId);
   const createEdge = useCreateEdge(patientId);
   const deleteEdge = useDeleteEdge(patientId);
+  const confirmStep = useConfirmStep(patientId);
+  const rejectStep = useRejectStep(patientId);
 
   // Edges query
   const { data: edges = [] } = usePathwayEdges(patientId);
+
+  // Phase 6: "already covered" section data (D-10)
+  const proposedSteps = steps.filter(s => s.status === 'PROPOSED' && s.sourceDocumentId);
+  const sourceDocumentId = proposedSteps.length > 0 ? proposedSteps[0].sourceDocumentId : null;
+  const { data: alreadyCoveredTypes } = useDocumentAlreadyCovered(sourceDocumentId);
+
+  // Separate visible steps from rejected steps (D-07: hidden by default)
+  const visibleSteps = steps.filter(s => s.status !== 'REJECTED');
+  const rejectedSteps = steps.filter(s => s.status === 'REJECTED');
 
   function handleAddStep(data: { name: string; eventType?: string; windowDays?: number; required: boolean }) {
     createStep.mutate(
@@ -256,9 +281,27 @@ export function PathwayEditor({ patientId, steps }: PathwayEditorProps) {
 
   return (
     <div className="space-y-2">
+      {/* Phase 6: "Already in pathway" section (D-10) */}
+      {alreadyCoveredTypes && alreadyCoveredTypes.length > 0 && (
+        <Card className="bg-muted/50">
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Already in pathway
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-2 px-4">
+            <p className="text-xs text-muted-foreground">
+              The document also mentioned these care events, which are already tracked:{' '}
+              {alreadyCoveredTypes.join(', ').replace(/_/g, ' ').toLowerCase()}.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <ol className="space-y-1">
-        {steps.map((step) => {
-          if (editingStepId === step.stepId && step.status === 'ACTIVE') {
+        {visibleSteps.map((step) => {
+          // D-06: InlineStepEdit renders for PROPOSED steps as well as ACTIVE
+          if (editingStepId === step.stepId && (step.status === 'ACTIVE' || step.status === 'PROPOSED')) {
             return (
               <InlineStepEdit
                 key={step.stepId}
@@ -279,10 +322,38 @@ export function PathwayEditor({ patientId, steps }: PathwayEditorProps) {
               onRemove={() => setRemoveDialogStep({ id: step.stepId, name: step.stepName })}
               onSkip={() => setSkipDialogStep({ id: step.stepId, name: step.stepName })}
               onUnskip={() => handleUnskipStep(step.stepId)}
+              onConfirm={step.status === 'PROPOSED' ? () => confirmStep.mutate(step.stepId) : undefined}
+              onReject={step.status === 'PROPOSED' ? () => {
+                setRejectingStepId(step.stepId);
+                setRejectingStepName(step.stepName);
+              } : undefined}
             />
           );
         })}
       </ol>
+
+      {/* Phase 6: Show rejected steps collapsible (D-07) */}
+      {rejectedSteps.length > 0 && (
+        <Collapsible open={showRejected} onOpenChange={setShowRejected}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+              {showRejected
+                ? 'Hide rejected steps'
+                : `Show ${rejectedSteps.length} rejected step${rejectedSteps.length === 1 ? '' : 's'}`}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-1 mt-2">
+            {rejectedSteps.map(step => (
+              <StepRow
+                key={step.stepId}
+                step={step}
+                isLastAtDepth={false}
+                isEditing={false}
+              />
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* Add step button / inline form */}
       {showAddForm ? (
@@ -363,6 +434,44 @@ export function PathwayEditor({ patientId, steps }: PathwayEditorProps) {
               disabled={deleteStep.isPending}
             >
               {deleteStep.isPending ? 'Removing...' : 'Remove Step'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Phase 6: Reject proposal confirmation dialog */}
+      <Dialog open={rejectingStepId !== null} onOpenChange={(open) => {
+        if (!open) setRejectingStepId(null);
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove proposal for &quot;{rejectingStepName}&quot;?</DialogTitle>
+            <DialogDescription>
+              This step will be marked as rejected. It won&apos;t appear in the pathway,
+              and the AI won&apos;t re-propose it from future document uploads.
+            </DialogDescription>
+          </DialogHeader>
+          {rejectStep.isError && (
+            <p className="text-destructive text-sm">
+              An error occurred. Your changes were not saved. Please try again.
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectingStepId(null)}>
+              Keep Proposal
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={rejectStep.isPending}
+              onClick={() => {
+                if (rejectingStepId) {
+                  rejectStep.mutate(rejectingStepId, {
+                    onSuccess: () => setRejectingStepId(null),
+                  });
+                }
+              }}
+            >
+              Reject Proposal
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -61,7 +61,7 @@ export interface PathwayStatusResponse {
 
 // ── Phase 5: Per-Patient Pathway DAG Types ──────────────────────────────────
 
-export type PathwayStepStatusEnum = 'ACTIVE' | 'PROPOSED' | 'COMPLETED' | 'SKIPPED';
+export type PathwayStepStatusEnum = 'ACTIVE' | 'PROPOSED' | 'COMPLETED' | 'SKIPPED' | 'REJECTED';
 
 export interface PathwayStepStatus {
   stepId: string;
@@ -74,6 +74,10 @@ export interface PathwayStepStatus {
   hasActiveAlert: boolean;
   skipReason: string | null;
   prerequisiteStepIds: string[];
+  // Phase 6: AI extraction source tracking
+  sourceDocumentId: string | null;
+  extractionSource: 'TEMPLATE' | 'MANUAL' | 'AI_EXTRACTED' | null;
+  sourceDocumentFilename: string | null;
 }
 
 export interface PatientPathwayStep {
@@ -94,6 +98,10 @@ export interface PatientPathwayStep {
   sortOrder: number;
   prerequisiteStepIds: string[];
   createdAt: string;
+  // Phase 6: AI extraction source tracking
+  sourceDocumentId: string | null;
+  extractionSource: 'TEMPLATE' | 'MANUAL' | 'AI_EXTRACTED' | null;
+  sourceDocumentFilename: string | null;
 }
 
 export interface PatientPathwayEdge {

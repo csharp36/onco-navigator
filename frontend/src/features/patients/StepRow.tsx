@@ -1,11 +1,13 @@
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
   Circle,
   MinusCircle,
   Pencil,
   RotateCcw,
   Trash2,
+  X,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +55,14 @@ function PathwayStepIcon({ step }: { step: PathwayStepStatus }) {
       />
     );
   }
+  if (step.status === 'REJECTED') {
+    return (
+      <MinusCircle
+        className="h-5 w-5 text-muted-foreground shrink-0"
+        aria-label="Rejected"
+      />
+    );
+  }
   // SKIPPED
   return (
     <MinusCircle
@@ -73,6 +83,8 @@ function stepNameClass(status: PathwayStepStatus['status']): string {
       return 'text-sm text-muted-foreground';
     case 'SKIPPED':
       return 'text-sm line-through text-muted-foreground';
+    case 'REJECTED':
+      return 'text-sm text-muted-foreground line-through';
     default:
       return 'text-sm';
   }
@@ -88,6 +100,8 @@ interface StepRowProps {
   onRemove?: () => void;
   onSkip?: () => void;
   onUnskip?: () => void;
+  onConfirm?: () => void;   // Phase 6: confirm PROPOSED step
+  onReject?: () => void;    // Phase 6: reject PROPOSED step
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -100,6 +114,8 @@ export function StepRow({
   onRemove,
   onSkip,
   onUnskip,
+  onConfirm,
+  onReject,
 }: StepRowProps) {
   const branchConnector =
     step.depth > 0
@@ -113,7 +129,7 @@ export function StepRow({
       <li
         className={`flex items-start gap-3 rounded-md p-3 min-h-[44px] ${
           step.hasActiveAlert ? 'bg-amber-50' : ''
-        }`}
+        } ${step.status === 'PROPOSED' ? 'rounded-md border border-dashed' : ''}`}
         style={{ paddingLeft: `calc(${step.depth * 24}px + 0.75rem)` }}
         aria-level={step.depth + 1}
       >
@@ -153,6 +169,14 @@ export function StepRow({
               </span>
             )}
 
+            {step.status === 'PROPOSED' && (
+              <Badge variant="outline" className="text-xs">AI Proposed</Badge>
+            )}
+
+            {step.status === 'REJECTED' && (
+              <Badge variant="outline" className="text-xs text-muted-foreground">Rejected</Badge>
+            )}
+
             {step.status === 'SKIPPED' && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -168,6 +192,12 @@ export function StepRow({
               </Tooltip>
             )}
           </div>
+
+          {step.status === 'PROPOSED' && step.sourceDocumentFilename && (
+            <span className="text-xs text-muted-foreground">
+              Source: {step.sourceDocumentFilename}
+            </span>
+          )}
 
           <p className="text-xs text-muted-foreground mt-0.5">
             {step.timingInfo}
@@ -221,15 +251,36 @@ export function StepRow({
             )}
 
             {step.status === 'PROPOSED' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                aria-label={`Remove ${step.stepName}`}
-                onClick={onRemove}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-8 px-3"
+                  aria-label={`Confirm ${step.stepName}`}
+                  onClick={onConfirm}
+                >
+                  <Check className="h-4 w-4 mr-1" />
+                  Confirm
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  aria-label={`Edit ${step.stepName}`}
+                  onClick={onEdit}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                  aria-label={`Reject proposal for ${step.stepName}`}
+                  onClick={onReject}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             )}
 
             {step.status === 'SKIPPED' && (
