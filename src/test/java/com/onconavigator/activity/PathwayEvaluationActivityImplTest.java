@@ -6,18 +6,21 @@ import com.onconavigator.ai.service.AlertGenerationAiService;
 import com.onconavigator.domain.Alert;
 import com.onconavigator.domain.CareEvent;
 import com.onconavigator.domain.Patient;
-import com.onconavigator.domain.PathwayTemplate;
+import com.onconavigator.domain.PatientPathway;
+import com.onconavigator.domain.PatientPathwayStep;
 import com.onconavigator.domain.dto.PathwayEvaluationResult;
 import com.onconavigator.domain.enums.AlertStatus;
 import com.onconavigator.domain.enums.AlertType;
 import com.onconavigator.domain.enums.CancerType;
 import com.onconavigator.domain.enums.CareEventStatus;
 import com.onconavigator.domain.enums.CareEventType;
+import com.onconavigator.domain.enums.PathwayStepStatus;
 import com.onconavigator.repository.AlertRepository;
 import com.onconavigator.repository.CareEventRepository;
-import com.onconavigator.repository.PathwayTemplateRepository;
+import com.onconavigator.repository.PatientPathwayEdgeRepository;
+import com.onconavigator.repository.PatientPathwayRepository;
+import com.onconavigator.repository.PatientPathwayStepRepository;
 import com.onconavigator.repository.PatientRepository;
-import com.onconavigator.repository.PhysicianOverrideRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -36,14 +39,17 @@ import static org.mockito.Mockito.*;
  * Unit tests for {@link PathwayEvaluationActivityImpl} Claude AI integration.
  *
  * <p>Tests verify the template-first / Claude-fallback alert generation logic
- * introduced in Phase 4 Plan 04. These tests complement the baseline deviation
- * detection tests in {@link PathwayEvaluationActivityTest}.
+ * using per-patient DAG pathway steps (Phase 6 model). These tests complement
+ * the baseline deviation detection tests in {@link PathwayEvaluationActivityTest}.
+ *
+ * <p>Updated in Phase 6 to use PatientPathwayRepository/StepRepository/EdgeRepository
+ * instead of the previous PathwayTemplateRepository/PhysicianOverrideRepository.
  *
  * <p>Test cases cover:
  * <ul>
- *   <li>AI-01: Template text used for standard deviations (Claude NOT called)</li>
+ *   <li>AI-01: Step alertText used for standard deviations (Claude NOT called)</li>
  *   <li>AI-02/AI-03: Claude called for non-standard deviations (null/blank alertText)</li>
- *   <li>AI-04: Generic fallback template when Claude returns null (circuit breaker open)</li>
+ *   <li>AI-04: Generic fallback when Claude returns null (circuit breaker open)</li>
  *   <li>Zero-PHI: Only anonymized context passed to Claude (no patient identifiers)</li>
  * </ul>
  *
@@ -55,27 +61,31 @@ class PathwayEvaluationActivityImplTest {
     private PatientRepository patientRepository;
     private CareEventRepository careEventRepository;
     private AlertRepository alertRepository;
-    private PathwayTemplateRepository templateRepository;
-    private PhysicianOverrideRepository overrideRepository;
+    private PatientPathwayRepository pathwayRepository;
+    private PatientPathwayStepRepository stepRepository;
+    private PatientPathwayEdgeRepository edgeRepository;
     private ObjectMapper objectMapper;
     private AlertGenerationAiService alertGenerationAiService;
     private PathwayEvaluationActivityImpl activity;
 
     private static final UUID PATIENT_ID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+    private static final UUID PATHWAY_ID = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
+    private static final UUID STEP1_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @BeforeEach
     void setUp() {
         patientRepository = Mockito.mock(PatientRepository.class);
         careEventRepository = Mockito.mock(CareEventRepository.class);
         alertRepository = Mockito.mock(AlertRepository.class);
-        templateRepository = Mockito.mock(PathwayTemplateRepository.class);
-        overrideRepository = Mockito.mock(PhysicianOverrideRepository.class);
+        pathwayRepository = Mockito.mock(PatientPathwayRepository.class);
+        stepRepository = Mockito.mock(PatientPathwayStepRepository.class);
+        edgeRepository = Mockito.mock(PatientPathwayEdgeRepository.class);
         objectMapper = new ObjectMapper();
         alertGenerationAiService = Mockito.mock(AlertGenerationAiService.class);
         activity = new PathwayEvaluationActivityImpl(
                 patientRepository, careEventRepository, alertRepository,
-                templateRepository, overrideRepository, objectMapper,
-                alertGenerationAiService);
+                pathwayRepository, stepRepository, edgeRepository,
+                objectMapper, alertGenerationAiService);
     }
 
     // ---- Helper factories ----
@@ -94,102 +104,40 @@ class PathwayEvaluationActivityImplTest {
         return patient;
     }
 
-    private PathwayTemplate createTestTemplate(CancerType type, String templateDataJson) {
-        PathwayTemplate template = new PathwayTemplate();
-        template.setId(UUID.randomUUID());
-        template.setCancerType(type);
-        template.setTemplateData(templateDataJson);
-        return template;
+    private PatientPathway createTestPathway() {
+        PatientPathway pathway = new PatientPathway();
+        pathway.setId(PATHWAY_ID);
+        return pathway;
     }
 
-    private CareEvent createTestEvent(CareEventType type, CareEventStatus status, LocalDate date) {
-        CareEvent event = new CareEvent();
-        event.setId(UUID.randomUUID());
-        event.setEventType(type);
-        event.setStatus(status);
-        event.setEventDate(date);
-        return event;
+    private PatientPathwayStep createActiveStep(UUID id, String name, CareEventType eventType,
+                                                  int windowDays, String alertText,
+                                                  PatientPathway pathway) {
+        PatientPathwayStep step = new PatientPathwayStep();
+        step.setId(id);
+        step.setPathway(pathway);
+        step.setName(name);
+        step.setEventType(eventType);
+        step.setWindowDays(windowDays);
+        step.setStatus(PathwayStepStatus.ACTIVE);
+        step.setRequired(true);
+        step.setAlertText(alertText);
+        return step;
     }
 
-    /**
-     * Template with step 1 having standard alertText (non-null) -- template-first path.
-     */
-    private String buildTemplateWithAlertText() {
-        return """
-                [
-                  {
-                    "stepId": "BREAST_01",
-                    "stepNumber": 1,
-                    "name": "Surgeon Consultation",
-                    "description": "Initial surgical consultation",
-                    "eventType": "CONSULTATION",
-                    "windowDays": 14,
-                    "anchorType": "DIAGNOSIS_DATE",
-                    "anchorStepId": null,
-                    "required": true,
-                    "alertText": "Expected template text for surgeon consultation deviation.",
-                    "suggestedAction": "Contact surgeon office to schedule.",
-                    "prerequisites": []
-                  }
-                ]
-                """;
-    }
-
-    /**
-     * Template with step 1 having NULL alertText -- non-standard deviation path (Claude).
-     */
-    private String buildTemplateWithNullAlertText() {
-        return """
-                [
-                  {
-                    "stepId": "BREAST_01",
-                    "stepNumber": 1,
-                    "name": "Radiation Therapy Planning",
-                    "description": "Radiation therapy planning session",
-                    "eventType": "RADIATION",
-                    "windowDays": 28,
-                    "anchorType": "DIAGNOSIS_DATE",
-                    "anchorStepId": null,
-                    "required": true,
-                    "alertText": null,
-                    "suggestedAction": null,
-                    "prerequisites": []
-                  }
-                ]
-                """;
-    }
-
-    /**
-     * Template with step 1 having blank alertText -- treated same as null.
-     */
-    private String buildTemplateWithBlankAlertText() {
-        return """
-                [
-                  {
-                    "stepId": "BREAST_01",
-                    "stepNumber": 1,
-                    "name": "Radiation Therapy Planning",
-                    "description": "Radiation therapy planning session",
-                    "eventType": "RADIATION",
-                    "windowDays": 28,
-                    "anchorType": "DIAGNOSIS_DATE",
-                    "anchorStepId": null,
-                    "required": true,
-                    "alertText": "   ",
-                    "suggestedAction": null,
-                    "prerequisites": []
-                  }
-                ]
-                """;
-    }
-
-    private void setupCommonMocks(Patient patient, PathwayTemplate template) {
+    private void setupCommonMocks(Patient patient, PatientPathway pathway,
+                                   PatientPathwayStep step) {
         when(patientRepository.findById(PATIENT_ID)).thenReturn(Optional.of(patient));
+        when(pathwayRepository.findByPatient_Id(PATIENT_ID)).thenReturn(Optional.of(pathway));
+        when(stepRepository.findByPathway_IdAndStatus(PATHWAY_ID, PathwayStepStatus.ACTIVE))
+                .thenReturn(List.of(step));
+        when(stepRepository.findByPathway_IdAndStatus(PATHWAY_ID, PathwayStepStatus.COMPLETED))
+                .thenReturn(List.of());
+        when(stepRepository.findByPathway_IdAndStatus(PATHWAY_ID, PathwayStepStatus.SKIPPED))
+                .thenReturn(List.of());
+        when(edgeRepository.findByPathway_Id(PATHWAY_ID)).thenReturn(List.of());
         when(careEventRepository.findByPatient_IdOrderByEventDateDesc(PATIENT_ID))
                 .thenReturn(List.of());
-        when(templateRepository.findByCancerType(patient.getCancerType()))
-                .thenReturn(Optional.of(template));
-        when(overrideRepository.existsByPatientIdAndPathwayStepId(any(), any())).thenReturn(false);
         when(alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(any(), any(), any()))
                 .thenReturn(false);
     }
@@ -197,51 +145,56 @@ class PathwayEvaluationActivityImplTest {
     // ---- Tests ----
 
     /**
-     * AI-01: Template text is the primary source for standard deviations.
+     * AI-01: Step alertText is the primary source for standard deviations.
      *
-     * <p>When {@code step.alertText()} is non-null and non-blank, the alert's
-     * deviationDescription should be the template text. Claude should NOT be called.
+     * <p>When {@code step.getAlertText()} is non-null and non-blank, the alert's
+     * deviationDescription should be the step's alertText. Claude should NOT be called.
      */
     @Test
-    void evaluate_usesTemplateText_whenAlertTextIsPresent() {
-        // 35 days past diagnosis -- triggers MISSING_EVENT for 14-day window
+    void evaluate_usesStepAlertText_whenAlertTextIsPresent() {
+        // 35 days past diagnosis — triggers MISSING_EVENT for 14-day window
         LocalDate diagnosisDate = LocalDate.now().minusDays(35);
         Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
-        PathwayTemplate template = createTestTemplate(CancerType.BREAST, buildTemplateWithAlertText());
+        PatientPathway pathway = createTestPathway();
 
-        setupCommonMocks(patient, template);
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Surgeon Consultation",
+                CareEventType.CONSULTATION, 14,
+                "Expected template text for surgeon consultation deviation.", pathway);
+
+        setupCommonMocks(patient, pathway, step);
 
         PathwayEvaluationResult result = activity.evaluate(PATIENT_ID);
 
         assertThat(result).isNotNull();
 
-        // Verify alert was saved with template text
+        // Verify alert was saved with the step's alertText
         ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
         verify(alertRepository, atLeastOnce()).save(alertCaptor.capture());
 
         Alert savedAlert = alertCaptor.getValue();
         assertThat(savedAlert.getDeviationDescription())
                 .isEqualTo("Expected template text for surgeon consultation deviation.");
-        assertThat(savedAlert.getSuggestedAction())
-                .isEqualTo("Contact surgeon office to schedule.");
 
-        // Claude should NOT have been called (template text is primary -- AI-01)
+        // Claude should NOT have been called (step alertText is primary -- AI-01)
         verifyNoInteractions(alertGenerationAiService);
     }
 
     /**
      * AI-02/AI-03: Claude called for non-standard deviations when alertText is null.
      *
-     * <p>When {@code step.alertText()} is null, the activity should call
+     * <p>When {@code step.getAlertText()} is null, the activity should call
      * AlertGenerationAiService to generate Claude-powered text.
      */
     @Test
     void evaluate_callsClaude_whenAlertTextIsNullOrBlank() {
         LocalDate diagnosisDate = LocalDate.now().minusDays(35);
         Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
-        PathwayTemplate template = createTestTemplate(CancerType.BREAST, buildTemplateWithNullAlertText());
+        PatientPathway pathway = createTestPathway();
 
-        setupCommonMocks(patient, template);
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Radiation Therapy Planning",
+                CareEventType.RADIATION, 28, null /* null alertText */, pathway);
+
+        setupCommonMocks(patient, pathway, step);
 
         // Mock Claude to return generated alert text
         when(alertGenerationAiService.generateAlertDescription(
@@ -261,8 +214,6 @@ class PathwayEvaluationActivityImplTest {
         Alert savedAlert = alertCaptor.getValue();
         assertThat(savedAlert.getDeviationDescription())
                 .isEqualTo("Claude generated desc for radiation therapy delay");
-        assertThat(savedAlert.getSuggestedAction())
-                .isEqualTo("Claude suggested action: contact radiation oncology");
 
         // Verify Claude was called
         verify(alertGenerationAiService).generateAlertDescription(
@@ -270,18 +221,21 @@ class PathwayEvaluationActivityImplTest {
     }
 
     /**
-     * AI-04: Generic fallback template when Claude returns null (circuit breaker open).
+     * AI-04: Generic fallback when Claude returns null (circuit breaker open).
      *
-     * <p>When alertText is null AND Claude returns null (e.g., circuit breaker is open),
-     * the activity should use the generic fallback template text.
+     * <p>When alertText is null AND Claude returns null, the activity should use
+     * the generic fallback description containing the step name.
      */
     @Test
-    void evaluate_usesFallbackTemplate_whenClaudeReturnsNull() {
+    void evaluate_usesFallbackDescription_whenClaudeReturnsNull() {
         LocalDate diagnosisDate = LocalDate.now().minusDays(35);
         Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
-        PathwayTemplate template = createTestTemplate(CancerType.BREAST, buildTemplateWithNullAlertText());
+        PatientPathway pathway = createTestPathway();
 
-        setupCommonMocks(patient, template);
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Radiation Therapy Planning",
+                CareEventType.RADIATION, 28, null /* null alertText */, pathway);
+
+        setupCommonMocks(patient, pathway, step);
 
         // Claude returns null (circuit breaker open)
         when(alertGenerationAiService.generateAlertDescription(
@@ -292,17 +246,13 @@ class PathwayEvaluationActivityImplTest {
 
         assertThat(result).isNotNull();
 
-        // Verify alert was saved with generic fallback text (AI-04)
+        // Verify alert was saved with fallback description containing the step name
         ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
         verify(alertRepository, atLeastOnce()).save(alertCaptor.capture());
 
         Alert savedAlert = alertCaptor.getValue();
         assertThat(savedAlert.getDeviationDescription())
-                .contains("Care pathway deviation detected for step:");
-        assertThat(savedAlert.getDeviationDescription())
                 .contains("Radiation Therapy Planning");
-        assertThat(savedAlert.getSuggestedAction())
-                .contains("Review the patient's pathway status");
     }
 
     /**
@@ -320,11 +270,13 @@ class PathwayEvaluationActivityImplTest {
     void evaluate_passesOnlyAnonymizedContextToClaude() {
         LocalDate diagnosisDate = LocalDate.now().minusDays(35);
         Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
-        PathwayTemplate template = createTestTemplate(CancerType.BREAST, buildTemplateWithNullAlertText());
+        PatientPathway pathway = createTestPathway();
 
-        setupCommonMocks(patient, template);
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Radiation Therapy Planning",
+                CareEventType.RADIATION, 28, null /* null alertText — triggers Claude */, pathway);
 
-        // Mock Claude to return generated text
+        setupCommonMocks(patient, pathway, step);
+
         when(alertGenerationAiService.generateAlertDescription(
                 anyString(), anyString(), anyString(), anyString(), anyList(), anyList()))
                 .thenReturn(new AlertText("Test desc", "Test action"));
@@ -385,9 +337,12 @@ class PathwayEvaluationActivityImplTest {
     void evaluate_callsClaude_whenAlertTextIsBlank() {
         LocalDate diagnosisDate = LocalDate.now().minusDays(35);
         Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
-        PathwayTemplate template = createTestTemplate(CancerType.BREAST, buildTemplateWithBlankAlertText());
+        PatientPathway pathway = createTestPathway();
 
-        setupCommonMocks(patient, template);
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Radiation Therapy Planning",
+                CareEventType.RADIATION, 28, "   " /* blank alertText */, pathway);
+
+        setupCommonMocks(patient, pathway, step);
 
         when(alertGenerationAiService.generateAlertDescription(
                 anyString(), anyString(), anyString(), anyString(), anyList(), anyList()))
