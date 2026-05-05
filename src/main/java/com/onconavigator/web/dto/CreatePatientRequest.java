@@ -22,6 +22,11 @@ import java.util.UUID;
  *   <li>{@code "template"} (default) — deep-copies the cancer-type template into per-patient rows
  *   <li>{@code "empty"} — creates a pathway with no steps; AI extraction populates it
  * </ul>
+ *
+ * <p>The optional {@code templateId} field selects a specific template variant (including
+ * child templates). When provided, selects a specific template variant for the patient's
+ * pathway. When null, the root template for the patient's cancer type is used (backward
+ * compatible with existing API clients).
  */
 public record CreatePatientRequest(
         @NotBlank(message = "First name is required") String firstName,
@@ -33,6 +38,7 @@ public record CreatePatientRequest(
         @NotNull(message = "Diagnosis date is required") LocalDate diagnosisDate,
         UUID assignedNavigatorId,
         String treatingPhysician,
+        UUID templateId,  // Optional: specific template variant UUID. Null = root template for cancer type.
         String pathwayMode  // "template" (default) or "empty" per D-07
 ) {
     /**

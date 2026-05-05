@@ -8,6 +8,7 @@ import com.onconavigator.domain.PatientPathwayEdge;
 import com.onconavigator.domain.PatientPathwayStep;
 import com.onconavigator.domain.PathwayTemplate;
 import com.onconavigator.domain.dto.PathwayStep;
+import com.onconavigator.domain.dto.TemplateDiff;
 import com.onconavigator.domain.enums.PathwayStepStatus;
 import com.onconavigator.repository.PatientPathwayEdgeRepository;
 import com.onconavigator.repository.PatientPathwayRepository;
@@ -48,45 +49,68 @@ public class PathwayForkService {
     private final PatientPathwayEdgeRepository edgeRepository;
     private final PathwayTemplateRepository templateRepository;
     private final ObjectMapper objectMapper;
+    private final TemplateMergeService templateMergeService;
 
     public PathwayForkService(PatientPathwayRepository pathwayRepository,
                               PatientPathwayStepRepository stepRepository,
                               PatientPathwayEdgeRepository edgeRepository,
                               PathwayTemplateRepository templateRepository,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              TemplateMergeService templateMergeService) {
         this.pathwayRepository = pathwayRepository;
         this.stepRepository = stepRepository;
         this.edgeRepository = edgeRepository;
         this.templateRepository = templateRepository;
         this.objectMapper = objectMapper;
+        this.templateMergeService = templateMergeService;
     }
 
     /**
      * Forks a pathway template into per-patient relational rows (D-05).
      *
-     * <p>Deep copies all template steps and prerequisite edges, remapping template string step
+     * <p>Loads the specified template by ID. For child templates (parentTemplateId is not null),
+     * the parent template is loaded and the child's diff is merged via {@link TemplateMergeService}
+     * to produce a flat step list (D-06: live inheritance at fork time). For root templates,
+     * the template data is parsed directly as a step array.
+     *
+     * <p>Deep copies all resolved steps and prerequisite edges, remapping template string step
      * IDs to the newly generated UUIDs. Records the source template ID and version for
      * traceability.
      *
-     * @param patient the Patient entity (already saved)
-     * @param actorId UUID of the authenticated user creating the pathway
+     * @param patient    the Patient entity (already saved)
+     * @param templateId UUID of the specific template to fork (root or child)
+     * @param actorId    UUID of the authenticated user creating the pathway
      * @return the created PatientPathway with all steps and edges persisted
-     * @throws ResponseStatusException 404 if no template exists for the patient's cancer type
-     * @throws IllegalStateException   if the template JSONB data cannot be parsed
+     * @throws ResponseStatusException 404 if no template exists with the given ID
+     * @throws IllegalStateException   if the template JSONB data cannot be parsed or parent not found
      */
     @Transactional
-    public PatientPathway forkFromTemplate(Patient patient, UUID actorId) {
-        // 1. Find root template by cancer type (child template selection deferred to Phase 8 Plan 2)
-        PathwayTemplate template = templateRepository.findByCancerTypeAndParentTemplateIdIsNull(patient.getCancerType())
+    public PatientPathway forkFromTemplate(Patient patient, UUID templateId, UUID actorId) {
+        // 1. Load the selected template by ID
+        PathwayTemplate template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No pathway template found for cancer type " + patient.getCancerType()));
+                        "No pathway template found with ID " + templateId));
 
-        // 2. Parse JSONB template_data into List<PathwayStep>
+        // 2. Resolve steps: merge if child template, direct parse if root
         List<PathwayStep> templateSteps;
         try {
-            templateSteps = objectMapper.readValue(
-                    template.getTemplateData(),
-                    new TypeReference<List<PathwayStep>>() {});
+            if (template.getParentTemplateId() != null) {
+                // Child template -- load parent and merge (D-06: live inheritance)
+                PathwayTemplate parent = templateRepository.findById(template.getParentTemplateId())
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Parent template not found: " + template.getParentTemplateId()));
+                List<PathwayStep> parentSteps = objectMapper.readValue(
+                        parent.getTemplateData(), new TypeReference<List<PathwayStep>>() {});
+                TemplateDiff diff = objectMapper.readValue(
+                        template.getTemplateData(), TemplateDiff.class);
+                templateSteps = templateMergeService.merge(parentSteps, diff);
+            } else {
+                // Root template -- parse directly (existing behavior)
+                templateSteps = objectMapper.readValue(
+                        template.getTemplateData(), new TypeReference<List<PathwayStep>>() {});
+            }
+        } catch (ResponseStatusException | IllegalStateException e) {
+            throw e;
         } catch (Exception e) {
             throw new IllegalStateException(
                     "Failed to parse template data for template " + template.getId(), e);
@@ -141,8 +165,9 @@ public class PathwayForkService {
             }
         }
 
-        log.info("Forked template {} for patient {} ({} steps, {} edges)",
-                template.getId(), patient.getId(), templateSteps.size(), edgeCount);
+        log.info("Forked template {} (child={}) for patient {} ({} steps, {} edges)",
+                template.getId(), template.getParentTemplateId() != null,
+                patient.getId(), templateSteps.size(), edgeCount);
 
         return pathway;
     }

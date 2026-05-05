@@ -2,6 +2,7 @@ package com.onconavigator.service;
 
 import com.onconavigator.domain.CareEvent;
 import com.onconavigator.domain.Patient;
+import com.onconavigator.domain.PathwayTemplate;
 import com.onconavigator.domain.enums.AlertStatus;
 import com.onconavigator.domain.enums.CareEventStatus;
 import com.onconavigator.domain.enums.PatientStatus;
@@ -9,6 +10,7 @@ import com.onconavigator.repository.AlertRepository;
 import com.onconavigator.repository.CareEventRepository;
 import com.onconavigator.repository.ClinicalDocumentRepository;
 import com.onconavigator.repository.PatientRepository;
+import com.onconavigator.repository.PathwayTemplateRepository;
 import com.onconavigator.security.HmacTokenService;
 import com.onconavigator.web.dto.CareEventResponse;
 import com.onconavigator.web.dto.CreateCareEventRequest;
@@ -45,6 +47,7 @@ public class PatientService {
     private final CareEventRepository careEventRepository;
     private final AlertRepository alertRepository;
     private final ClinicalDocumentRepository documentRepository;
+    private final PathwayTemplateRepository templateRepository;
     private final PathwayService pathwayService;
     private final PathwayForkService pathwayForkService;
     private final HmacTokenService hmacTokenService;
@@ -53,6 +56,7 @@ public class PatientService {
                           CareEventRepository careEventRepository,
                           AlertRepository alertRepository,
                           ClinicalDocumentRepository documentRepository,
+                          PathwayTemplateRepository templateRepository,
                           PathwayService pathwayService,
                           PathwayForkService pathwayForkService,
                           HmacTokenService hmacTokenService) {
@@ -60,6 +64,7 @@ public class PatientService {
         this.careEventRepository = careEventRepository;
         this.alertRepository = alertRepository;
         this.documentRepository = documentRepository;
+        this.templateRepository = templateRepository;
         this.pathwayService = pathwayService;
         this.pathwayForkService = pathwayForkService;
         this.hmacTokenService = hmacTokenService;
@@ -98,7 +103,17 @@ public class PatientService {
         if ("empty".equals(req.effectivePathwayMode())) {
             pathwayForkService.createEmptyPathway(saved, actorId);
         } else {
-            pathwayForkService.forkFromTemplate(saved, actorId);
+            // Resolve template ID: use explicit templateId from request, or fall back to root template
+            UUID effectiveTemplateId = req.templateId();
+            if (effectiveTemplateId == null) {
+                // Backward compat: look up root template by cancer type
+                PathwayTemplate rootTemplate = templateRepository
+                        .findByCancerTypeAndParentTemplateIdIsNull(saved.getCancerType())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "No root pathway template found for cancer type " + saved.getCancerType()));
+                effectiveTemplateId = rootTemplate.getId();
+            }
+            pathwayForkService.forkFromTemplate(saved, effectiveTemplateId, actorId);
         }
 
         try {
