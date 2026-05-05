@@ -6,6 +6,7 @@ import type {
   DeactivatePatientRequest, PathwayStatusResponse,
   PatientPathwayStep, PatientPathwayEdge,
   CreateStepRequest, CreateEdgeRequest,
+  PathwayTemplateResponse,
 } from './types';
 
 export function usePatients(mrn?: string) {
@@ -256,5 +257,24 @@ export function useDeleteEdge(patientId: string) {
       queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-status'] });
       queryClient.invalidateQueries({ queryKey: ['patients', patientId, 'pathway-edges'] });
     },
+  });
+}
+
+// ── Phase 8: Template Inheritance Hooks ───────────────────────────────────────
+
+/**
+ * Fetches available pathway templates for a cancer type.
+ * Returns all templates (root + children) sorted with root first.
+ * Only fetches when cancerType is non-null (enabled: !!cancerType pattern).
+ * Templates change rarely -- 5 minute staleTime.
+ */
+export function usePathwayTemplates(cancerType: string | null) {
+  return useQuery({
+    queryKey: ['pathway-templates', cancerType],
+    queryFn: () => apiClient.get<PathwayTemplateResponse[]>(
+      `/pathway-templates?cancerType=${encodeURIComponent(cancerType!)}`
+    ),
+    enabled: !!cancerType,
+    staleTime: 5 * 60 * 1000,
   });
 }

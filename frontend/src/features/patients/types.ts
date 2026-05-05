@@ -26,6 +26,7 @@ export interface CreatePatientRequest {
   assignedNavigatorId?: string;
   treatingPhysician?: string;
   pathwayMode?: 'template' | 'empty';
+  templateId?: string;  // Phase 8: specific template variant selection
 }
 
 export interface CareEventResponse {
@@ -138,4 +139,16 @@ export interface CreateEdgeRequest {
 
 export interface SkipStepRequest {
   reason: string;
+}
+
+// -- Phase 8: Template Inheritance Types --
+
+export interface PathwayTemplateResponse {
+  id: string;
+  cancerType: 'BREAST' | 'LUNG' | 'COLORECTAL';
+  name: string;
+  description: string | null;
+  parentTemplateId: string | null;
+  version: number;
+  isRoot: boolean;
 }
