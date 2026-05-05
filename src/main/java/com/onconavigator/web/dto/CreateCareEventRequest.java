@@ -22,5 +22,9 @@ public record CreateCareEventRequest(
         @NotNull(message = "Event date is required") LocalDate eventDate,
         @NotNull(message = "Status is required") CareEventStatus status,
         String notes,
-        UUID documentId
+        UUID documentId,
+        // Phase 7: scheduling coordination fields (per D-07, D-10, D-13)
+        LocalDate expectedCompletionDate,
+        Boolean schedulingConfirmed,
+        String externalFacilityName
 ) {}

@@ -23,5 +23,9 @@ public record CareEventResponse(
         CareEventStatus status,
         String notes,
         String pathwayStepId,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        // Phase 7: scheduling coordination fields
+        LocalDate expectedCompletionDate,
+        boolean schedulingConfirmed,
+        String externalFacilityName
 ) {}
