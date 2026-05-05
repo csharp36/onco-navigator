@@ -169,6 +169,50 @@ public class PatientPathwayController {
         return patientPathwayService.unskipStep(patientId, stepId, actorId);
     }
 
+    /**
+     * Confirms a PROPOSED step, transitioning it to ACTIVE status.
+     *
+     * <p>Proposed edges are activated automatically on confirmation (D-12).
+     * Only NURSE_NAVIGATOR and ADMIN roles can confirm steps -- clinical step
+     * activation is a nurse decision, not a data entry function.
+     *
+     * @param patientId the patient UUID (ownership verification)
+     * @param stepId    the step UUID to confirm
+     * @param jwt       the authenticated user's JWT
+     * @return the updated step response with ACTIVE status
+     */
+    @PostMapping("/steps/{stepId}/confirm")
+    @PreAuthorize("hasRole('NURSE_NAVIGATOR') or hasRole('ADMIN')")
+    public PathwayStepResponse confirmStep(
+            @PathVariable UUID patientId,
+            @PathVariable UUID stepId,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID actorId = UUID.fromString(jwt.getSubject());
+        return patientPathwayService.confirmProposedStep(patientId, stepId, actorId);
+    }
+
+    /**
+     * Rejects a PROPOSED step, transitioning it to REJECTED status (soft delete).
+     *
+     * <p>REJECTED steps remain in the database for audit trail and dedup but are
+     * hidden from the pathway view by default (D-07). The REJECTED status prevents
+     * re-proposal from future document uploads (D-09).
+     *
+     * @param patientId the patient UUID (ownership verification)
+     * @param stepId    the step UUID to reject
+     * @param jwt       the authenticated user's JWT
+     * @return the updated step response with REJECTED status
+     */
+    @PatchMapping("/steps/{stepId}/reject")
+    @PreAuthorize("hasRole('NURSE_NAVIGATOR') or hasRole('ADMIN')")
+    public PathwayStepResponse rejectStep(
+            @PathVariable UUID patientId,
+            @PathVariable UUID stepId,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID actorId = UUID.fromString(jwt.getSubject());
+        return patientPathwayService.rejectProposedStep(patientId, stepId, actorId);
+    }
+
     // ── Edge endpoints ──────────────────────────────────────────────────────────
 
     /**
