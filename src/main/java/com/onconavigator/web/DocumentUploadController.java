@@ -169,7 +169,8 @@ public class DocumentUploadController {
         return new DocumentSummaryResponse(
                 doc.getId(), doc.getOriginalFilename(), doc.getContentType(),
                 doc.getFileSizeBytes(), doc.getDocumentType(),
-                doc.getClassificationSource(), doc.getCareEventId(), doc.getCreatedAt());
+                doc.getClassificationSource(), doc.getCareEventId(), doc.getCreatedAt(),
+                doc.getAlreadyCoveredEventTypes());
     }
 
     /**
@@ -197,7 +198,8 @@ public class DocumentUploadController {
         return new DocumentSummaryResponse(
                 doc.getId(), doc.getOriginalFilename(), doc.getContentType(),
                 doc.getFileSizeBytes(), doc.getDocumentType(),
-                doc.getClassificationSource(), doc.getCareEventId(), doc.getCreatedAt());
+                doc.getClassificationSource(), doc.getCareEventId(), doc.getCreatedAt(),
+                doc.getAlreadyCoveredEventTypes());
     }
 
     /**
@@ -213,7 +215,8 @@ public class DocumentUploadController {
                 .map(doc -> new DocumentSummaryResponse(
                         doc.getId(), doc.getOriginalFilename(), doc.getContentType(),
                         doc.getFileSizeBytes(), doc.getDocumentType(),
-                        doc.getClassificationSource(), doc.getCareEventId(), doc.getCreatedAt()))
+                        doc.getClassificationSource(), doc.getCareEventId(), doc.getCreatedAt(),
+                        doc.getAlreadyCoveredEventTypes()))
                 .toList();
     }
 

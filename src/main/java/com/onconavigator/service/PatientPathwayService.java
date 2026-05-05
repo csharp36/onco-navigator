@@ -1,5 +1,7 @@
 package com.onconavigator.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onconavigator.ai.model.ExtractionResult;
 import com.onconavigator.domain.PatientPathway;
 import com.onconavigator.domain.PatientPathwayEdge;
@@ -8,6 +10,7 @@ import com.onconavigator.domain.enums.AlertStatus;
 import com.onconavigator.domain.enums.CareEventType;
 import com.onconavigator.domain.enums.PathwayStepStatus;
 import com.onconavigator.repository.AlertRepository;
+import com.onconavigator.repository.ClinicalDocumentRepository;
 import com.onconavigator.repository.PatientPathwayEdgeRepository;
 import com.onconavigator.repository.PatientPathwayRepository;
 import com.onconavigator.repository.PatientPathwayStepRepository;
@@ -68,17 +71,20 @@ public class PatientPathwayService {
     private final PatientPathwayEdgeRepository edgeRepository;
     private final AlertRepository alertRepository;
     private final PathwayService pathwayService;
+    private final ClinicalDocumentRepository documentRepository;
 
     public PatientPathwayService(PatientPathwayRepository pathwayRepository,
                                   PatientPathwayStepRepository stepRepository,
                                   PatientPathwayEdgeRepository edgeRepository,
                                   AlertRepository alertRepository,
-                                  PathwayService pathwayService) {
+                                  PathwayService pathwayService,
+                                  ClinicalDocumentRepository documentRepository) {
         this.pathwayRepository = pathwayRepository;
         this.stepRepository = stepRepository;
         this.edgeRepository = edgeRepository;
         this.alertRepository = alertRepository;
         this.pathwayService = pathwayService;
+        this.documentRepository = documentRepository;
     }
 
     // ---- Step queries ----
@@ -297,6 +303,163 @@ public class PatientPathwayService {
         pathwayService.signalPathwayStepsChanged(patientId);
 
         log.info("Unskipped step {} for patient {}", stepId, patientId);
+
+        List<UUID> prereqIds = getPrerequisiteIds(step.getPathway().getId(), stepId);
+        return toStepResponse(step, 0, 0, prereqIds);
+    }
+
+    /**
+     * Confirms a PROPOSED step, transitioning it to ACTIVE status and activating
+     * its proposed edges (D-05, D-12).
+     *
+     * <p>Only PROPOSED steps can be confirmed. Proposed edges stored in proposedEdgesJson
+     * are resolved to PatientPathwayEdge rows with cycle detection. The step's
+     * proposedEdgesJson is cleared after edge activation.
+     *
+     * @param patientId the patient UUID (ownership verification)
+     * @param stepId    the step UUID to confirm
+     * @param actorId   UUID of the authenticated nurse/admin
+     * @return the updated step response with ACTIVE status
+     * @throws ResponseStatusException 409 if step is not PROPOSED
+     */
+    @Transactional
+    public PathwayStepResponse confirmProposedStep(UUID patientId, UUID stepId, UUID actorId) {
+        PatientPathwayStep step = requireStep(patientId, stepId);  // BOLA check
+
+        if (step.getStatus() != PathwayStepStatus.PROPOSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only PROPOSED steps can be confirmed; step " + stepId + " is " + step.getStatus());
+        }
+
+        step.setStatus(PathwayStepStatus.ACTIVE);
+
+        // Activate proposed edges (D-12) -- bundled with step confirmation
+        activateProposedEdges(patientId, step, actorId);
+
+        // Clear the proposed edges JSON after activation
+        step.setProposedEdgesJson(null);
+        step = stepRepository.save(step);
+
+        pathwayService.signalPathwayStepsChanged(patientId);
+
+        log.info("Confirmed proposed step {} for patient {}", stepId, patientId);
+
+        List<UUID> prereqIds = getPrerequisiteIds(step.getPathway().getId(), stepId);
+        return toStepResponse(step, 0, 0, prereqIds);
+    }
+
+    /**
+     * Resolves and activates proposed edges from a step's proposedEdgesJson.
+     *
+     * <p>For each proposed edge:
+     * <ol>
+     *   <li>Resolves predecessorStepName to a step UUID (using predecessorStepId if available,
+     *       fallback to name match)</li>
+     *   <li>Runs cycle detection via wouldCreateCycle()</li>
+     *   <li>Creates PatientPathwayEdge row (source=predecessor, target=confirmed step)</li>
+     * </ol>
+     *
+     * <p>Edges that would create cycles or have unresolvable predecessors are silently skipped
+     * with a WARN log.
+     *
+     * @param patientId the patient UUID (for logging)
+     * @param step      the confirmed step whose proposedEdgesJson to activate
+     * @param actorId   UUID of the nurse/admin confirming the step
+     */
+    private void activateProposedEdges(UUID patientId, PatientPathwayStep step, UUID actorId) {
+        String edgesJson = step.getProposedEdgesJson();
+        if (edgesJson == null || edgesJson.isBlank()) {
+            return;
+        }
+
+        PatientPathway pathway = step.getPathway();
+        List<PatientPathwayStep> allSteps = stepRepository.findByPathway_Id(pathway.getId());
+        List<PatientPathwayEdge> existingEdges = edgeRepository.findByPathway_Id(pathway.getId());
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            JsonNode edgesArray = mapper.readTree(edgesJson);
+            if (!edgesArray.isArray()) return;
+
+            for (JsonNode edgeNode : edgesArray) {
+                String predecessorName = edgeNode.has("predecessorStepName")
+                        ? edgeNode.get("predecessorStepName").asText() : null;
+                UUID predecessorStepId = edgeNode.has("predecessorStepId")
+                        ? UUID.fromString(edgeNode.get("predecessorStepId").asText()) : null;
+
+                // Resolve predecessor: prefer UUID, fallback to name match
+                PatientPathwayStep predecessor = null;
+                if (predecessorStepId != null) {
+                    predecessor = allSteps.stream()
+                            .filter(s -> s.getId().equals(predecessorStepId))
+                            .findFirst().orElse(null);
+                }
+                if (predecessor == null && predecessorName != null) {
+                    predecessor = allSteps.stream()
+                            .filter(s -> s.getName().equalsIgnoreCase(predecessorName))
+                            .findFirst().orElse(null);
+                }
+
+                if (predecessor == null) {
+                    log.warn("Cannot resolve predecessor '{}' for step {} in patient {}",
+                            predecessorName, step.getId(), patientId);
+                    continue;
+                }
+
+                // Cycle detection (D-13)
+                if (wouldCreateCycle(predecessor.getId(), step.getId(), existingEdges)) {
+                    log.warn("Skipping edge {} -> {} for patient {} (would create cycle)",
+                            predecessor.getId(), step.getId(), patientId);
+                    continue;
+                }
+
+                // Create edge (source=predecessor, target=confirmed step)
+                PatientPathwayEdge edge = new PatientPathwayEdge();
+                edge.setPathway(pathway);
+                edge.setSourceStepId(predecessor.getId());
+                edge.setTargetStepId(step.getId());
+                edge.setCreatedBy(actorId);
+                PatientPathwayEdge savedEdge = edgeRepository.save(edge);
+                // Add to local list to keep cycle detection up to date within this batch
+                existingEdges = new ArrayList<>(existingEdges);
+                existingEdges.add(savedEdge);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to parse proposed edges JSON for step {} in patient {}: {}",
+                    step.getId(), patientId, e.getMessage());
+        }
+    }
+
+    /**
+     * Rejects a PROPOSED step, transitioning it to REJECTED status (D-05, D-07).
+     *
+     * <p>Only PROPOSED steps can be rejected. REJECTED steps are soft-deleted:
+     * they remain in the database for audit trail and dedup but are hidden from
+     * the pathway view by default. The REJECTED status also prevents re-proposal
+     * from future document uploads (D-09).
+     *
+     * @param patientId the patient UUID (ownership verification)
+     * @param stepId    the step UUID to reject
+     * @param actorId   UUID of the authenticated nurse/admin
+     * @return the updated step response with REJECTED status
+     * @throws ResponseStatusException 409 if step is not PROPOSED
+     */
+    @Transactional
+    public PathwayStepResponse rejectProposedStep(UUID patientId, UUID stepId, UUID actorId) {
+        PatientPathwayStep step = requireStep(patientId, stepId);  // BOLA check
+
+        if (step.getStatus() != PathwayStepStatus.PROPOSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only PROPOSED steps can be rejected; step " + stepId + " is " + step.getStatus());
+        }
+
+        step.setStatus(PathwayStepStatus.REJECTED);
+        step.setProposedEdgesJson(null);  // Clear proposed edges -- not needed for rejected steps
+        step = stepRepository.save(step);
+
+        pathwayService.signalPathwayStepsChanged(patientId);
+
+        log.info("Rejected proposed step {} for patient {}", stepId, patientId);
 
         List<UUID> prereqIds = getPrerequisiteIds(step.getPathway().getId(), stepId);
         return toStepResponse(step, 0, 0, prereqIds);
@@ -723,9 +886,22 @@ public class PatientPathwayService {
 
     /**
      * Maps a {@link PatientPathwayStep} with topology metadata to a {@link PathwayStepResponse}.
+     *
+     * <p>For AI-extracted steps with a sourceDocumentId, performs a primary-key lookup against
+     * ClinicalDocumentRepository to populate sourceDocumentFilename for the frontend's
+     * "Source: {filename}" display (UI-SPEC, Phase 6). The lookup is by PK (indexed) and
+     * within the existing transaction — negligible performance impact.
      */
     private PathwayStepResponse toStepResponse(PatientPathwayStep step, int depth, int sortOrder,
                                                 List<UUID> prerequisiteIds) {
+        // Resolve sourceDocumentFilename for AI-extracted steps (Phase 6 plan 03)
+        String sourceDocumentFilename = null;
+        if (step.getSourceDocumentId() != null) {
+            sourceDocumentFilename = documentRepository.findById(step.getSourceDocumentId())
+                    .map(doc -> doc.getOriginalFilename())
+                    .orElse(null);
+        }
+
         return new PathwayStepResponse(
                 step.getId(),
                 step.getPathway().getId(),
@@ -747,7 +923,7 @@ public class PatientPathwayService {
                 // Phase 6: AI extraction source tracking
                 step.getSourceDocumentId(),
                 step.getSource(),
-                null  // sourceDocumentFilename resolved by service in Phase 6 plan 03
+                sourceDocumentFilename
         );
     }
 
