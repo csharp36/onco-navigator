@@ -11,23 +11,28 @@ import java.util.UUID;
  * at query time by Kahn's algorithm so the frontend can render the DAG without additional
  * graph traversal work.
  *
- * @param id                   step UUID
- * @param pathwayId            UUID of the patient pathway this step belongs to
- * @param name                 human-readable step name
- * @param description          clinical description of the step
- * @param eventType            care event type name that satisfies this step (nullable)
- * @param windowDays           expected completion window in days (nullable)
- * @param required             whether this step is required for pathway completion
- * @param status               current evaluation status (ACTIVE, PROPOSED, COMPLETED, SKIPPED)
- * @param skipReason           reason recorded when the step was skipped (nullable)
- * @param alertText            deviation alert text shown to nurse navigators
- * @param suggestedAction      corrective action text included in alerts
- * @param completedAt          timestamp when the step was completed (nullable)
- * @param completedCareEventId UUID of the care event that completed this step (nullable)
- * @param depth                DAG depth: 0 for root nodes, max(predecessor depths)+1 for others
- * @param sortOrder            topological sort order position across the entire pathway
- * @param prerequisiteIds      UUIDs of direct prerequisite steps (incoming edges)
- * @param createdAt            step creation timestamp
+ * @param id                     step UUID
+ * @param pathwayId              UUID of the patient pathway this step belongs to
+ * @param name                   human-readable step name
+ * @param description            clinical description of the step
+ * @param eventType              care event type name that satisfies this step (nullable)
+ * @param windowDays             expected completion window in days (nullable)
+ * @param required               whether this step is required for pathway completion
+ * @param status                 current evaluation status (ACTIVE, PROPOSED, COMPLETED, SKIPPED, REJECTED)
+ * @param skipReason             reason recorded when the step was skipped (nullable)
+ * @param alertText              deviation alert text shown to nurse navigators
+ * @param suggestedAction        corrective action text included in alerts
+ * @param completedAt            timestamp when the step was completed (nullable)
+ * @param completedCareEventId   UUID of the care event that completed this step (nullable)
+ * @param depth                  DAG depth: 0 for root nodes, max(predecessor depths)+1 for others
+ * @param sortOrder              topological sort order position across the entire pathway
+ * @param prerequisiteIds        UUIDs of direct prerequisite steps (incoming edges)
+ * @param createdAt              step creation timestamp
+ * @param sourceDocumentId       UUID of the ClinicalDocument that triggered AI extraction (nullable;
+ *                               non-null only when extractionSource is 'AI_EXTRACTED')
+ * @param extractionSource       origin of the step: 'TEMPLATE', 'MANUAL', 'AI_EXTRACTED', or null
+ * @param sourceDocumentFilename original filename of the source document for "Source: {filename}"
+ *                               UI link (non-PHI metadata; nullable)
  */
 public record PathwayStepResponse(
         UUID id,
@@ -46,5 +51,9 @@ public record PathwayStepResponse(
         int depth,
         int sortOrder,
         List<UUID> prerequisiteIds,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        // Phase 6: AI extraction source tracking
+        UUID sourceDocumentId,
+        String extractionSource,
+        String sourceDocumentFilename
 ) {}

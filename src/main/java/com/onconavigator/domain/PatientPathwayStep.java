@@ -114,6 +114,32 @@ public class PatientPathwayStep {
     @Column(name = "source_template_step_id", length = 100)
     private String sourceTemplateStepId;
 
+    // Phase 6: AI extraction source tracking
+
+    /**
+     * Origin of this step: 'TEMPLATE', 'MANUAL', or 'AI_EXTRACTED'.
+     * Null for steps created before Phase 6.
+     */
+    @Column(name = "source", length = 50)
+    private String source;
+
+    /**
+     * FK to clinical_documents.id when source is 'AI_EXTRACTED'.
+     * Provides traceability from the proposed step back to the document that triggered extraction.
+     * Nullable — null for TEMPLATE and MANUAL steps.
+     */
+    @Column(name = "source_document_id")
+    private UUID sourceDocumentId;
+
+    /**
+     * JSON representation of proposed DAG edges for this step (D-12).
+     * Populated by AI extraction; consumed by PatientPathwayService to create
+     * patient_pathway_edges after nurse confirmation.
+     * Nullable — null for non-AI steps and after edges are persisted.
+     */
+    @Column(name = "proposed_edges_json", columnDefinition = "TEXT")
+    private String proposedEdgesJson;
+
     /**
      * Timestamp when this step was completed. Set when status transitions to COMPLETED.
      */
@@ -252,6 +278,30 @@ public class PatientPathwayStep {
 
     public void setSourceTemplateStepId(String sourceTemplateStepId) {
         this.sourceTemplateStepId = sourceTemplateStepId;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public UUID getSourceDocumentId() {
+        return sourceDocumentId;
+    }
+
+    public void setSourceDocumentId(UUID sourceDocumentId) {
+        this.sourceDocumentId = sourceDocumentId;
+    }
+
+    public String getProposedEdgesJson() {
+        return proposedEdgesJson;
+    }
+
+    public void setProposedEdgesJson(String proposedEdgesJson) {
+        this.proposedEdgesJson = proposedEdgesJson;
     }
 
     public OffsetDateTime getCompletedAt() {

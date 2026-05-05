@@ -610,7 +610,11 @@ public class PatientPathwayService {
                 depth,
                 sortOrder,
                 prerequisiteIds,
-                step.getCreatedAt()
+                step.getCreatedAt(),
+                // Phase 6: AI extraction source tracking
+                step.getSourceDocumentId(),
+                step.getSource(),
+                null  // sourceDocumentFilename resolved by service in Phase 6 plan 03
         );
     }
 
