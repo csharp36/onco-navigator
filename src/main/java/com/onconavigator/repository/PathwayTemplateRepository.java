@@ -5,27 +5,44 @@ import com.onconavigator.domain.enums.CancerType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Repository for {@link PathwayTemplate} entities.
  *
- * <p>Pathway templates are configuration-as-data: the database contains one template per
- * cancer type (enforced by a UNIQUE constraint on {@code cancer_type}). The pathway engine
- * loads templates by cancer type to drive its deviation detection logic.
+ * <p>Pathway templates are configuration-as-data. Multiple templates may exist per cancer type
+ * (a root template and zero or more child templates that inherit from it via parent_template_id).
+ *
+ * <p>Use {@code findByCancerType} to retrieve all templates (root + children) for a cancer type.
+ * Use {@code findByCancerTypeAndParentTemplateIdIsNull} to retrieve only the root template.
+ * Use {@code findByParentTemplateId} to retrieve all children of a given parent.
  */
 @Repository
 public interface PathwayTemplateRepository extends JpaRepository<PathwayTemplate, UUID> {
 
     /**
-     * Find the pathway template for a given cancer type.
+     * Find all pathway templates for a given cancer type (root + children).
      *
-     * <p>A UNIQUE constraint on {@code pathway_templates.cancer_type} guarantees at most
-     * one result per cancer type. Returns empty if no template has been seeded for that type.
-     *
-     * @param cancerType the cancer type to look up (e.g., {@code CancerType.BREAST})
-     * @return the pathway template for that cancer type, or empty if not found
+     * @param cancerType the cancer type to look up (e.g., {@code CancerType.COLORECTAL})
+     * @return all templates for that cancer type, or an empty list if none seeded
      */
-    Optional<PathwayTemplate> findByCancerType(CancerType cancerType);
+    List<PathwayTemplate> findByCancerType(CancerType cancerType);
+
+    /**
+     * Find the root pathway template for a given cancer type (no parent).
+     *
+     * @param cancerType the cancer type to look up
+     * @return the root template, or empty if no root template has been seeded
+     */
+    Optional<PathwayTemplate> findByCancerTypeAndParentTemplateIdIsNull(CancerType cancerType);
+
+    /**
+     * Find all child templates that inherit from a given parent template.
+     *
+     * @param parentTemplateId the UUID of the parent template
+     * @return child templates inheriting from the specified parent
+     */
+    List<PathwayTemplate> findByParentTemplateId(UUID parentTemplateId);
 }

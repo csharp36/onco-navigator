@@ -25,6 +25,14 @@ import java.util.UUID;
  * (INSERT into pathway_templates), not a code change. The {@code templateData} JSONB column
  * stores the full step sequence with time windows, prerequisites, and alert text.
  *
+ * <p>Supports template inheritance (Phase 8): a child template can reference a parent via
+ * {@code parentTemplateId}. Child templates store a diff (overrides, additions, removals,
+ * edge changes) in their {@code templateData} instead of a full step array. At fork time,
+ * the merge engine resolves parent + child diff into a flat step list.
+ *
+ * <p>Multiple templates may exist per cancer type (e.g., Colorectal root + Rectal child).
+ * The {@code name} and {@code description} fields provide display information.
+ *
  * <p>No PHI is stored in this entity — pathway templates are clinical protocol data,
  * not patient-specific. Encryption is not applied.
  *
@@ -41,8 +49,28 @@ public class PathwayTemplate {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "cancer_type", columnDefinition = "cancer_type", nullable = false, unique = true)
+    @Column(name = "cancer_type", columnDefinition = "cancer_type", nullable = false)
     private CancerType cancerType;
+
+    /**
+     * References the parent template for inherited (child) templates.
+     * Null for root templates. Single-level inheritance only (D-03).
+     */
+    @Column(name = "parent_template_id")
+    private UUID parentTemplateId;
+
+    /**
+     * Human-readable display name for the template (e.g., "Rectal Cancer Pathway").
+     */
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    /**
+     * Brief clinical description of what makes this template variant different.
+     * Used in the template picker UI for child templates (D-09).
+     */
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "version", nullable = false)
     private Integer version = 1;
@@ -125,5 +153,29 @@ public class PathwayTemplate {
 
     public void setCreatedBy(UUID createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public UUID getParentTemplateId() {
+        return parentTemplateId;
+    }
+
+    public void setParentTemplateId(UUID parentTemplateId) {
+        this.parentTemplateId = parentTemplateId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

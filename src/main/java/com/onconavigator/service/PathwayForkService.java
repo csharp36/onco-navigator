@@ -76,8 +76,8 @@ public class PathwayForkService {
      */
     @Transactional
     public PatientPathway forkFromTemplate(Patient patient, UUID actorId) {
-        // 1. Find template by cancer type
-        PathwayTemplate template = templateRepository.findByCancerType(patient.getCancerType())
+        // 1. Find root template by cancer type (child template selection deferred to Phase 8 Plan 2)
+        PathwayTemplate template = templateRepository.findByCancerTypeAndParentTemplateIdIsNull(patient.getCancerType())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "No pathway template found for cancer type " + patient.getCancerType()));
 
