@@ -90,6 +90,7 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
   const [step1Data, setStep1Data] = useState<Step1Values | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [pathwayMode, setPathwayMode] = useState<'template' | 'empty'>('template');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const createPatient = useCreatePatient();
@@ -159,6 +160,7 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
       // assignedNavigatorId is UUID on backend — V1 has no user directory, omit it
       treatingPhysician: values.treatingPhysician || undefined,
       pathwayMode,
+      templateId: pathwayMode === 'template' ? selectedTemplateId ?? undefined : undefined,
     };
 
     createPatient.mutate(payload, {
@@ -299,6 +301,7 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
                   onValueChange={(value) => {
                     form2.setValue('cancerType', value, { shouldValidate: true });
                     setPathwayMode('template');
+                    setSelectedTemplateId(null);
                   }}
                   defaultValue={form2.getValues('cancerType')}
                 >
@@ -325,8 +328,10 @@ export function PatientWizard({ prefill }: PatientWizardProps) {
               {/* Pathway Setup (D-07) */}
               <TemplatePicker
                 cancerType={form2.watch('cancerType') || null}
-                value={pathwayMode}
-                onChange={setPathwayMode}
+                pathwayMode={pathwayMode}
+                onPathwayModeChange={setPathwayMode}
+                selectedTemplateId={selectedTemplateId}
+                onTemplateIdChange={setSelectedTemplateId}
               />
 
               {/* Cancer Stage */}
