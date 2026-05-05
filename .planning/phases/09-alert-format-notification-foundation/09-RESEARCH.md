@@ -770,23 +770,26 @@ GRANT ALL ON notification_log_aud TO onco_app;
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Who can manage notification_preferences via the REST API?**
    - What we know: D-12 says admin sets defaults, users override their own. D-07 says dashboard is always-on.
    - What's unclear: Is there a REST API endpoint for users to update their own preferences in Phase 9, or is that deferred (since channels are log-only anyway)?
    - Recommendation: Include `GET /api/notification-preferences` and `PUT /api/notification-preferences` in Phase 9 for completeness, restricted to `ROLE_ADMIN` for defaults and any authenticated user for their own settings. Without an API, there's no way to set preferences even for testing.
+   - **RESOLVED:** Include GET/PUT endpoints in Plan 09-02 (NotificationPreferenceController), restricted by role. Admin sets defaults, authenticated users manage their own. Additionally seed one enabled preference row so the log-only pipeline is testable without the API.
 
 2. **Deep link URL base — how is it configured in local dev?**
    - What we know: D-08 requires a deep link to `patients/{patientId}` in notifications.
    - What's unclear: The frontend runs on `http://localhost:5173` in dev. The URL needs to be configurable.
    - Recommendation: Add `onconavigator.notification.base-url` config property, defaulting to `http://localhost:5173` for local dev. Override per Spring profile.
+   - **RESOLVED:** Use `onconavigator.notification.base-url` config property defaulting to `http://localhost:5173`. Implemented in Plan 09-02 (LoggingNotificationService `@Value` annotation).
 
 3. **`notification_log.rendered_content` — what exactly is rendered for the log-only implementation?**
    - What we know: D-09 requires storing what was sent. D-05 is log-only.
    - What's unclear: Should the rendered content match what WOULD be sent via Teams (JSON card format) or a simpler human-readable string?
    - Recommendation: Use a simple human-readable format for the log-only implementation. JSON card format can be added when the real Teams connector is built. Changing the `rendered_content` format at that point is fine since the field is opaque encrypted BYTEA.
 
+   - **RESOLVED:** Use simple human-readable string format for the log-only implementation. NotificationPayload.render() produces this format. Can be changed to JSON card when real connectors are built (field is opaque encrypted BYTEA).
 ---
 
 ## Environment Availability
