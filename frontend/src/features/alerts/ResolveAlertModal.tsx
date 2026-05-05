@@ -30,16 +30,17 @@ interface ResolveAlertModalProps {
 
 function getSeverityBadgeVariant(
   severityLabel: AlertResponse['severityLabel'],
-): 'destructive' | 'secondary' | 'outline' {
+): 'destructive' | 'default' | 'secondary' | 'outline' {
   switch (severityLabel) {
     case 'OVERDUE':
+    case 'CANCELLED':
       return 'destructive';
     case 'MISSING':
-      return 'secondary';
-    case 'OUT OF ORDER':
-      return 'outline';
+    case 'RESULTS PENDING':
+    case 'DEADLINE':
+      return 'default';
     default:
-      return 'outline';
+      return 'secondary';
   }
 }
 
