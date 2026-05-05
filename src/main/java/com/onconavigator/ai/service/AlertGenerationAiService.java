@@ -123,7 +123,7 @@ public class AlertGenerationAiService {
             return null;
         }
 
-        return new AlertText(description, suggestedAction);
+        return new AlertText(description, suggestedAction, null);
     }
 
     /**

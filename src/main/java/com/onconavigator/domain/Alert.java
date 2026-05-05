@@ -55,6 +55,9 @@ public class Alert {
     @Column(name = "suggested_action", columnDefinition = "TEXT")
     private String suggestedAction;
 
+    @Column(name = "missing_summary", columnDefinition = "TEXT")
+    private String missingSummary;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -131,6 +134,14 @@ public class Alert {
 
     public void setSuggestedAction(String suggestedAction) {
         this.suggestedAction = suggestedAction;
+    }
+
+    public String getMissingSummary() {
+        return missingSummary;
+    }
+
+    public void setMissingSummary(String missingSummary) {
+        this.missingSummary = missingSummary;
     }
 
     public OffsetDateTime getCreatedAt() {

@@ -201,7 +201,8 @@ class PathwayEvaluationActivityImplTest {
                 anyString(), anyString(), anyString(), anyString(), anyList(), anyList()))
                 .thenReturn(new AlertText(
                         "Claude generated desc for radiation therapy delay",
-                        "Claude suggested action: contact radiation oncology"));
+                        "Claude suggested action: contact radiation oncology",
+                        null));
 
         PathwayEvaluationResult result = activity.evaluate(PATIENT_ID);
 
@@ -279,7 +280,7 @@ class PathwayEvaluationActivityImplTest {
 
         when(alertGenerationAiService.generateAlertDescription(
                 anyString(), anyString(), anyString(), anyString(), anyList(), anyList()))
-                .thenReturn(new AlertText("Test desc", "Test action"));
+                .thenReturn(new AlertText("Test desc", "Test action", null));
 
         activity.evaluate(PATIENT_ID);
 
@@ -346,7 +347,7 @@ class PathwayEvaluationActivityImplTest {
 
         when(alertGenerationAiService.generateAlertDescription(
                 anyString(), anyString(), anyString(), anyString(), anyList(), anyList()))
-                .thenReturn(new AlertText("Claude text for blank template", "Claude action"));
+                .thenReturn(new AlertText("Claude text for blank template", "Claude action", null));
 
         activity.evaluate(PATIENT_ID);
 
