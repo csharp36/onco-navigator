@@ -242,6 +242,22 @@ Cross-cutting constraints:
   4. Multiple templates can exist per cancer type (the active root template is used by default)
   5. A "Rectal Cancer" child template exists inheriting from "Colorectal Cancer" with neoadjuvant-specific modifications
   6. The patient creation wizard shows available templates including child templates for the selected cancer type
+**Plans:** 3 plans
+Plans:
+**Wave 1** *(no dependencies)*
+- [ ] 08-01-PLAN.md — Flyway V19/V20 migrations (template inheritance schema, rectal seed), PathwayTemplate entity, TemplateDiff DTOs, repository changes, TemplateMergeService with unit tests
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 08-02-PLAN.md — PathwayForkService merge integration, PathwayTemplateController REST endpoint, CreatePatientRequest templateId, PatientService changes, fork service tests
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 08-03-PLAN.md — Frontend TemplatePicker rewrite with variant selection, PatientWizard templateId integration, usePathwayTemplates hook, PathwayTemplateResponse type
+
+Cross-cutting constraints:
+- No CancerType enum changes (D-01) — colon/rectal distinction at template level only
+- Single-level inheritance only (D-03) — no grandparent traversal
+- Diff-based storage (D-05) — child template_data is TemplateDiff JSON, not step array
+- Live inheritance at fork time (D-06) — non-overridden parent steps reflect latest parent version
+- @Audited on PathwayTemplate — Envers _AUD table must be updated in migration
+- Templates are non-PHI — no encryption needed, all authenticated roles can read
 
 ### Phase 9: Alert Format + Notification Foundation
 **Goal**: Alerts use the oncologist-specified two-part format (what's missing + suggested action ≤150 chars). Infrastructure for Teams/email notifications is established.
@@ -274,5 +290,5 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 5. Per-Patient Pathway + DAG Foundation | 6/6 | Complete | 2026-05-04 |
 | 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
 | 7. Referral Trigger + Enhanced Timing | 4/4 | Complete | 2026-05-05 |
-| 8. Template Inheritance | 0/0 | Not Started | - |
+| 8. Template Inheritance | 0/3 | Not Started | - |
 | 9. Alert Format + Notifications | 0/0 | Not Started | - |
