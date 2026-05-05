@@ -90,7 +90,7 @@ The AI-SPEC (06-AI-SPEC.md) is the primary technical reference for this phase. I
 | Confirm/reject status transitions | API / Backend | — | Status transitions (PROPOSED→ACTIVE, PROPOSED→REJECTED) are backend mutations with @PreAuthorize enforcement |
 | pathwayStepsChanged Temporal signal | API / Backend | — | Already wired in PatientPathwayService on every step mutation; confirm/reject just call it too |
 | PROPOSED step visual rendering | Browser / Client | Frontend Server (SSR) | PathwayDAGView already handles PROPOSED status in Phase 5; Phase 6 adds confirm/reject buttons |
-| "Already covered" informational display | Browser / Client | — | Read-only client-side rendering of data from the confirmation mutation response |
+| "Already covered" informational display | Browser / Client | — | Read-only client-side rendering of alreadyCoveredEventTypes from ClinicalDocument metadata |
 | Reject confirmation dialog | Browser / Client | — | Radix Dialog, already installed; no server involvement until user confirms the rejection |
 | "Show rejected" toggle | Browser / Client | — | Collapsible, already installed; filtered client-side from step list that includes REJECTED steps |
 | Extraction in-progress indicator | Browser / Client | — | Progress component rendered while TanStack Query polling detects new PROPOSED steps |
@@ -132,53 +132,54 @@ All libraries are already installed. Phase 6 adds zero new npm packages and zero
 
 ```
 Document Upload (POST /api/documents/upload)
-        │
-        ▼
+        |
+        v
 DocumentProcessingService.processUpload() [@Transactional]
-        │
-        ├── Text extraction (PDFBox / OCR / Vision)
-        ├── DocumentClassificationService.classify() [Claude call 1 — existing]
-        ├── DocumentPatientMatchService.matchPatient()
-        ├── ClinicalDocumentRepository.save(doc)  ← transaction commits HERE
-        │
-        └── if (doc.patient != null && extractedText != null)
-                 │
-                 └── StepExtractionTriggerService.triggerAsync()  [@Async — runs AFTER transaction]
-                          │
-                          ├── PatientPathwayService.buildExistingStepsContext(patientId) [DB query]
-                          ├── StepExtractionService.extractSteps() [@CircuitBreaker("claude-api")]
-                          │         │
-                          │         └── Claude API call (claude-sonnet-4-20250514)
-                          │               stepExtractionClient.prompt().call().entity(ExtractionResult.class)
-                          │
-                          ├── ExtractionResult.proposedSteps: List<ProposedStep>
-                          │         ├── CareEventType enum validation (filter invalids)
-                          │         ├── Backend dedup against ACTIVE/COMPLETED/REJECTED steps
-                          │         └── DAG cycle detection on proposed edges
-                          │
-                          ├── PatientPathwayService.createProposedSteps()
-                          │         └── PatientPathwayStep (status=PROPOSED, source=AI_EXTRACTED,
-                          │                                 sourceDocumentId=doc.getId())
-                          │
-                          └── PatientPathwayService.signalPathwayStepsChanged(patientId)
-                                    └── Temporal signal → workflow re-evaluates
+        |
+        +-- Text extraction (PDFBox / OCR / Vision)
+        +-- DocumentClassificationService.classify() [Claude call 1 -- existing]
+        +-- DocumentPatientMatchService.matchPatient()
+        +-- ClinicalDocumentRepository.save(doc)  <-- transaction commits HERE
+        |
+        +-- if (doc.patient != null && extractedText != null)
+                 |
+                 +-- StepExtractionTriggerService.triggerAsync()  [@Async -- runs AFTER transaction]
+                          |
+                          +-- PatientPathwayService.buildExistingStepsContext(patientId) [DB query]
+                          +-- StepExtractionService.extractSteps() [@CircuitBreaker("claude-api")]
+                          |         |
+                          |         +-- Claude API call (claude-sonnet-4-20250514)
+                          |               stepExtractionClient.prompt().call().entity(ExtractionResult.class)
+                          |
+                          +-- ExtractionResult.proposedSteps: List<ProposedStep>
+                          |         +-- CareEventType enum validation (filter invalids)
+                          |         +-- Backend dedup against ACTIVE/COMPLETED/REJECTED steps
+                          |         +-- DAG cycle detection on proposed edges
+                          |
+                          +-- PatientPathwayService.createProposedSteps()
+                          |         +-- PatientPathwayStep (status=PROPOSED, source=AI_EXTRACTED,
+                          |                                 sourceDocumentId=doc.getId())
+                          |         +-- Persist alreadyCoveredEventTypes on ClinicalDocument
+                          |
+                          +-- PatientPathwayService.signalPathwayStepsChanged(patientId)
+                                    +-- Temporal signal -> workflow re-evaluates
                                          (PROPOSED steps excluded from evaluation)
 
 
 Nurse Confirm Flow (POST /api/patients/{patientId}/pathway/steps/{stepId}/confirm)
-        │
-        └── PatientPathwayService.confirmProposedStep()
-                 ├── step.status = ACTIVE
-                 ├── Confirm proposed edges (create PatientPathwayEdge rows)
-                 │         └── DAG cycle detection per existing createEdge() pattern
-                 └── signalPathwayStepsChanged() → evaluation engine picks up new ACTIVE step
+        |
+        +-- PatientPathwayService.confirmProposedStep()
+                 +-- step.status = ACTIVE
+                 +-- Confirm proposed edges (create PatientPathwayEdge rows)
+                 |         +-- DAG cycle detection per existing createEdge() pattern
+                 +-- signalPathwayStepsChanged() -> evaluation engine picks up new ACTIVE step
 
 
 Nurse Reject Flow (PATCH /api/patients/{patientId}/pathway/steps/{stepId}/reject)
-        │
-        └── PatientPathwayService.rejectProposedStep()
-                 ├── step.status = REJECTED
-                 └── signalPathwayStepsChanged()
+        |
+        +-- PatientPathwayService.rejectProposedStep()
+                 +-- step.status = REJECTED
+                 +-- signalPathwayStepsChanged()
                           (REJECTED step excluded from evaluation; blocks re-proposal via dedup)
 ```
 
@@ -188,46 +189,46 @@ No new top-level directories. New files slot into existing packages:
 
 ```
 src/main/java/com/onconavigator/
-├── ai/
-│   ├── config/
-│   │   └── AiClientConfig.java              ← ADD stepExtractionClient @Bean
-│   ├── model/
-│   │   └── ExtractionResult.java            ← NEW (top-level wrapper record)
-│   ├── prompt/
-│   │   └── ExtractionPrompts.java           ← NEW (SYSTEM_PROMPT + USER_TEMPLATE)
-│   └── service/
-│       └── StepExtractionService.java       ← NEW (@CircuitBreaker, feature flag, null fallback)
-├── domain/
-│   └── enums/
-│       └── PathwayStepStatus.java           ← ADD REJECTED value
-├── service/
-│   ├── DocumentProcessingService.java       ← MODIFY: hook async trigger after doc.save()
-│   ├── PatientPathwayService.java           ← ADD: createProposedSteps(), buildExistingStepsContext(),
-│   │                                               confirmProposedStep(), rejectProposedStep()
-│   └── StepExtractionTriggerService.java    ← NEW (@Async wrapper, owns full extraction pipeline)
-└── web/
-    ├── PatientPathwayController.java        ← ADD confirm endpoint, reject endpoint
-    └── dto/
-        └── PathwayStepResponse.java         ← ADD sourceDocumentId, extractionSource fields
++-- ai/
+|   +-- config/
+|   |   +-- AiClientConfig.java              <-- ADD stepExtractionClient @Bean
+|   +-- model/
+|   |   +-- ExtractionResult.java            <-- NEW (top-level wrapper record)
+|   +-- prompt/
+|   |   +-- ExtractionPrompts.java           <-- NEW (SYSTEM_PROMPT + USER_TEMPLATE)
+|   +-- service/
+|       +-- StepExtractionService.java       <-- NEW (@CircuitBreaker, feature flag, null fallback)
++-- domain/
+|   +-- enums/
+|       +-- PathwayStepStatus.java           <-- ADD REJECTED value
++-- service/
+|   +-- DocumentProcessingService.java       <-- MODIFY: hook async trigger after doc.save()
+|   +-- PatientPathwayService.java           <-- ADD: createProposedSteps(), buildExistingStepsContext(),
+|   |                                               confirmProposedStep(), rejectProposedStep()
+|   +-- StepExtractionTriggerService.java    <-- NEW (@Async wrapper, owns full extraction pipeline)
++-- web/
+    +-- PatientPathwayController.java        <-- ADD confirm endpoint, reject endpoint
+    +-- dto/
+        +-- PathwayStepResponse.java         <-- ADD sourceDocumentId, extractionSource fields
 
 src/main/resources/db/migration/
-    └── V16__add_rejected_status_and_ai_source.sql  ← NEW
+    +-- V16__add_rejected_status_and_ai_source.sql  <-- NEW
 
 frontend/src/features/patients/
-├── types.ts     ← ADD 'REJECTED' to PathwayStepStatusEnum, add sourceDocumentId + extractionSource
-├── api.ts       ← ADD useConfirmStep(), useRejectStep() mutation hooks
-├── StepRow.tsx  ← ADD confirm/reject buttons for PROPOSED steps (or handled in PathwayEditor)
-└── PathwayEditor.tsx  ← ADD "already covered" section, "show rejected" Collapsible
++-- types.ts     <-- ADD 'REJECTED' to PathwayStepStatusEnum, add sourceDocumentId + extractionSource
++-- api.ts       <-- ADD useConfirmStep(), useRejectStep() mutation hooks
++-- StepRow.tsx  <-- ADD confirm/reject buttons for PROPOSED steps (or handled in PathwayEditor)
++-- PathwayEditor.tsx  <-- ADD "already covered" section, "show rejected" Collapsible
 ```
 
 ### Pattern 1: @Async Trigger After @Transactional Upload (Critical Pattern)
 
-**What:** The Claude extraction call must run AFTER the upload transaction commits, not inside it. Running inside @Transactional holds the HikariCP connection during the 2–8 second Claude wait, exhausting the connection pool under concurrent load.
+**What:** The Claude extraction call must run AFTER the upload transaction commits, not inside it. Running inside @Transactional holds the HikariCP connection during the 2-8 second Claude wait, exhausting the connection pool under concurrent load.
 
 **When to use:** Any time a long-running I/O operation (Claude, HTTP call) would be triggered from within a @Transactional method.
 
 ```java
-// Source: AI-SPEC Section 4b.2 — verified against Spring @Async documentation
+// Source: AI-SPEC Section 4b.2 -- verified against Spring @Async documentation
 // StepExtractionTriggerService.java
 @Service
 public class StepExtractionTriggerService {
@@ -248,7 +249,7 @@ public class StepExtractionTriggerService {
 
 **Critical prerequisite:** `@EnableAsync` must be on a `@Configuration` class. Spring Boot does NOT enable async automatically. Without it, `@Async` methods run synchronously on the caller's thread with no error. Add to `AiClientConfig` or a new `AsyncConfig` class.
 
-[VERIFIED: existing codebase — @EnableAsync not yet present; must be added in Phase 6]
+[VERIFIED: existing codebase -- @EnableAsync not yet present; must be added in Phase 6]
 
 ### Pattern 2: EventType as String, Validated in Service Layer
 
@@ -259,7 +260,7 @@ public class StepExtractionTriggerService {
 ```java
 // Source: AI-SPEC Section 4.2 and Section 3.5 (Pitfall 5)
 // If declared as CareEventType, Claude's unknown value causes Jackson to throw
-// InvalidDefinitionException during .entity() — the whole extraction fails.
+// InvalidDefinitionException during .entity() -- the whole extraction fails.
 // Declaring as String lets service code filter invalids gracefully.
 private boolean isValidCareEventType(String eventType, UUID documentId) {
     try {
@@ -298,9 +299,9 @@ CREATE INDEX IF NOT EXISTS idx_pathway_steps_source_doc
     WHERE source_document_id IS NOT NULL;
 ```
 
-**Flyway note:** `ALTER TYPE ... ADD VALUE` is not transactional in PostgreSQL. Flyway wraps migrations in transactions by default. For PostgreSQL enum modifications, either (a) use `-- Flyway disable migration` annotation, or (b) confirm that `ADD VALUE IF NOT EXISTS` works correctly in Flyway's transaction context for PostgreSQL 16. Testing on the actual DB instance is required. [ASSUMED — the exact Flyway annotation approach needs verification against the project's Flyway version]
+**Flyway note:** `ALTER TYPE ... ADD VALUE` is not transactional in PostgreSQL. Flyway wraps migrations in transactions by default. For PostgreSQL enum modifications, either (a) use `-- Flyway disable migration` annotation, or (b) confirm that `ADD VALUE IF NOT EXISTS` works correctly in Flyway's transaction context for PostgreSQL 16. Testing on the actual DB instance is required. [ASSUMED -- the exact Flyway annotation approach needs verification against the project's Flyway version]
 
-### Pattern 4: Confirm Step — Bundle Edges
+### Pattern 4: Confirm Step -- Bundle Edges
 
 **What:** When a nurse confirms a PROPOSED step, its proposed edges are activated atomically. The edge proposals are stored as part of the step creation (in a separate proposed_edges concept or as part of the step JSON) and converted to real `PatientPathwayEdge` rows on confirmation.
 
@@ -310,7 +311,7 @@ CREATE INDEX IF NOT EXISTS idx_pathway_steps_source_doc
 
 **Option B:** Create a new `proposed_pathway_edges` table parallel to `patient_pathway_edges`. More normalized but adds migration complexity for a transient structure.
 
-Option A is recommended because proposed edges are transient — they exist only between extraction and confirmation. Storing them as JSONB on the step eliminates a new table and a join. [ASSUMED — final choice is Claude's discretion per CONTEXT.md]
+Option A is recommended because proposed edges are transient -- they exist only between extraction and confirmation. Storing them as JSONB on the step eliminates a new table and a join. [ASSUMED -- final choice is Claude's discretion per CONTEXT.md]
 
 ```java
 // PatientPathwayService.confirmProposedStep()
@@ -334,11 +335,11 @@ public PathwayStepResponse confirmProposedStep(UUID patientId, UUID stepId, UUID
 
 ### Anti-Patterns to Avoid
 
-- **Calling Claude inside @Transactional without @Async:** Holds DB connection for the full Claude response time (2–8 seconds). Under 10 concurrent uploads, exhausts HikariCP pool. [VERIFIED: AI-SPEC Section 4b.2]
+- **Calling Claude inside @Transactional without @Async:** Holds DB connection for the full Claude response time (2-8 seconds). Under 10 concurrent uploads, exhausts HikariCP pool. [VERIFIED: AI-SPEC Section 4b.2]
 - **Declaring eventType as CareEventType enum in ExtractionResult record:** Hard Jackson deserialization failure on any unknown Claude value. [VERIFIED: AI-SPEC Section 3.5 Pitfall 5]
-- **Calling .defaultSystem() on the injected ChatClient.Builder singleton:** Mutates shared builder state — both beans end up with the same system prompt. Use ChatClient.builder(chatModel) static factory per bean. [VERIFIED: existing AiClientConfig.java has this pattern correct already]
+- **Calling .defaultSystem() on the injected ChatClient.Builder singleton:** Mutates shared builder state -- both beans end up with the same system prompt. Use ChatClient.builder(chatModel) static factory per bean. [VERIFIED: existing AiClientConfig.java has this pattern correct already]
 - **Forgetting @EnableAsync:** @Async runs synchronously with no error. [VERIFIED: @EnableAsync not present in existing codebase]
-- **Auto-confirming steps without nurse action:** PROPOSED status is enforced by structure — createProposedSteps() always uses PROPOSED, confirmProposedStep() is the only path to ACTIVE, and it is @PreAuthorize-protected. [VERIFIED: AI-SPEC Section 6.1]
+- **Auto-confirming steps without nurse action:** PROPOSED status is enforced by structure -- createProposedSteps() always uses PROPOSED, confirmProposedStep() is the only path to ACTIVE, and it is @PreAuthorize-protected. [VERIFIED: AI-SPEC Section 6.1]
 
 ---
 
@@ -357,9 +358,9 @@ public PathwayStepResponse confirmProposedStep(UUID patientId, UUID stepId, UUID
 
 ## Runtime State Inventory
 
-Not applicable — this is a greenfield capability addition (new service, new DB columns, new enum value, new API endpoints, new UI components). No rename/refactor/migration of existing data.
+Not applicable -- this is a greenfield capability addition (new service, new DB columns, new enum value, new API endpoints, new UI components). No rename/refactor/migration of existing data.
 
-One note: the `pathway_step_status` PostgreSQL enum is modified by adding `REJECTED`. Existing rows are unaffected — no data migration needed.
+One note: the `pathway_step_status` PostgreSQL enum is modified by adding `REJECTED`. Existing rows are unaffected -- no data migration needed.
 
 ---
 
@@ -367,15 +368,15 @@ One note: the `pathway_step_status` PostgreSQL enum is modified by adding `REJEC
 
 ### Pitfall 1: @Async Without @EnableAsync
 
-**What goes wrong:** `StepExtractionTriggerService.triggerAsync()` is annotated `@Async`, but Spring Boot does not enable async processing by default. Without `@EnableAsync` on a `@Configuration` class, the method executes synchronously on the upload request thread inside the `@Transactional` boundary — holding the HikariCP connection for the entire Claude call.
+**What goes wrong:** `StepExtractionTriggerService.triggerAsync()` is annotated `@Async`, but Spring Boot does not enable async processing by default. Without `@EnableAsync` on a `@Configuration` class, the method executes synchronously on the upload request thread inside the `@Transactional` boundary -- holding the HikariCP connection for the entire Claude call.
 
 **Why it happens:** Spring docs say "add @EnableAsync to your configuration" but it is easy to miss. Spring Boot auto-configuration does not apply it automatically.
 
 **How to avoid:** Add `@EnableAsync` to `AiClientConfig` or a dedicated `AsyncConfig` class. Verify by checking that the upload response returns in < 500ms in integration testing even when Claude is slow (mock with a 3-second delay).
 
-**Warning signs:** Upload response takes 3–8 seconds instead of < 500ms; all HikariCP connections blocked under concurrent upload load.
+**Warning signs:** Upload response takes 3-8 seconds instead of < 500ms; all HikariCP connections blocked under concurrent upload load.
 
-[VERIFIED: @EnableAsync is not present in the codebase — must be added in Phase 6]
+[VERIFIED: @EnableAsync is not present in the codebase -- must be added in Phase 6]
 
 ### Pitfall 2: PostgreSQL Enum ALTER TYPE in Flyway Transaction
 
@@ -387,7 +388,7 @@ One note: the `pathway_step_status` PostgreSQL enum is modified by adding `REJEC
 
 **Warning signs:** Flyway migration fails with `ERROR: unsafe use of new value "REJECTED" of enum type pathway_step_status` on startup.
 
-[ASSUMED — specific Flyway + PostgreSQL 16 interaction; verify by running the migration locally before committing]
+[ASSUMED -- specific Flyway + PostgreSQL 16 interaction; verify by running the migration locally before committing]
 
 ### Pitfall 3: Proposed Edge Name Resolution at Confirmation Time
 
@@ -424,16 +425,16 @@ One note: the `pathway_step_status` PostgreSQL enum is modified by adding `REJEC
 ### New ChatClient Bean (stepExtractionClient)
 
 ```java
-// Source: AI-SPEC Section 4.1 — verified against existing AiClientConfig.java pattern
-// AiClientConfig.java — add alongside existing documentClassificationClient bean
+// Source: AI-SPEC Section 4.1 -- verified against existing AiClientConfig.java pattern
+// AiClientConfig.java -- add alongside existing documentClassificationClient bean
 @Bean
 ChatClient stepExtractionClient(ChatModel chatModel) {
-    // ChatClient.builder(chatModel) — static factory, fresh builder per CR-05.
+    // ChatClient.builder(chatModel) -- static factory, fresh builder per CR-05.
     return ChatClient.builder(chatModel)
             .defaultSystem(ExtractionPrompts.SYSTEM_PROMPT)
             .defaultOptions(AnthropicChatOptions.builder()
                     .temperature(0.1)   // Deterministic extraction
-                    .maxTokens(2000)    // Hard cap — bounded JSON output
+                    .maxTokens(2000)    // Hard cap -- bounded JSON output
                     .build())
             .build();
 }
@@ -442,10 +443,10 @@ ChatClient stepExtractionClient(ChatModel chatModel) {
 ### Pipeline Hook in DocumentProcessingService
 
 ```java
-// Source: AI-SPEC Section 4.4 — after doc = documentRepository.save(doc)
+// Source: AI-SPEC Section 4.4 -- after doc = documentRepository.save(doc)
 // Add AFTER line 166 in DocumentProcessingService.java
 
-// 6b. Step extraction — async, non-blocking. StepExtractionTriggerService
+// 6b. Step extraction -- async, non-blocking. StepExtractionTriggerService
 // owns the full pipeline: fetch context, call Claude, persist proposed steps, signal.
 // Only fires when patient is linked and document has extractable text.
 if (doc.getPatient() != null && extraction.text() != null && !extraction.text().isBlank()) {
@@ -467,11 +468,11 @@ public String buildExistingStepsContext(UUID patientId) { ... }
 @Transactional
 public void createProposedSteps(UUID patientId, UUID documentId, ExtractionResult result) { ... }
 
-// Transition PROPOSED → ACTIVE; create proposed edges; signal
+// Transition PROPOSED -> ACTIVE; create proposed edges; signal
 @Transactional
 public PathwayStepResponse confirmProposedStep(UUID patientId, UUID stepId, UUID actorId) { ... }
 
-// Transition PROPOSED → REJECTED; signal
+// Transition PROPOSED -> REJECTED; signal
 @Transactional
 public PathwayStepResponse rejectProposedStep(UUID patientId, UUID stepId, UUID actorId) { ... }
 ```
@@ -503,12 +504,12 @@ public PathwayStepResponse rejectStep(
 }
 ```
 
-**Authorization note:** Confirm and reject are `NURSE_NAVIGATOR` and `ADMIN` only (not CARE_COORDINATOR). Clinical step activation is a nurse decision, not a data entry function. [ASSUMED — CONTEXT.md does not specify; this is Claude's discretion consistent with the role model]
+**Authorization note:** Confirm and reject are `NURSE_NAVIGATOR` and `ADMIN` only (not CARE_COORDINATOR). Clinical step activation is a nurse decision, not a data entry function. [ASSUMED -- CONTEXT.md does not specify; this is Claude's discretion consistent with the role model]
 
 ### Frontend Type Extensions
 
 ```typescript
-// Source: frontend/src/features/patients/types.ts — add to existing types
+// Source: frontend/src/features/patients/types.ts -- add to existing types
 
 // Extend PathwayStepStatusEnum
 export type PathwayStepStatusEnum = 'ACTIVE' | 'PROPOSED' | 'COMPLETED' | 'SKIPPED' | 'REJECTED';
@@ -525,7 +526,7 @@ export interface PatientPathwayStep {
 ### TanStack Query Mutation Hooks
 
 ```typescript
-// Source: frontend/src/features/patients/api.ts — follow existing useSkipStep pattern
+// Source: frontend/src/features/patients/api.ts -- follow existing useSkipStep pattern
 export function useConfirmStep(patientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -566,7 +567,7 @@ export function useRejectStep(patientId: string) {
 
 **Deprecated/outdated patterns in this context:**
 - `ChatClient.Builder` singleton mutation via `.defaultSystem()`: Replaced by `ChatClient.builder(chatModel)` static factory per bean (enforced by CR-05 already in `AiClientConfig`)
-- Streaming responses for extraction: Not applicable — BeanOutputConverter requires complete response before deserialization
+- Streaming responses for extraction: Not applicable -- BeanOutputConverter requires complete response before deserialization
 
 ---
 
@@ -576,7 +577,7 @@ export function useRejectStep(patientId: string) {
 |---|-------|---------|---------------|
 | A1 | `ALTER TYPE ... ADD VALUE IF NOT EXISTS 'REJECTED'` runs cleanly in Flyway's transaction context on PostgreSQL 16 | Common Pitfalls #2 | Flyway migration fails on startup; must restructure V16 with `-- Flyway disableChecksum` or similar annotation |
 | A2 | Proposed edges stored as JSONB column on patient_pathway_steps (Option A) is the preferred approach over a new proposed_pathway_edges table | Pattern 4 | If Option B preferred, requires additional V16 migration table and join queries at confirmation time |
-| A3 | Confirm endpoint is restricted to NURSE_NAVIGATOR and ADMIN (not CARE_COORDINATOR) | Code Examples — controller | If CARE_COORDINATOR should also confirm, update @PreAuthorize; low-risk either way |
+| A3 | Confirm endpoint is restricted to NURSE_NAVIGATOR and ADMIN (not CARE_COORDINATOR) | Code Examples -- controller | If CARE_COORDINATOR should also confirm, update @PreAuthorize; low-risk either way |
 | A4 | `extractionRationale` field is surfaced in the frontend as a tooltip (not inline text) to keep the step row compact | Frontend type extensions | If shown inline, step row height increases; UI-SPEC does not explicitly specify the tooltip vs inline decision |
 | A5 | Source document filename for "Source: {filename}" link comes from a separate query on the document store or is included in the step response | Frontend type extensions | If not included in PathwayStepResponse, the frontend needs a second API call per PROPOSED step or a denormalized filename field added to the response |
 
@@ -584,28 +585,22 @@ export function useRejectStep(patientId: string) {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Proposed edge storage mechanism (A2)**
-   - What we know: proposed edges must survive from extraction time to confirmation time; at confirmation they are converted to real PatientPathwayEdge rows
-   - What's unclear: JSONB column on patient_pathway_steps (simple, transient) vs. a separate table (normalized, queryable) — both work
-   - Recommendation: Use JSONB column (`proposed_edges_json TEXT`) on patient_pathway_steps for V1; it avoids a new table and the data is inherently transient
+1. **Proposed edge storage mechanism (A2)** -- RESOLVED
+   - Resolution: Use JSONB column (`proposed_edges_json TEXT`) on patient_pathway_steps. Implemented in V16 migration (Plan 01) and consumed in confirmProposedStep (Plan 03).
 
-2. **Source document filename exposure in step response**
-   - What we know: UI-SPEC specifies "Source: {original filename}" below the step name for PROPOSED steps
-   - What's unclear: should PathwayStepResponse include `sourceDocumentFilename` (denormalized), or should the frontend make a separate document lookup by `sourceDocumentId`?
-   - Recommendation: Add `sourceDocumentFilename String` (nullable) to PathwayStepResponse; it avoids a second API call and the filename is non-PHI. One extra field in the DTO is simpler than a frontend lookup.
+2. **Source document filename exposure in step response** -- RESOLVED
+   - Resolution: `sourceDocumentFilename` field added to PathwayStepResponse DTO. Populated via ClinicalDocumentRepository lookup in toStepResponse() for PROPOSED steps with a sourceDocumentId (Plan 03). Non-PHI metadata, avoids second API call from frontend.
 
-3. **Extraction progress indicator and polling**
-   - What we know: extraction runs async and completes 3–10 seconds after the upload response; the frontend needs to show extracted steps without a page refresh
-   - What's unclear: does the frontend poll the steps endpoint on an interval after upload, or does the upload response include a flag that triggers polling?
-   - Recommendation: After a successful upload with `patientLinked=true`, poll `usePathwaySteps` every 3 seconds for 30 seconds (10 polls). TanStack Query's `refetchInterval` with a state variable controlling when polling is active. Stop polling when new PROPOSED steps appear (step count increases). This is consistent with existing Phase 4 behavior where the upload response triggers a UI state change without WebSocket.
+3. **Extraction progress indicator and polling** -- RESOLVED (deferred to post-Phase 6)
+   - Resolution: Polling after async extraction is not implemented in Phase 6 plans. The existing TanStack Query behavior already refetches pathway-steps on window focus and after mutations. After a document upload, the nurse navigating to/from the patient detail page will see newly PROPOSED steps. Dedicated polling (refetchInterval) is a UX enhancement that can be added without backend changes once the core extraction pipeline ships. This is explicitly deferred -- not dropped -- because the core value (extraction + confirm/reject) is deliverable without it.
 
 ---
 
 ## Environment Availability
 
-Step 2.6: SKIPPED for Phase 6 Claude integration specifics — all external dependencies (Anthropic API, PostgreSQL, Temporal) were verified and operational in Phase 4. No new external tools are introduced.
+Step 2.6: SKIPPED for Phase 6 Claude integration specifics -- all external dependencies (Anthropic API, PostgreSQL, Temporal) were verified and operational in Phase 4. No new external tools are introduced.
 
 Specific Phase 6 prerequisite: `@EnableAsync` is a code change, not an environment dependency.
 
@@ -619,7 +614,7 @@ Specific Phase 6 prerequisite: `@EnableAsync` is a code change, not an environme
 |---------------|---------|-----------------|
 | V2 Authentication | no | Covered by existing Keycloak JWT infrastructure |
 | V3 Session Management | no | Stateless JWT; no new session state |
-| V4 Access Control | yes | Confirm/reject endpoints restricted to NURSE_NAVIGATOR + ADMIN via @PreAuthorize; PROPOSED→ACTIVE transition structurally impossible without explicit confirmation call |
+| V4 Access Control | yes | Confirm/reject endpoints restricted to NURSE_NAVIGATOR + ADMIN via @PreAuthorize; PROPOSED->ACTIVE transition structurally impossible without explicit confirmation call |
 | V5 Input Validation | yes | @Valid on controller request bodies; extraction result validated (enum check, null guard) in service layer |
 | V6 Cryptography | no | Document text already handled by EncryptionConverter from Phase 4; no new PHI storage patterns |
 
@@ -627,51 +622,51 @@ Specific Phase 6 prerequisite: `@EnableAsync` is a code change, not an environme
 
 | Pattern | STRIDE | Standard Mitigation |
 |---------|--------|---------------------|
-| BOLA on confirm/reject — nurse A confirms nurse B's patient's step | Tampering | `requireStep(patientId, stepId)` ownership check in PatientPathwayService — same pattern as all existing step mutations |
-| PHI leakage via logs in extraction service | Information Disclosure | Log only document UUID, step counts, and invalid eventType strings — never log extractedText, step names, or extractionRationale; pattern matches DocumentClassificationService |
+| BOLA on confirm/reject -- nurse A confirms nurse B's patient's step | Tampering | `requireStep(patientId, stepId)` ownership check in PatientPathwayService -- same pattern as all existing step mutations |
+| PHI leakage via logs in extraction service | Information Disclosure | Log only document UUID, step counts, and invalid eventType strings -- never log extractedText, step names, or extractionRationale; pattern matches DocumentClassificationService |
 | Hallucinated step auto-activation | Tampering | PROPOSED status enforced structurally: createProposedSteps() always uses PROPOSED; only confirmProposedStep() transitions to ACTIVE; no code path allows direct ACTIVE creation from extraction |
 | Claude API response injection via extractionRationale | Tampering | extractionRationale is stored as text and displayed to the nurse; it is not executed; standard output encoding in React prevents XSS |
 | Extraction call without BAA | Compliance | Feature flag `onconavigator.ai.step-extraction.enabled` defaults to false; PHI reaches Anthropic only when flag is explicitly enabled post-BAA |
 
 ### HIPAA-Specific PHI Controls for Phase 6
 
-- Document text (PHI) flows: Upload → DocumentProcessingService (memory) → StepExtractionTriggerService (memory) → Anthropic API (requires BAA). The memory path is acceptable; the Anthropic transmission requires BAA.
-- `PatientPathwayStep.name` from AI extraction: names like "Radiation Therapy for Ms. Smith" would be PHI. The system prompt instructs Claude to name steps from clinical process vocabulary (event types), not patient-specific language. The `extractionRationale` field contains quotes from the document — this may contain PHI and must be stored encrypted or treated as PHI-bearing content.
-- `extractionRationale` storage: If this field is persisted in `patient_pathway_steps`, it may contain clinical document content re-stated verbatim. Assess whether it should go through `EncryptionConverter` or be excluded from persistence (display only, not stored). [ASSUMED — the AI-SPEC mentions this field is shown to the nurse; it is not explicit about whether it is persisted vs. ephemeral]
+- Document text (PHI) flows: Upload -> DocumentProcessingService (memory) -> StepExtractionTriggerService (memory) -> Anthropic API (requires BAA). The memory path is acceptable; the Anthropic transmission requires BAA.
+- `PatientPathwayStep.name` from AI extraction: names like "Radiation Therapy for Ms. Smith" would be PHI. The system prompt instructs Claude to name steps from clinical process vocabulary (event types), not patient-specific language. The `extractionRationale` field contains quotes from the document -- this may contain PHI and must be stored encrypted or treated as PHI-bearing content.
+- `extractionRationale` storage: If this field is persisted in `patient_pathway_steps`, it may contain clinical document content re-stated verbatim. Assess whether it should go through `EncryptionConverter` or be excluded from persistence (display only, not stored). [ASSUMED -- the AI-SPEC mentions this field is shown to the nurse; it is not explicit about whether it is persisted vs. ephemeral]
 
 ---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `.planning/phases/06-ai-step-extraction-from-clinical-documents/06-AI-SPEC.md` — Complete Spring AI 1.1.0 implementation guidance; ExtractionResult record; StepExtractionService; prompt constants; async pattern; pitfalls; eval strategy; guardrails. Generated with Context7 verification of Spring AI docs.
-- `.planning/phases/06-ai-step-extraction-from-clinical-documents/06-UI-SPEC.md` — Complete frontend component contracts; interaction specifications; copy; accessibility; component inventory.
-- `.planning/phases/06-ai-step-extraction-from-clinical-documents/06-CONTEXT.md` — All locked decisions (D-01 through D-13).
-- `src/main/java/com/onconavigator/ai/service/DocumentClassificationService.java` — Reference implementation pattern for StepExtractionService.
-- `src/main/java/com/onconavigator/ai/config/AiClientConfig.java` — Confirmed ChatClient bean pattern; confirmed @EnableAsync is not yet present.
-- `src/main/java/com/onconavigator/service/PatientPathwayService.java` — Existing step/edge CRUD, cycle detection, topology computation, and signalPathwayStepsChanged pattern.
-- `src/main/java/com/onconavigator/web/PatientPathwayController.java` — Endpoint patterns to follow for confirm/reject.
-- `src/main/java/com/onconavigator/domain/enums/PathwayStepStatus.java` — Confirmed REJECTED is not yet present.
-- `src/main/resources/db/migration/V13__create_pathway_step_status_enum.sql` — Confirms enum syntax to match for V16.
-- `src/main/resources/db/migration/V14__create_per_patient_pathway_tables.sql` — Confirms table structure for the columns to add.
-- `frontend/src/features/patients/types.ts` — Confirmed REJECTED not yet in PathwayStepStatusEnum; sourceDocumentId not yet present.
-- `frontend/src/features/patients/api.ts` — Confirmed confirm/reject hooks do not yet exist; existing mutation patterns to follow.
+- `.planning/phases/06-ai-step-extraction-from-clinical-documents/06-AI-SPEC.md` -- Complete Spring AI 1.1.0 implementation guidance; ExtractionResult record; StepExtractionService; prompt constants; async pattern; pitfalls; eval strategy; guardrails. Generated with Context7 verification of Spring AI docs.
+- `.planning/phases/06-ai-step-extraction-from-clinical-documents/06-UI-SPEC.md` -- Complete frontend component contracts; interaction specifications; copy; accessibility; component inventory.
+- `.planning/phases/06-ai-step-extraction-from-clinical-documents/06-CONTEXT.md` -- All locked decisions (D-01 through D-13).
+- `src/main/java/com/onconavigator/ai/service/DocumentClassificationService.java` -- Reference implementation pattern for StepExtractionService.
+- `src/main/java/com/onconavigator/ai/config/AiClientConfig.java` -- Confirmed ChatClient bean pattern; confirmed @EnableAsync is not yet present.
+- `src/main/java/com/onconavigator/service/PatientPathwayService.java` -- Existing step/edge CRUD, cycle detection, topology computation, and signalPathwayStepsChanged pattern.
+- `src/main/java/com/onconavigator/web/PatientPathwayController.java` -- Endpoint patterns to follow for confirm/reject.
+- `src/main/java/com/onconavigator/domain/enums/PathwayStepStatus.java` -- Confirmed REJECTED is not yet present.
+- `src/main/resources/db/migration/V13__create_pathway_step_status_enum.sql` -- Confirms enum syntax to match for V16.
+- `src/main/resources/db/migration/V14__create_per_patient_pathway_tables.sql` -- Confirms table structure for the columns to add.
+- `frontend/src/features/patients/types.ts` -- Confirmed REJECTED not yet in PathwayStepStatusEnum; sourceDocumentId not yet present.
+- `frontend/src/features/patients/api.ts` -- Confirmed confirm/reject hooks do not yet exist; existing mutation patterns to follow.
 
 ### Secondary (MEDIUM confidence)
-- `.planning/STATE.md` accumulated decisions — Phase 04-01: ChatClient beans use ChatClient.Builder with per-bean overrides; Phase 02-fix: @Async-equivalent pattern context.
+- `.planning/STATE.md` accumulated decisions -- Phase 04-01: ChatClient beans use ChatClient.Builder with per-bean overrides; Phase 02-fix: @Async-equivalent pattern context.
 
 ### Tertiary (LOW confidence)
-- A2 (proposed edge storage), A3 (auth scope), A4 (rationale display), A5 (filename in response) — Design decisions under Claude's discretion; no single authoritative source; recommendations based on existing project patterns.
+- A2 (proposed edge storage), A3 (auth scope), A4 (rationale display), A5 (filename in response) -- Design decisions under Claude's discretion; no single authoritative source; recommendations based on existing project patterns.
 
 ---
 
 ## Metadata
 
 **Confidence breakdown:**
-- Standard stack: HIGH — all libraries confirmed present in pom.xml and package.json; no new dependencies
-- Architecture: HIGH — all integration points verified by reading actual source files
-- Pitfalls: HIGH (pitfalls 1, 3, 4, 5) / MEDIUM (pitfall 2) — majority verified by reading code; Flyway/PG enum pitfall is cross-referenced against documented behavior
-- Frontend types: HIGH — types.ts and api.ts read directly; gaps are clear and specific
+- Standard stack: HIGH -- all libraries confirmed present in pom.xml and package.json; no new dependencies
+- Architecture: HIGH -- all integration points verified by reading actual source files
+- Pitfalls: HIGH (pitfalls 1, 3, 4, 5) / MEDIUM (pitfall 2) -- majority verified by reading code; Flyway/PG enum pitfall is cross-referenced against documented behavior
+- Frontend types: HIGH -- types.ts and api.ts read directly; gaps are clear and specific
 
 **Research date:** 2026-05-04
 **Valid until:** 2026-06-04 (Spring AI 1.1.0 stable; no expected breaking changes in 30 days)
