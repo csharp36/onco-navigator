@@ -2,6 +2,7 @@ package com.onconavigator.ai.config;
 
 import com.onconavigator.ai.prompt.AlertPrompts;
 import com.onconavigator.ai.prompt.ClassificationPrompts;
+import com.onconavigator.ai.prompt.ExtractionPrompts;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
@@ -11,12 +12,14 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Spring AI ChatClient bean configuration for Claude API integration.
  *
- * <p>Defines two distinct ChatClient beans with different system prompts and parameters:
+ * <p>Defines three distinct ChatClient beans with different system prompts and parameters:
  * <ul>
  *   <li>{@code documentClassificationClient} — Low temperature (0.1) for deterministic
  *       document classification. Max 1024 tokens (classification responses are concise).</li>
  *   <li>{@code alertGenerationClient} — Slightly higher temperature (0.3) for more natural
  *       language alert descriptions. Max 2048 tokens for detailed suggestions.</li>
+ *   <li>{@code stepExtractionClient} — Low temperature (0.1) for deterministic step extraction
+ *       (Phase 6). Max 2000 tokens bounded JSON output for proposed step list.</li>
  * </ul>
  *
  * <p>Both clients use the model configured via {@code spring.ai.anthropic.chat.options.model}
@@ -52,6 +55,17 @@ public class AiClientConfig {
                 .defaultOptions(AnthropicChatOptions.builder()
                         .temperature(0.3)
                         .maxTokens(2048)
+                        .build())
+                .build();
+    }
+
+    @Bean
+    ChatClient stepExtractionClient(ChatModel chatModel) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(ExtractionPrompts.SYSTEM_PROMPT)
+                .defaultOptions(AnthropicChatOptions.builder()
+                        .temperature(0.1)   // Deterministic extraction
+                        .maxTokens(2000)    // Bounded JSON output for step list
                         .build())
                 .build();
     }

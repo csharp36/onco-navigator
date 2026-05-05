@@ -101,6 +101,15 @@ public class ClinicalDocument {
     @Column(name = "extraction_confidence")
     private Integer extractionConfidence;
 
+    /**
+     * Comma-separated list of CareEventType values that Claude identified in this document
+     * but were already tracked in the patient's pathway (D-10). Populated by
+     * StepExtractionTriggerService after extraction. Non-PHI metadata.
+     * Example: "SURGERY,CHEMOTHERAPY"
+     */
+    @Column(name = "already_covered_event_types")
+    private String alreadyCoveredEventTypes;
+
     @Column(name = "created_by", nullable = false, updatable = false)
     private UUID createdBy;
 
@@ -200,6 +209,14 @@ public class ClinicalDocument {
 
     public void setExtractionConfidence(Integer extractionConfidence) {
         this.extractionConfidence = extractionConfidence;
+    }
+
+    public String getAlreadyCoveredEventTypes() {
+        return alreadyCoveredEventTypes;
+    }
+
+    public void setAlreadyCoveredEventTypes(String alreadyCoveredEventTypes) {
+        this.alreadyCoveredEventTypes = alreadyCoveredEventTypes;
     }
 
     public UUID getCreatedBy() {

@@ -75,6 +75,8 @@ onconavigator:
   ai:
     document-classification:
       enabled: ${ONCO_AI_CLASSIFICATION_ENABLED:false}
+    step-extraction:
+      enabled: ${ONCO_AI_STEP_EXTRACTION_ENABLED:false}
   tessdata:
     path: /usr/share/tesseract-ocr/5/tessdata
 
