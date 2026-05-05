@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Working Application** - Patient data entry, alert management, and the nurse navigator dashboard (completed 2026-04-30)
 - [x] **Phase 4: AI Document Ingestion & Alert Enhancement** - PDF drag-and-drop classification, patient matching, event pre-fill, Claude alert generation, circuit breaker (completed 2026-05-01)
 - [x] **Phase 5: Per-Patient Pathway Instances + DAG Foundation** - Mutable per-patient pathways forked from templates, DAG evaluation engine replacing linear iteration (completed 2026-05-04)
-- [ ] **Phase 6: AI Step Extraction from Clinical Documents** - Claude extracts pathway steps from MD notes, orders, and nurse notes; proposed steps require nurse confirmation
+- [x] **Phase 6: AI Step Extraction from Clinical Documents** - Claude extracts pathway steps from MD notes, orders, and nurse notes; proposed steps require nurse confirmation (completed 2026-05-05)
 - [ ] **Phase 7: Referral Trigger + Enhanced Timing** - Referral PDF as pathway clock trigger, event status awareness (Scheduled/Pending/Cancelled), results-before-visit and 48-hour escalation alerts
 - [ ] **Phase 8: Template Inheritance** - Extensible pathway templates with parent/child inheritance (e.g., rectal inherits from colorectal)
 - [ ] **Phase 9: Alert Format + Notification Foundation** - Two-part alerts (what's missing + action ≤150 chars), Teams/email notification infrastructure
@@ -183,13 +183,13 @@ Cross-cutting constraints:
 **Plans:** 5 plans
 Plans:
 **Wave 1** *(no dependencies)*
-- [ ] 06-01-PLAN.md — Flyway V16 migration (REJECTED enum, source columns), PathwayStepStatus REJECTED, PatientPathwayStep entity fields, PathwayStepResponse DTO, ExtractionResult model, ExtractionPrompts, stepExtractionClient bean, feature flag
+- [x] 06-01-PLAN.md — Flyway V16 migration (REJECTED enum, source columns), PathwayStepStatus REJECTED, PatientPathwayStep entity fields, PathwayStepResponse DTO, ExtractionResult model, ExtractionPrompts, stepExtractionClient bean, feature flag
 **Wave 2** *(blocked on Wave 1)*
-- [ ] 06-02-PLAN.md — StepExtractionService (Claude call, circuit breaker, feature flag, enum validation), StepExtractionTriggerService (async orchestrator), PatientPathwayService new methods (buildExistingStepsContext, createProposedSteps), DocumentProcessingService hook
-- [ ] 06-03-PLAN.md — confirmProposedStep and rejectProposedStep service methods (status transitions, edge activation, cycle detection), confirm/reject REST endpoints on PatientPathwayController
+- [x] 06-02-PLAN.md — StepExtractionService (Claude call, circuit breaker, feature flag, enum validation), StepExtractionTriggerService (async orchestrator), PatientPathwayService new methods (buildExistingStepsContext, createProposedSteps), DocumentProcessingService hook
+- [x] 06-03-PLAN.md — confirmProposedStep and rejectProposedStep service methods (status transitions, edge activation, cycle detection), confirm/reject REST endpoints on PatientPathwayController
 **Wave 3** *(blocked on Wave 2)*
-- [ ] 06-04-PLAN.md — Frontend: TypeScript types (REJECTED, source fields), confirm/reject API hooks, StepRow confirm/reject/REJECTED rendering, PathwayEditor integration (reject dialog, show rejected toggle)
-- [ ] 06-05-PLAN.md — Unit tests: StepExtractionService (feature flag, blank text, enum validation, fallback), PatientPathwayService confirm/reject (status guards, dedup, edge activation)
+- [x] 06-04-PLAN.md — Frontend: TypeScript types (REJECTED, source fields), confirm/reject API hooks, StepRow confirm/reject/REJECTED rendering, PathwayEditor integration (reject dialog, show rejected toggle)
+- [x] 06-05-PLAN.md — Unit tests: StepExtractionService (feature flag, blank text, enum validation, fallback), PatientPathwayService confirm/reject (status guards, dedup, edge activation)
 **UI hint**: yes
 
 Cross-cutting constraints:
