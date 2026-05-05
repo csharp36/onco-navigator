@@ -101,7 +101,7 @@ Cross-cutting constraints:
 **Depends on**: Phase 3
 **Requirements**: AI-01, AI-02, AI-03, AI-04, DOC-01, DOC-02, DOC-03, DOC-04, DOC-05
 **Success Criteria** (what must be TRUE):
-  1. A test corpus of de-identified/synthetic clinical PDFs (pathology reports, radiology reports, referral letters, operative notes) exists in the repository and covers all supported document types
+  1. A test corpus of de-identified/synthetic clinical PDFs exists in the repository covering pathology reports, radiology reports, referral letters, operative notes, and lab results for breast, lung, and colorectal cancer
   2. A user can drag a PDF onto the dashboard and the system classifies it into a document type (pathology report, radiology report, referral letter, operative note, lab result) using Claude AI
   3. After classification, the system attempts to match the document to an existing patient (by extracting MRN or patient name from the document) or offers to create a new patient
   4. On successful patient match, a pre-filled care event recording wizard opens with event type, date, and extracted details — the user confirms or corrects before saving
@@ -214,6 +214,22 @@ Cross-cutting constraints:
   6. The system generates a DEADLINE_APPROACHING alert 48 hours before a deadline
   7. A CANCELLED event triggers an immediate corrective action alert
   8. A SCHEDULED/PENDING event with expected_completion_date in the past triggers a DELAYED alert
+**Plans:** 4 plans
+Plans:
+**Wave 1** *(no dependencies -- parallel)*
+- [ ] 07-01-PLAN.md — Flyway migrations (V17 enum, V18 columns), entities, DTOs, alert severity, ClassificationPrompts
+- [ ] 07-02-PLAN.md — Frontend TypeScript types, care event form scheduling fields, alert display for new types
+**Wave 2** *(blocked on Wave 1 Plan 01)*
+- [ ] 07-03-PLAN.md — PathwayEvaluationActivityImpl status-aware rewrite, DocumentProcessingService referral hook
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 07-04-PLAN.md — Unit tests for status-aware evaluation (10 test methods, all alert types)
+
+Cross-cutting constraints:
+- No PHI in log statements — UUID-only logging preserved
+- @Audited (Hibernate Envers) on Patient and CareEvent — new fields auto-captured
+- Alert dedup via existing partial unique index (V7) + existsByPatientIdAndPathwayStepNameAndStatus
+- RESULTS_NOT_READY uses sentinel step name "__RESULTS_NOT_READY__" for patient-level alert dedup
+- CANCELLED/DELAYED mutual exclusion enforced in evaluation branching (Pitfall 7)
 
 ### Phase 8: Template Inheritance
 **Goal**: Pathway templates become extensible with parent/child relationships. A child template inherits all parent steps and can override, add, or remove specific steps.
@@ -256,7 +272,7 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 3. Working Application | 6/6 | Complete | 2026-04-30 |
 | 4. AI Document Ingestion & Alert Enhancement | 7/7 | Complete | 2026-05-01 |
 | 5. Per-Patient Pathway + DAG Foundation | 6/6 | Complete | 2026-05-04 |
-| 6. AI Step Extraction | 0/5 | Not Started | - |
-| 7. Referral Trigger + Enhanced Timing | 0/0 | Not Started | - |
+| 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
+| 7. Referral Trigger + Enhanced Timing | 0/4 | Not Started | - |
 | 8. Template Inheritance | 0/0 | Not Started | - |
 | 9. Alert Format + Notifications | 0/0 | Not Started | - |
