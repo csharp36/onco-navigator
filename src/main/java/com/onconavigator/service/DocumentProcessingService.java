@@ -25,6 +25,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -169,6 +170,17 @@ public class DocumentProcessingService {
         doc = documentRepository.save(doc);
         log.info("Document {} processed: type={} matchStatus={} patientLinked={}",
                 doc.getId(), documentType, matchStatus, doc.getPatient() != null);
+
+        // Phase 7: Auto-set referral_received_at when a REFERRAL_LETTER is linked to a patient (D-02)
+        if ("REFERRAL_LETTER".equals(documentType) && doc.getPatient() != null) {
+            // Re-fetch patient to avoid LazyInitializationException on proxy (Research A5)
+            Patient referralPatient = patientRepository.findById(doc.getPatient().getId()).orElse(null);
+            if (referralPatient != null && referralPatient.getReferralReceivedAt() == null) {
+                referralPatient.setReferralReceivedAt(OffsetDateTime.now());
+                patientRepository.save(referralPatient);
+                log.info("REFERRAL_DETECTED: set referral_received_at for patient {}", referralPatient.getId());
+            }
+        }
 
         // 6b. Step extraction -- async, non-blocking (D-01, D-02)
         // Only fires when patient is linked and document has extractable text.
