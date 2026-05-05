@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_execute
-stopped_at: Phase 9 planned (4 plans in 4 waves)
-last_updated: "2026-05-05T22:30:00.000Z"
-last_activity: 2026-05-05 -- Phase 9 planned (alert format + notification foundation)
+status: executing
+stopped_at: Completed 09-01 plan
+last_updated: "2026-05-05T23:53:29.000Z"
+last_activity: 2026-05-05 -- Phase 9 Plan 01 complete (notification schema + alert entity extension)
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 44
-  completed_plans: 40
-  percent: 91
+  completed_plans: 41
+  percent: 93
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** Prevent patients from falling through the cracks by systematically watching every patient's care pathway and surfacing deviations before they become wasted visits, delayed treatments, or invisible gaps.
-**Current focus:** Phase 08 — template-inheritance
+**Current focus:** Phase 09 — alert-format-notification-foundation
 
 ## Current Position
 
-Phase: 09 — PLANNED
-Plan: 0 of 4
-Status: Ready to execute (4 plans in 4 waves)
-Last activity: 2026-05-05 -- Phase 9 planned (alert format + notification foundation)
+Phase: 09 — EXECUTING
+Plan: 1 of 4 complete
+Status: Executing (Plan 01 complete, Plans 02-04 remaining)
+Last activity: 2026-05-05 -- Phase 9 Plan 01 complete (notification schema + alert entity extension)
 
-Progress: [█████████░] 91% (40/44 plans)
+Progress: [█████████░] 93% (41/44 plans)
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [█████████░] 91% (40/44 plans)
 | Phase 08-template-inheritance P01 | 8min | 2 tasks | 12 files |
 | Phase 08-template-inheritance P02 | 6min | 2 tasks | 6 files |
 | Phase 08-template-inheritance P03 | 2min | 2 tasks | 4 files |
+| Phase 09-alert-format-notification-foundation P01 | 4min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,9 @@ Recent decisions affecting current work:
 - [Phase 08-01]: PathwayForkService updated immediately to use findByCancerTypeAndParentTemplateIdIsNull -- single caller, no deferred fix needed
 - [Phase 08-02]: PatientService and CreatePatientRequest changes included in Task 1 commit (Rule 3: compilation dependency -- PathwayForkService new 3-param signature breaks compile without both)
 - [Phase 08-02]: PathwayForkService catch block re-throws ResponseStatusException and IllegalStateException to preserve HTTP status codes through the generic Exception catch
+- [Phase 09-01]: NotificationPreference entity NOT @Audited (no PHI, preference metadata only); NotificationLog IS @Audited with EncryptionConverter on rendered_content (PHI)
+- [Phase 09-01]: AlertText constructor call sites updated with null missingSummary as temporary fix (Plan 02 adds MISSING_SUMMARY parsing)
+- [Phase 09-01]: V22 seeds TEAMS channel as enabled (TRUE) for log-only testing; EMAIL seeded as disabled
 
 ### Pending Todos
 
@@ -155,6 +159,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-05T21:52:52.850Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-alert-format-notification-foundation/09-CONTEXT.md
+Last session: 2026-05-05T23:53:29Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: .planning/phases/09-alert-format-notification-foundation/09-01-SUMMARY.md
