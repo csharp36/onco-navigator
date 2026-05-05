@@ -68,8 +68,13 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
     /**
      * Find alerts by status, ordered by clinical severity then creation time.
      *
-     * <p>Severity ordering (per ALRT-01): DELAYED_EVENT (overdue, highest urgency) → 1,
-     * MISSING_EVENT (not recorded, moderate urgency) → 2, OUT_OF_ORDER (sequencing issue) → 3.
+     * <p>Severity ordering: DELAYED_EVENT (overdue, highest urgency) → 1,
+     * CANCELLED_EVENT (immediate corrective action needed) → 2,
+     * RESULTS_NOT_READY (results pending before upcoming visit) → 3,
+     * DEADLINE_APPROACHING (48-hour window warning) → 4,
+     * MISSING_EVENT (not recorded, moderate urgency) → 5,
+     * SCHEDULING_UNCONFIRMED (scheduling not confirmed) → 6,
+     * OUT_OF_ORDER (sequencing issue) → 7.
      * Within the same severity tier, older alerts appear first (most urgent within tier).
      *
      * <p>Uses JPQL CASE WHEN with string literals for the AlertType enum values. String
@@ -84,10 +89,14 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
             WHERE a.status = :status
             ORDER BY
                 CASE a.alertType
-                    WHEN 'DELAYED_EVENT' THEN 1
-                    WHEN 'MISSING_EVENT' THEN 2
-                    WHEN 'OUT_OF_ORDER'  THEN 3
-                    ELSE 4
+                    WHEN 'DELAYED_EVENT'          THEN 1
+                    WHEN 'CANCELLED_EVENT'        THEN 2
+                    WHEN 'RESULTS_NOT_READY'      THEN 3
+                    WHEN 'DEADLINE_APPROACHING'   THEN 4
+                    WHEN 'MISSING_EVENT'          THEN 5
+                    WHEN 'SCHEDULING_UNCONFIRMED' THEN 6
+                    WHEN 'OUT_OF_ORDER'           THEN 7
+                    ELSE 8
                 END ASC,
                 a.createdAt ASC
             """)

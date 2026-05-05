@@ -200,6 +200,10 @@ public class PatientService {
         event.setNotes(req.notes());
         event.setDocumentId(req.documentId());
         event.setCreatedBy(actorId);
+        // Phase 7: scheduling coordination fields (per D-07, D-10, D-13)
+        event.setExpectedCompletionDate(req.expectedCompletionDate());
+        event.setSchedulingConfirmed(req.schedulingConfirmed() != null ? req.schedulingConfirmed() : Boolean.FALSE);
+        event.setExternalFacilityName(req.externalFacilityName());
 
         CareEvent saved = careEventRepository.save(event);
 
@@ -295,6 +299,7 @@ public class PatientService {
                 p.getCancerType(),
                 p.getCancerStage(),
                 p.getDiagnosisDate(),
+                p.getReferralReceivedAt(),  // Phase 7
                 p.getAssignedNavigatorId(),
                 p.getTreatingPhysician(),
                 p.getStatus(),
@@ -316,7 +321,10 @@ public class PatientService {
                 e.getStatus(),
                 e.getNotes(),
                 e.getPathwayStepId(),
-                e.getCreatedAt()
+                e.getCreatedAt(),
+                e.getExpectedCompletionDate(),                             // Phase 7
+                Boolean.TRUE.equals(e.getSchedulingConfirmed()),           // Phase 7
+                e.getExternalFacilityName()                                // Phase 7
         );
     }
 

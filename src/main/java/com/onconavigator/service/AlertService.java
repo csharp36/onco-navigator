@@ -23,8 +23,9 @@ import java.util.UUID;
  * Service for alert queries, severity ordering, and resolution.
  *
  * <p>Provides severity-ordered alert retrieval using the
- * {@link AlertRepository#findByStatusOrderedBySeverity} query, which orders
- * DELAYED_EVENT (overdue) first, MISSING_EVENT second, OUT_OF_ORDER third.
+ * {@link AlertRepository#findByStatusOrderedBySeverity} query, which orders alerts
+ * by clinical priority: DELAYED_EVENT, CANCELLED_EVENT, RESULTS_NOT_READY,
+ * DEADLINE_APPROACHING, MISSING_EVENT, SCHEDULING_UNCONFIRMED, OUT_OF_ORDER.
  *
  * <p>PHI safety: Log statements contain only alert UUIDs and actor UUIDs.
  * Patient names and MRNs are accessed for DTO mapping only — never logged.
@@ -132,10 +133,15 @@ public class AlertService {
     /**
      * Maps an AlertType enum value to the display severity label used in the nurse dashboard.
      *
+     * <p>Severity ordering matches {@link AlertRepository#findByStatusOrderedBySeverity}:
      * <ul>
-     *   <li>DELAYED_EVENT → "OVERDUE"</li>
-     *   <li>MISSING_EVENT → "MISSING"</li>
-     *   <li>OUT_OF_ORDER  → "OUT OF ORDER"</li>
+     *   <li>DELAYED_EVENT         → "OVERDUE"</li>
+     *   <li>CANCELLED_EVENT       → "CANCELLED"</li>
+     *   <li>RESULTS_NOT_READY     → "RESULTS PENDING"</li>
+     *   <li>DEADLINE_APPROACHING  → "DEADLINE"</li>
+     *   <li>MISSING_EVENT         → "MISSING"</li>
+     *   <li>SCHEDULING_UNCONFIRMED → "UNCONFIRMED"</li>
+     *   <li>OUT_OF_ORDER          → "OUT OF ORDER"</li>
      * </ul>
      */
     private String toSeverityLabel(AlertType type) {
@@ -144,8 +150,12 @@ public class AlertService {
         }
         return switch (type) {
             case DELAYED_EVENT -> "OVERDUE";
+            case CANCELLED_EVENT -> "CANCELLED";
+            case RESULTS_NOT_READY -> "RESULTS PENDING";
+            case DEADLINE_APPROACHING -> "DEADLINE";
             case MISSING_EVENT -> "MISSING";
-            case OUT_OF_ORDER  -> "OUT OF ORDER";
+            case SCHEDULING_UNCONFIRMED -> "UNCONFIRMED";
+            case OUT_OF_ORDER -> "OUT OF ORDER";
         };
     }
 

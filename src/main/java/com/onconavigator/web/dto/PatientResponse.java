@@ -28,6 +28,7 @@ public record PatientResponse(
         CancerType cancerType,
         String cancerStage,
         LocalDate diagnosisDate,
+        OffsetDateTime referralReceivedAt,  // Phase 7: per D-01/D-02
         UUID assignedNavigatorId,
         String treatingPhysician,
         PatientStatus status,
