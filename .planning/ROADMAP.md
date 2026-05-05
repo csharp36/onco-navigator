@@ -217,12 +217,12 @@ Cross-cutting constraints:
 **Plans:** 4 plans
 Plans:
 **Wave 1** *(no dependencies -- parallel)*
-- [ ] 07-01-PLAN.md — Flyway migrations (V17 enum, V18 columns), entities, DTOs, alert severity, ClassificationPrompts
-- [ ] 07-02-PLAN.md — Frontend TypeScript types, care event form scheduling fields, alert display for new types
+- [x] 07-01-PLAN.md — Flyway migrations (V17 enum, V18 columns), entities, DTOs, alert severity, ClassificationPrompts
+- [x] 07-02-PLAN.md — Frontend TypeScript types, care event form scheduling fields, alert display for new types
 **Wave 2** *(blocked on Wave 1 Plan 01)*
-- [ ] 07-03-PLAN.md — PathwayEvaluationActivityImpl status-aware rewrite, DocumentProcessingService referral hook
+- [x] 07-03-PLAN.md — PathwayEvaluationActivityImpl status-aware rewrite, DocumentProcessingService referral hook
 **Wave 3** *(blocked on Wave 2)*
-- [ ] 07-04-PLAN.md — Unit tests for status-aware evaluation (10 test methods, all alert types)
+- [x] 07-04-PLAN.md — Unit tests for status-aware evaluation (10 test methods, all alert types)
 
 Cross-cutting constraints:
 - No PHI in log statements — UUID-only logging preserved
@@ -273,6 +273,6 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 4. AI Document Ingestion & Alert Enhancement | 7/7 | Complete | 2026-05-01 |
 | 5. Per-Patient Pathway + DAG Foundation | 6/6 | Complete | 2026-05-04 |
 | 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
-| 7. Referral Trigger + Enhanced Timing | 0/4 | Not Started | - |
+| 7. Referral Trigger + Enhanced Timing | 4/4 | Complete | 2026-05-05 |
 | 8. Template Inheritance | 0/0 | Not Started | - |
 | 9. Alert Format + Notifications | 0/0 | Not Started | - |
