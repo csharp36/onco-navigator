@@ -290,5 +290,5 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 5. Per-Patient Pathway + DAG Foundation | 6/6 | Complete | 2026-05-04 |
 | 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
 | 7. Referral Trigger + Enhanced Timing | 4/4 | Complete | 2026-05-05 |
-| 8. Template Inheritance | 0/3 | Not Started | - |
+| 8. Template Inheritance | 0/3 | Planned | - |
 | 9. Alert Format + Notifications | 0/0 | Not Started | - |
