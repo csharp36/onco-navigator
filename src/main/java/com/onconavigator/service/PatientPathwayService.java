@@ -294,6 +294,49 @@ public class PatientPathwayService {
         return toStepResponse(step, 0, 0, prereqIds);
     }
 
+    /**
+     * Signals the Temporal pathway workflow that steps have changed.
+     *
+     * <p>Delegates to {@link PathwayService#signalPathwayStepsChanged(UUID)} so that
+     * services without a direct PathwayService dependency (e.g., StepExtractionTriggerService)
+     * can trigger pathway re-evaluation through PatientPathwayService alone.
+     *
+     * @param patientId the patient UUID
+     */
+    public void signalPathwayStepsChanged(UUID patientId) {
+        pathwayService.signalPathwayStepsChanged(patientId);
+    }
+
+    /**
+     * Builds a non-PHI JSON string of existing pathway steps for Claude's dedup context.
+     *
+     * <p>Returns a JSON array of objects with stepName, eventType, and status fields.
+     * Full implementation added in Phase 6 Plan 02 Task 2.
+     *
+     * @param patientId the patient UUID
+     * @return JSON array string of existing steps, or "[]" if no pathway exists
+     */
+    @Transactional(readOnly = true)
+    public String buildExistingStepsContext(UUID patientId) {
+        // Full implementation provided in Task 2 of this plan
+        return "[]";
+    }
+
+    /**
+     * Persists validated extraction results as PROPOSED pathway steps with dedup.
+     *
+     * <p>Full implementation added in Phase 6 Plan 02 Task 2.
+     *
+     * @param patientId  the patient UUID
+     * @param documentId the source document UUID
+     * @param result     validated extraction result
+     */
+    @Transactional
+    public void createProposedSteps(UUID patientId, UUID documentId,
+                                     com.onconavigator.ai.model.ExtractionResult result) {
+        // Full implementation provided in Task 2 of this plan
+    }
+
     // ---- Edge mutations ----
 
     /**
