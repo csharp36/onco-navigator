@@ -6,6 +6,7 @@ import com.onconavigator.service.AlertService;
 import com.onconavigator.service.AuditService;
 import com.onconavigator.service.DocumentProcessingService;
 import com.onconavigator.service.PathwayStatusService;
+import com.onconavigator.service.PatientPathwayService;
 import com.onconavigator.service.PatientService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,8 @@ class SecurityConfigTest {
     private ClinicalDocumentRepository clinicalDocumentRepository;
     @MockitoBean
     private PatientRepository patientRepository;
+    @MockitoBean
+    private PatientPathwayService patientPathwayService;
 
     /**
      * Satisfies Spring Security's oauth2ResourceServer() requirement.
