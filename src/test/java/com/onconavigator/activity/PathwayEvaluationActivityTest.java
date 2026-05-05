@@ -239,8 +239,19 @@ class PathwayEvaluationActivityTest {
     /**
      * Test 3 (PATH-05): Scenario B — Out-of-order event.
      *
-     * <p>Step 2 (ACTIVE, PATHOLOGY_REPORT) has a matching SCHEDULED care event, but step 1
-     * (CONSULTATION, a prerequisite) is NOT yet COMPLETED. An OUT_OF_ORDER alert must be created.
+     * <p>In the Phase 6 DAG evaluation model, OUT_OF_ORDER is detected for a "ready" step
+     * that has a matching care event, but whose prerequisite step is not COMPLETED.
+     *
+     * <p>Setup:
+     * <ul>
+     *   <li>Step 1: SKIPPED (satisfies step2's readiness check, but is NOT COMPLETED)</li>
+     *   <li>Step 2: ACTIVE, prerequisite=step1. Ready because step1 is SKIPPED.</li>
+     *   <li>Step 2 has a COMPLETED PATHOLOGY_REPORT care event (hasMatch=true)</li>
+     * </ul>
+     *
+     * <p>OUT_OF_ORDER fires because step2 has a match AND step1 (its prerequisite) is NOT
+     * in completedStepIds (only in skippedStepIds). This represents the "did step 2 before
+     * step 1 was formally completed" scenario.
      */
     @Test
     void testOutOfOrderDetected_PATH05() {
@@ -248,31 +259,34 @@ class PathwayEvaluationActivityTest {
         Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
         PatientPathway pathway = createTestPathway();
 
-        PatientPathwayStep step1 = createActiveStep(STEP1_ID, "Surgeon Consultation",
+        // Step 1 is SKIPPED — satisfies step2's readiness check but is NOT COMPLETED
+        PatientPathwayStep step1Skipped = createActiveStep(STEP1_ID, "Surgeon Consultation",
                 CareEventType.CONSULTATION, 14, "Consultation alert text", pathway);
+        step1Skipped.setStatus(PathwayStepStatus.SKIPPED);
+
+        // Step 2 is ACTIVE with a prerequisite of step1
         PatientPathwayStep step2 = createActiveStep(STEP2_ID, "Pathology Report",
                 CareEventType.PATHOLOGY_REPORT, 14, "Pathology report alert text", pathway);
 
-        // Edge: step1 -> step2
+        // Edge: step1 -> step2 (step2 depends on step1)
         PatientPathwayEdge edge = new PatientPathwayEdge();
         edge.setId(UUID.randomUUID());
         edge.setPathway(pathway);
         edge.setSourceStepId(STEP1_ID);
         edge.setTargetStepId(STEP2_ID);
 
-        // Step 2 has a SCHEDULED event, but step 1 is still PENDING (prerequisite not met)
+        // Step 2 has a COMPLETED PATHOLOGY_REPORT care event (hasMatch = true)
         CareEvent step2Event = createTestEvent(CareEventType.PATHOLOGY_REPORT,
-                CareEventStatus.SCHEDULED, LocalDate.now().minusDays(5));
+                CareEventStatus.COMPLETED, LocalDate.now().minusDays(5));
 
         when(patientRepository.findById(PATIENT_ID)).thenReturn(Optional.of(patient));
         when(pathwayRepository.findByPatient_Id(PATIENT_ID)).thenReturn(Optional.of(pathway));
-        // Both steps ACTIVE; no completed or skipped
         when(stepRepository.findByPathway_IdAndStatus(PATHWAY_ID, PathwayStepStatus.ACTIVE))
-                .thenReturn(List.of(step1, step2));
+                .thenReturn(List.of(step2)); // step2 is the only ACTIVE step
         when(stepRepository.findByPathway_IdAndStatus(PATHWAY_ID, PathwayStepStatus.COMPLETED))
-                .thenReturn(List.of());
+                .thenReturn(List.of()); // step1 is SKIPPED, not COMPLETED
         when(stepRepository.findByPathway_IdAndStatus(PATHWAY_ID, PathwayStepStatus.SKIPPED))
-                .thenReturn(List.of());
+                .thenReturn(List.of(step1Skipped));
         when(edgeRepository.findByPathway_Id(PATHWAY_ID)).thenReturn(List.of(edge));
         when(careEventRepository.findByPatient_IdOrderByEventDateDesc(PATIENT_ID))
                 .thenReturn(List.of(step2Event));
@@ -286,7 +300,7 @@ class PathwayEvaluationActivityTest {
         verify(alertRepository, atLeastOnce()).save(alertCaptor.capture());
         List<Alert> savedAlerts = alertCaptor.getAllValues();
         assertTrue(savedAlerts.stream().anyMatch(a -> a.getAlertType() == AlertType.OUT_OF_ORDER),
-                "An OUT_OF_ORDER alert must be created when step 2 has an event but step 1 (prerequisite) is not COMPLETED");
+                "An OUT_OF_ORDER alert must be created when step 2 has a completed event but step 1 (prerequisite) is SKIPPED not COMPLETED");
     }
 
     /**
