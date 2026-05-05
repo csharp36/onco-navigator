@@ -1,9 +1,11 @@
 package com.onconavigator.service;
 
+import com.onconavigator.ai.model.ExtractionResult;
 import com.onconavigator.domain.PatientPathway;
 import com.onconavigator.domain.PatientPathwayEdge;
 import com.onconavigator.domain.PatientPathwayStep;
 import com.onconavigator.domain.enums.AlertStatus;
+import com.onconavigator.domain.enums.CareEventType;
 import com.onconavigator.domain.enums.PathwayStepStatus;
 import com.onconavigator.repository.AlertRepository;
 import com.onconavigator.repository.PatientPathwayEdgeRepository;
@@ -54,6 +56,12 @@ import java.util.stream.Collectors;
 public class PatientPathwayService {
 
     private static final Logger log = LoggerFactory.getLogger(PatientPathwayService.class);
+
+    /**
+     * System actor UUID used for audit trail rows created by automated processes (AI extraction).
+     * Matches the convention established in V14 migration for migration-created rows.
+     */
+    private static final UUID SYSTEM_ACTOR_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final PatientPathwayRepository pathwayRepository;
     private final PatientPathwayStepRepository stepRepository;
@@ -311,30 +319,112 @@ public class PatientPathwayService {
      * Builds a non-PHI JSON string of existing pathway steps for Claude's dedup context.
      *
      * <p>Returns a JSON array of objects with stepName, eventType, and status fields.
-     * Full implementation added in Phase 6 Plan 02 Task 2.
+     * Contains only clinical process vocabulary (event types, step names), NOT patient identifiers.
+     * This context helps Claude avoid re-proposing steps already tracked (D-03).
      *
      * @param patientId the patient UUID
      * @return JSON array string of existing steps, or "[]" if no pathway exists
      */
     @Transactional(readOnly = true)
     public String buildExistingStepsContext(UUID patientId) {
-        // Full implementation provided in Task 2 of this plan
-        return "[]";
+        PatientPathway pathway = pathwayRepository.findByPatient_Id(patientId).orElse(null);
+        if (pathway == null) {
+            return "[]";
+        }
+        List<PatientPathwayStep> steps = stepRepository.findByPathway_Id(pathway.getId());
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (PatientPathwayStep step : steps) {
+            if (step.getStatus() == PathwayStepStatus.ACTIVE
+                    || step.getStatus() == PathwayStepStatus.COMPLETED
+                    || step.getStatus() == PathwayStepStatus.REJECTED) {
+                if (!first) sb.append(",");
+                sb.append("{\"stepName\":\"").append(escapeJson(step.getName()))
+                  .append("\",\"eventType\":\"").append(step.getEventType() != null ? step.getEventType().name() : "")
+                  .append("\",\"status\":\"").append(step.getStatus().name())
+                  .append("\"}");
+                first = false;
+            }
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     /**
      * Persists validated extraction results as PROPOSED pathway steps with dedup.
      *
-     * <p>Full implementation added in Phase 6 Plan 02 Task 2.
+     * <p>For each proposed step:
+     * <ol>
+     *   <li>Validates CareEventType (already filtered by StepExtractionService, but belt-and-suspenders)</li>
+     *   <li>Checks dedup against ACTIVE/COMPLETED/REJECTED steps by event type (D-08, D-09)</li>
+     *   <li>Creates PatientPathwayStep with status=PROPOSED, source=AI_EXTRACTED, sourceDocumentId=documentId</li>
+     *   <li>Serializes proposedEdges as JSON in proposedEdgesJson column (D-12)</li>
+     * </ol>
      *
      * @param patientId  the patient UUID
      * @param documentId the source document UUID
      * @param result     validated extraction result
      */
     @Transactional
-    public void createProposedSteps(UUID patientId, UUID documentId,
-                                     com.onconavigator.ai.model.ExtractionResult result) {
-        // Full implementation provided in Task 2 of this plan
+    public void createProposedSteps(UUID patientId, UUID documentId, ExtractionResult result) {
+        PatientPathway pathway = requirePathway(patientId);
+
+        // Build dedup set: event types of ACTIVE, COMPLETED, and REJECTED steps (D-09)
+        List<PatientPathwayStep> existingSteps = stepRepository.findByPathway_Id(pathway.getId());
+        Set<String> existingEventTypes = existingSteps.stream()
+                .filter(s -> s.getStatus() == PathwayStepStatus.ACTIVE
+                          || s.getStatus() == PathwayStepStatus.COMPLETED
+                          || s.getStatus() == PathwayStepStatus.REJECTED)
+                .filter(s -> s.getEventType() != null)
+                .map(s -> s.getEventType().name())
+                .collect(Collectors.toSet());
+
+        // Also include PROPOSED steps from THIS extraction to avoid intra-batch dupes
+        Set<String> createdEventTypes = new HashSet<>();
+
+        int createdCount = 0;
+        for (ExtractionResult.ProposedStep proposed : result.proposedSteps()) {
+            // Skip if event type already exists in pathway (D-08, D-09)
+            if (existingEventTypes.contains(proposed.eventType())
+                    || createdEventTypes.contains(proposed.eventType())) {
+                continue;
+            }
+
+            // Validate CareEventType (belt-and-suspenders -- StepExtractionService already filtered)
+            CareEventType eventType;
+            try {
+                eventType = CareEventType.valueOf(proposed.eventType());
+            } catch (IllegalArgumentException e) {
+                log.warn("Skipping proposed step with invalid event type '{}' for patient {}",
+                        proposed.eventType(), patientId);
+                continue;
+            }
+
+            PatientPathwayStep step = new PatientPathwayStep();
+            step.setPathway(pathway);
+            step.setName(proposed.stepName());
+            step.setEventType(eventType);
+            step.setWindowDays(proposed.estimatedTimeWindowDays());
+            step.setRequired(true);
+            step.setStatus(PathwayStepStatus.PROPOSED);
+            step.setSource("AI_EXTRACTED");
+            step.setSourceDocumentId(documentId);
+            // Use system actor UUID for AI-extracted steps (no human actor — required NOT NULL column)
+            step.setCreatedBy(SYSTEM_ACTOR_UUID);
+
+            // Serialize proposed edges as JSON for later confirmation (D-12)
+            if (proposed.proposedEdges() != null && !proposed.proposedEdges().isEmpty()) {
+                step.setProposedEdgesJson(serializeProposedEdges(proposed.proposedEdges(),
+                        existingSteps));
+            }
+
+            stepRepository.save(step);
+            createdEventTypes.add(proposed.eventType());
+            createdCount++;
+        }
+
+        log.info("Created {} proposed steps for patient {} from document {}",
+                createdCount, patientId, documentId);
     }
 
     // ---- Edge mutations ----
@@ -672,6 +762,52 @@ public class PatientPathwayService {
                 edge.getTargetStepId(),
                 edge.getCreatedAt()
         );
+    }
+
+    /**
+     * Escapes a string for safe embedding in a JSON value.
+     * Handles backslash and double-quote characters.
+     */
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    /**
+     * Serializes proposed DAG edges to a JSON string for storage in proposedEdgesJson column.
+     *
+     * <p>For predecessor steps that are already existing steps, attempts to resolve the
+     * step name to a UUID for later edge creation (D-12 traceability).
+     *
+     * @param edges         proposed edges from Claude extraction
+     * @param existingSteps current steps in the patient's pathway (for name-to-UUID resolution)
+     * @return JSON array string of proposed edges
+     */
+    private String serializeProposedEdges(
+            List<ExtractionResult.ProposedEdge> edges,
+            List<PatientPathwayStep> existingSteps) {
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (ExtractionResult.ProposedEdge edge : edges) {
+            if (!first) sb.append(",");
+            sb.append("{\"predecessorStepName\":\"").append(escapeJson(edge.predecessorStepName()))
+              .append("\",\"predecessorIsExistingStep\":").append(edge.predecessorIsExistingStep());
+            // Resolve name to UUID for existing steps (Pitfall 3 mitigation)
+            if (edge.predecessorIsExistingStep()) {
+                UUID resolvedId = existingSteps.stream()
+                        .filter(s -> s.getName().equalsIgnoreCase(edge.predecessorStepName()))
+                        .map(PatientPathwayStep::getId)
+                        .findFirst()
+                        .orElse(null);
+                if (resolvedId != null) {
+                    sb.append(",\"predecessorStepId\":\"").append(resolvedId).append("\"");
+                }
+            }
+            sb.append("}");
+            first = false;
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     // ---- Private record ----

@@ -64,6 +64,7 @@ public class DocumentProcessingService {
     private final DocumentPatientMatchService patientMatchService;
     private final ClinicalDocumentRepository documentRepository;
     private final PatientRepository patientRepository;
+    private final StepExtractionTriggerService stepExtractionTrigger;
 
     public DocumentProcessingService(PdfExtractionService pdfExtractionService,
                                      OcrExtractionService ocrExtractionService,
@@ -71,7 +72,8 @@ public class DocumentProcessingService {
                                      DocumentClassificationService classificationService,
                                      DocumentPatientMatchService patientMatchService,
                                      ClinicalDocumentRepository documentRepository,
-                                     PatientRepository patientRepository) {
+                                     PatientRepository patientRepository,
+                                     StepExtractionTriggerService stepExtractionTrigger) {
         this.pdfExtractionService = pdfExtractionService;
         this.ocrExtractionService = ocrExtractionService;
         this.claudeVisionService = claudeVisionService;
@@ -79,6 +81,7 @@ public class DocumentProcessingService {
         this.patientMatchService = patientMatchService;
         this.documentRepository = documentRepository;
         this.patientRepository = patientRepository;
+        this.stepExtractionTrigger = stepExtractionTrigger;
     }
 
     /**
@@ -166,6 +169,14 @@ public class DocumentProcessingService {
         doc = documentRepository.save(doc);
         log.info("Document {} processed: type={} matchStatus={} patientLinked={}",
                 doc.getId(), documentType, matchStatus, doc.getPatient() != null);
+
+        // 6b. Step extraction -- async, non-blocking (D-01, D-02)
+        // Only fires when patient is linked and document has extractable text.
+        // StepExtractionTriggerService runs on a separate thread after this transaction commits.
+        if (doc.getPatient() != null && extraction.text != null && !extraction.text.isBlank()) {
+            stepExtractionTrigger.triggerAsync(doc.getId(), doc.getPatient().getId(), extraction.text);
+        }
+
         return new DocumentUploadResponse(
                 doc.getId(),
                 classification,
