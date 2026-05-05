@@ -7,6 +7,7 @@ export interface PatientResponse {
   cancerType: 'BREAST' | 'LUNG' | 'COLORECTAL';
   cancerStage: string;
   diagnosisDate: string;
+  referralReceivedAt: string | null;
   assignedNavigatorId: string | null;
   treatingPhysician: string | null;
   status: 'ACTIVE' | 'INACTIVE';
@@ -36,6 +37,10 @@ export interface CareEventResponse {
   notes: string | null;
   pathwayStepId: string | null;
   createdAt: string;
+  // Phase 7: scheduling coordination fields
+  expectedCompletionDate: string | null;
+  schedulingConfirmed: boolean;
+  externalFacilityName: string | null;
 }
 
 export interface CreateCareEventRequest {
@@ -44,6 +49,10 @@ export interface CreateCareEventRequest {
   status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'PENDING';
   notes?: string;
   documentId?: string;
+  // Phase 7: scheduling coordination fields
+  expectedCompletionDate?: string;
+  schedulingConfirmed?: boolean;
+  externalFacilityName?: string;
 }
 
 export interface UpdateCareEventStatusRequest {

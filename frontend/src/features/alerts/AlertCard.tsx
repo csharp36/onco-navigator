@@ -13,27 +13,34 @@ function getSeverityBorderColor(severityLabel: AlertResponse['severityLabel']): 
   switch (severityLabel) {
     case 'OVERDUE':
       return 'var(--severity-overdue)';
+    case 'CANCELLED':
+      return 'var(--severity-overdue)';
+    case 'RESULTS PENDING':
+      return 'var(--severity-missing)';
+    case 'DEADLINE':
+      return 'var(--severity-missing)';
     case 'MISSING':
       return 'var(--severity-missing)';
-    case 'OUT OF ORDER':
+    case 'UNCONFIRMED':
       return 'var(--severity-out-of-order)';
     default:
-      return 'var(--border)';
+      return 'var(--severity-out-of-order)';
   }
 }
 
 function getSeverityBadgeVariant(
   severityLabel: AlertResponse['severityLabel'],
-): 'destructive' | 'secondary' | 'outline' {
+): 'destructive' | 'default' | 'secondary' | 'outline' {
   switch (severityLabel) {
     case 'OVERDUE':
+    case 'CANCELLED':
       return 'destructive';
     case 'MISSING':
-      return 'secondary';
-    case 'OUT OF ORDER':
-      return 'outline';
+    case 'RESULTS PENDING':
+    case 'DEADLINE':
+      return 'default';
     default:
-      return 'outline';
+      return 'secondary';
   }
 }
 
