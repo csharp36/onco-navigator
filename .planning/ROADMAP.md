@@ -180,11 +180,26 @@ Cross-cutting constraints:
   5. The system never auto-confirms AI-extracted steps — human-in-the-loop is non-negotiable
   6. A new `pathwayStepsChanged` Temporal signal triggers re-evaluation when steps are confirmed
 
+**Plans:** 5 plans
+Plans:
+**Wave 1** *(no dependencies)*
+- [ ] 06-01-PLAN.md — Flyway V16 migration (REJECTED enum, source columns), PathwayStepStatus REJECTED, PatientPathwayStep entity fields, PathwayStepResponse DTO, ExtractionResult model, ExtractionPrompts, stepExtractionClient bean, feature flag
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 06-02-PLAN.md — StepExtractionService (Claude call, circuit breaker, feature flag, enum validation), StepExtractionTriggerService (async orchestrator), PatientPathwayService new methods (buildExistingStepsContext, createProposedSteps), DocumentProcessingService hook
+- [ ] 06-03-PLAN.md — confirmProposedStep and rejectProposedStep service methods (status transitions, edge activation, cycle detection), confirm/reject REST endpoints on PatientPathwayController
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 06-04-PLAN.md — Frontend: TypeScript types (REJECTED, source fields), confirm/reject API hooks, StepRow confirm/reject/REJECTED rendering, PathwayEditor integration (reject dialog, show rejected toggle)
+- [ ] 06-05-PLAN.md — Unit tests: StepExtractionService (feature flag, blank text, enum validation, fallback), PatientPathwayService confirm/reject (status guards, dedup, edge activation)
+**UI hint**: yes
+
 Cross-cutting constraints:
 - Step extraction sends full document text to Claude (PHI — same BAA scope as document classification)
 - Patient pathway step names/statuses sent as context are non-PHI
 - Resilience4j @CircuitBreaker on extraction calls with fallback to manual step entry
 - Feature flag gates extraction (same pattern as document classification)
+- REJECTED status blocks re-proposal of previously rejected steps (D-09)
+- Confirm/reject restricted to NURSE_NAVIGATOR and ADMIN (not CARE_COORDINATOR)
+- Proposed edges stored as JSONB on step row, activated with cycle detection on confirm (D-12)
 
 ### Phase 7: Referral Trigger + Enhanced Timing + Status-Aware Evaluation
 **Goal**: The pathway clock starts from referral PDF receipt. The evaluation engine understands event statuses (Scheduled, Pending, Cancelled) and generates new alert types for results-before-visit, scheduling confirmation, and deadline escalation.
@@ -229,9 +244,9 @@ Cross-cutting constraints:
 Phases 1-4 execute sequentially. Phase 5 follows Phase 4. After Phase 5, phases 6/8/9 can run in parallel. Phase 7 depends on Phase 6.
 
 ```
-Phase 1 → 2 → 3 → 4 → 5 ──┬── 6 → 7
-                            ├── 8
-                            └── 9
+Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
+                            +-- 8
+                            +-- 9
 ```
 
 | Phase | Plans Complete | Status | Completed |
@@ -241,7 +256,7 @@ Phase 1 → 2 → 3 → 4 → 5 ──┬── 6 → 7
 | 3. Working Application | 6/6 | Complete | 2026-04-30 |
 | 4. AI Document Ingestion & Alert Enhancement | 7/7 | Complete | 2026-05-01 |
 | 5. Per-Patient Pathway + DAG Foundation | 6/6 | Complete | 2026-05-04 |
-| 6. AI Step Extraction | 0/0 | Not Started | - |
+| 6. AI Step Extraction | 0/5 | Not Started | - |
 | 7. Referral Trigger + Enhanced Timing | 0/0 | Not Started | - |
 | 8. Template Inheritance | 0/0 | Not Started | - |
 | 9. Alert Format + Notifications | 0/0 | Not Started | - |
