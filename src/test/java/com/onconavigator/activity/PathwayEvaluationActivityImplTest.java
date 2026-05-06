@@ -366,4 +366,126 @@ class PathwayEvaluationActivityImplTest {
         assertThat(savedAlert.getDeviationDescription())
                 .isEqualTo("Claude text for blank template");
     }
+
+    // ---- Gap 4: cap150 enforcement at activity layer ----
+
+    /**
+     * PW-ALL-007: suggestedAction exceeding 150 characters is truncated before saving alert.
+     */
+    @Test
+    void evaluate_cap150_truncatesSuggestedAction_when_exceedingLimit() {
+        LocalDate diagnosisDate = LocalDate.now().minusDays(35);
+        Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
+        PatientPathway pathway = createTestPathway();
+
+        // Step has alertText (template-first path) with suggestedAction > 150 chars
+        String longAction = "A".repeat(200);
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Surgeon Consultation",
+                CareEventType.CONSULTATION, 14, "Template alert text.", pathway);
+        step.setSuggestedAction(longAction);
+
+        setupCommonMocks(patient, pathway, step);
+
+        activity.evaluate(PATIENT_ID);
+
+        ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
+        verify(alertRepository, atLeastOnce()).save(alertCaptor.capture());
+
+        Alert savedAlert = alertCaptor.getValue();
+        assertThat(savedAlert.getSuggestedAction()).isNotNull();
+        assertThat(savedAlert.getSuggestedAction().length()).isLessThanOrEqualTo(150);
+    }
+
+    /**
+     * PW-ALL-007: missingSummary exceeding 150 characters is truncated before saving alert.
+     * When Claude returns a missingSummary longer than 150 chars, cap150 truncates it.
+     */
+    @Test
+    void evaluate_cap150_truncatesMissingSummary_when_exceedingLimit() {
+        LocalDate diagnosisDate = LocalDate.now().minusDays(35);
+        Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
+        PatientPathway pathway = createTestPathway();
+
+        // Step has null alertText, so Claude path is taken
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Radiation Therapy Planning",
+                CareEventType.RADIATION, 28, null, pathway);
+
+        setupCommonMocks(patient, pathway, step);
+
+        // Claude returns a missingSummary longer than 150 chars
+        String longSummary = "M".repeat(200);
+        when(alertGenerationAiService.generateAlertDescription(
+                anyString(), anyString(), anyString(), anyString(), anyList(), anyList()))
+                .thenReturn(new AlertText("Claude description", "Short action", longSummary));
+
+        activity.evaluate(PATIENT_ID);
+
+        ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
+        verify(alertRepository, atLeastOnce()).save(alertCaptor.capture());
+
+        Alert savedAlert = alertCaptor.getValue();
+        assertThat(savedAlert.getMissingSummary()).isNotNull();
+        assertThat(savedAlert.getMissingSummary().length()).isLessThanOrEqualTo(150);
+    }
+
+    // ---- Gap 5: Template-based missingSummary derivation ----
+
+    /**
+     * When step.getAlertText() is non-null (template-first path), missingSummary is
+     * derived from deviationDescription (which is the alertText value).
+     */
+    @Test
+    void evaluate_templatePath_derivesMissingSummary_fromAlertText() {
+        LocalDate diagnosisDate = LocalDate.now().minusDays(35);
+        Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
+        PatientPathway pathway = createTestPathway();
+
+        String templateText = "Surgeon consultation has not been completed within the expected window.";
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Surgeon Consultation",
+                CareEventType.CONSULTATION, 14, templateText, pathway);
+
+        setupCommonMocks(patient, pathway, step);
+
+        activity.evaluate(PATIENT_ID);
+
+        ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
+        verify(alertRepository, atLeastOnce()).save(alertCaptor.capture());
+
+        Alert savedAlert = alertCaptor.getValue();
+        // missingSummary should be derived from the alertText (template text)
+        assertThat(savedAlert.getMissingSummary()).isNotNull();
+        assertThat(savedAlert.getMissingSummary()).isEqualTo(templateText);
+        // Claude should NOT have been called (template-first path)
+        verifyNoInteractions(alertGenerationAiService);
+    }
+
+    /**
+     * When step.getAlertText() is longer than 150 chars, the derived missingSummary
+     * is truncated to 150 characters.
+     */
+    @Test
+    void evaluate_templatePath_truncatesMissingSummary_whenAlertTextExceeds150() {
+        LocalDate diagnosisDate = LocalDate.now().minusDays(35);
+        Patient patient = createTestPatient(CancerType.BREAST, diagnosisDate);
+        PatientPathway pathway = createTestPathway();
+
+        // AlertText longer than 150 chars
+        String longAlertText = "T".repeat(200);
+        PatientPathwayStep step = createActiveStep(STEP1_ID, "Surgeon Consultation",
+                CareEventType.CONSULTATION, 14, longAlertText, pathway);
+
+        setupCommonMocks(patient, pathway, step);
+
+        activity.evaluate(PATIENT_ID);
+
+        ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
+        verify(alertRepository, atLeastOnce()).save(alertCaptor.capture());
+
+        Alert savedAlert = alertCaptor.getValue();
+        // missingSummary should be derived from first 150 chars of alertText, then cap150'd
+        assertThat(savedAlert.getMissingSummary()).isNotNull();
+        assertThat(savedAlert.getMissingSummary().length()).isLessThanOrEqualTo(150);
+        // deviationDescription should still be the full alertText
+        assertThat(savedAlert.getDeviationDescription()).isEqualTo(longAlertText);
+    }
 }
