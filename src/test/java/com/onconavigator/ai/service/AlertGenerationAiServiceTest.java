@@ -220,4 +220,100 @@ class AlertGenerationAiServiceTest {
         // Service requires BOTH description and suggested action
         assertThat(result).isNull();
     }
+
+    // ---- Phase 9 Plan 04: MISSING_SUMMARY parsing and 150-char truncation tests ----
+
+    @Test
+    void generateAlertDescription_fullResponse_parsesMissingSummary() {
+        String claudeResponse = """
+                DESCRIPTION: Step X has not been completed within the expected timeframe. \
+                This delay may impact downstream treatment planning and coordination.
+                SUGGESTED_ACTION: Contact facility to confirm scheduling.
+                MISSING_SUMMARY: CT scan not completed within 14 days of referral.""";
+
+        when(alertClient.prompt()).thenReturn(promptRequest);
+        when(promptRequest.user(any(Consumer.class))).thenReturn(promptRequest);
+        when(promptRequest.call()).thenReturn(callResponse);
+        when(callResponse.content()).thenReturn(claudeResponse);
+
+        AlertText result = service.generateAlertDescription(
+                "BREAST", "CT Scan", "MISSING_EVENT",
+                "14", List.of("Surgery"), List.of("CT Scan"));
+
+        assertThat(result).isNotNull();
+        assertThat(result.deviationDescription()).contains("Step X has not been completed");
+        assertThat(result.suggestedAction()).contains("Contact facility to confirm scheduling");
+        assertThat(result.missingSummary()).isEqualTo("CT scan not completed within 14 days of referral.");
+    }
+
+    @Test
+    void generateAlertDescription_noMissingSummarySection_derivesFromDescription() {
+        // Claude returns only DESCRIPTION and SUGGESTED_ACTION (no MISSING_SUMMARY line)
+        String claudeResponse = """
+                DESCRIPTION: Radiation therapy planning has not been initiated within the window.
+                SUGGESTED_ACTION: Contact radiation oncology to schedule consultation.""";
+
+        when(alertClient.prompt()).thenReturn(promptRequest);
+        when(promptRequest.user(any(Consumer.class))).thenReturn(promptRequest);
+        when(promptRequest.call()).thenReturn(callResponse);
+        when(callResponse.content()).thenReturn(claudeResponse);
+
+        AlertText result = service.generateAlertDescription(
+                "BREAST", "Radiation Therapy Planning", "MISSING_EVENT",
+                "28", List.of("Surgery"), List.of("Radiation Therapy Planning"));
+
+        assertThat(result).isNotNull();
+        assertThat(result.deviationDescription()).contains("Radiation therapy planning");
+        assertThat(result.suggestedAction()).contains("Contact radiation oncology");
+        // missingSummary should be derived from the description (first 150 chars)
+        assertThat(result.missingSummary()).isNotNull();
+        assertThat(result.missingSummary()).contains("Radiation therapy planning");
+        assertThat(result.missingSummary().length()).isLessThanOrEqualTo(150);
+    }
+
+    @Test
+    void generateAlertDescription_missingSummaryExceeds150_truncated() {
+        // MISSING_SUMMARY is longer than 150 characters
+        String longSummary = "A".repeat(200);
+        String claudeResponse = String.format(
+                "DESCRIPTION: Test description of the deviation.%n" +
+                "SUGGESTED_ACTION: Test action to take.%n" +
+                "MISSING_SUMMARY: %s", longSummary);
+
+        when(alertClient.prompt()).thenReturn(promptRequest);
+        when(promptRequest.user(any(Consumer.class))).thenReturn(promptRequest);
+        when(promptRequest.call()).thenReturn(callResponse);
+        when(callResponse.content()).thenReturn(claudeResponse);
+
+        AlertText result = service.generateAlertDescription(
+                "LUNG", "Biopsy", "DELAYED_EVENT",
+                "7", List.of(), List.of("Biopsy"));
+
+        assertThat(result).isNotNull();
+        assertThat(result.missingSummary()).isNotNull();
+        assertThat(result.missingSummary().length()).isEqualTo(150);
+    }
+
+    @Test
+    void generateAlertDescription_suggestedActionExceeds150_truncated() {
+        // SUGGESTED_ACTION is longer than 150 characters
+        String longAction = "B".repeat(200);
+        String claudeResponse = String.format(
+                "DESCRIPTION: Test description.%n" +
+                "SUGGESTED_ACTION: %s%n" +
+                "MISSING_SUMMARY: Short summary.", longAction);
+
+        when(alertClient.prompt()).thenReturn(promptRequest);
+        when(promptRequest.user(any(Consumer.class))).thenReturn(promptRequest);
+        when(promptRequest.call()).thenReturn(callResponse);
+        when(callResponse.content()).thenReturn(claudeResponse);
+
+        AlertText result = service.generateAlertDescription(
+                "COLORECTAL", "Surgery", "MISSING_EVENT",
+                "14", List.of(), List.of("Surgery"));
+
+        assertThat(result).isNotNull();
+        assertThat(result.suggestedAction()).isNotNull();
+        assertThat(result.suggestedAction().length()).isEqualTo(150);
+    }
 }
