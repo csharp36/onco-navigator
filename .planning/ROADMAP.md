@@ -274,7 +274,7 @@ Plans:
 **Wave 1** *(no dependencies)*
 - [x] 09-01-PLAN.md — Flyway V21-V23 (alert missing_summary, notification_preferences, notification_log), JPA entities, enum, repositories, Alert entity extension, AlertText 3-component record
 **Wave 2** *(blocked on Wave 1)*
-- [ ] 09-02-PLAN.md — NotificationService interface, LoggingNotificationService, NotificationPreferenceService, NotificationPayload, AlertPrompts MISSING_SUMMARY extension, AlertGenerationAiService parsing, cap150 enforcement, notification dispatch hooks
+- [x] 09-02-PLAN.md — NotificationService interface, LoggingNotificationService, NotificationPreferenceService, NotificationPayload, AlertPrompts MISSING_SUMMARY extension, AlertGenerationAiService parsing, cap150 enforcement, notification dispatch hooks
 - [ ] 09-03-PLAN.md — DigestDispatchWorkflow + Activity (Temporal Schedule), DigestScheduleRegistrar startup bean, application-local.yml activity-beans update
 **Wave 3** *(blocked on Wave 2)*
 - [ ] 09-04-PLAN.md — Unit tests: preference merge, severity filter, quiet hours, dispatch routing, digest queue drain, MISSING_SUMMARY parsing, 150-char cap
@@ -309,4 +309,4 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
 | 7. Referral Trigger + Enhanced Timing | 4/4 | Complete | 2026-05-05 |
 | 8. Template Inheritance | 3/3 | Complete | 2026-05-05 |
-| 9. Alert Format + Notifications | 1/4 | In Progress | - |
+| 9. Alert Format + Notifications | 2/4 | In Progress | - |

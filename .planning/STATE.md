@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 09-01 plan
-last_updated: "2026-05-05T23:53:29.000Z"
-last_activity: 2026-05-05 -- Phase 9 Plan 01 complete (notification schema + alert entity extension)
+stopped_at: Completed 09-02 plan
+last_updated: "2026-05-06T00:08:35.000Z"
+last_activity: 2026-05-06 -- Phase 9 Plan 02 complete (notification dispatch pipeline + alert format enforcement)
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 44
-  completed_plans: 41
-  percent: 93
+  completed_plans: 42
+  percent: 95
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 ## Current Position
 
 Phase: 09 — EXECUTING
-Plan: 1 of 4 complete
-Status: Executing (Plan 01 complete, Plans 02-04 remaining)
-Last activity: 2026-05-05 -- Phase 9 Plan 01 complete (notification schema + alert entity extension)
+Plan: 2 of 4 complete
+Status: Executing (Plans 01-02 complete, Plans 03-04 remaining)
+Last activity: 2026-05-06 -- Phase 9 Plan 02 complete (notification dispatch pipeline + alert format enforcement)
 
-Progress: [█████████░] 93% (41/44 plans)
+Progress: [█████████░] 95% (42/44 plans)
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 93% (41/44 plans)
 | Phase 08-template-inheritance P02 | 6min | 2 tasks | 6 files |
 | Phase 08-template-inheritance P03 | 2min | 2 tasks | 4 files |
 | Phase 09-alert-format-notification-foundation P01 | 4min | 2 tasks | 14 files |
+| Phase 09-alert-format-notification-foundation P02 | 10min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,9 @@ Recent decisions affecting current work:
 - [Phase 09-01]: NotificationPreference entity NOT @Audited (no PHI, preference metadata only); NotificationLog IS @Audited with EncryptionConverter on rendered_content (PHI)
 - [Phase 09-01]: AlertText constructor call sites updated with null missingSummary as temporary fix (Plan 02 adds MISSING_SUMMARY parsing)
 - [Phase 09-01]: V22 seeds TEAMS channel as enabled (TRUE) for log-only testing; EMAIL seeded as disabled
+- [Phase 09-02]: buildAlertDescription() removed from PathwayEvaluationActivityImpl -- inline 3-path resolution (template, Claude, fallback) in createAlertIfNotDuplicate() captures full AlertText (all 3 fields)
+- [Phase 09-02]: RESULTS_NOT_READY alert path updated with missingSummary and notification dispatch for D-06 compliance
+- [Phase 09-02]: NotificationPreferenceController uses JwtAuthenticationToken (not @AuthenticationPrincipal Jwt) for JWT parameter extraction
 
 ### Pending Todos
 
@@ -159,6 +163,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-05T23:53:29Z
-Stopped at: Completed 09-01-PLAN.md
-Resume file: .planning/phases/09-alert-format-notification-foundation/09-01-SUMMARY.md
+Last session: 2026-05-06T00:08:35Z
+Stopped at: Completed 09-02-PLAN.md
+Resume file: .planning/phases/09-alert-format-notification-foundation/09-02-SUMMARY.md
