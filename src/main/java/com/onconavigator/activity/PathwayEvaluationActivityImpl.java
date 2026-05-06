@@ -267,6 +267,12 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                         String desc = "Delayed: " + step.getName() + " (expected by " + activeEvent.getExpectedCompletionDate() + ")";
                         String summary = createAlertIfNotDuplicate(patient, step, AlertType.DELAYED_EVENT, desc);
                         if (summary != null) alertsGenerated.add(summary);
+                    } else if (step.getWindowDays() != null && anchorDate != null
+                            && daysSinceAnchor > step.getWindowDays()) {
+                        // Window-based DELAYED: event exists but still PENDING/SCHEDULED past the window
+                        String desc = "Delayed: " + step.getName() + " (past " + step.getWindowDays() + "-day window, still " + eventStatus + ")";
+                        String summary = createAlertIfNotDuplicate(patient, step, AlertType.DELAYED_EVENT, desc);
+                        if (summary != null) alertsGenerated.add(summary);
                     }
 
                     // D-11/D-12: SCHEDULING_UNCONFIRMED — 7-day clock from referral (root) or eventDate (subsequent)
