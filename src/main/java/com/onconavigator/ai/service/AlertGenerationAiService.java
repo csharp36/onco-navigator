@@ -102,16 +102,47 @@ public class AlertGenerationAiService {
 
         String description = null;
         String suggestedAction = null;
+        String missingSummary = null;
 
         int descIdx = response.indexOf("DESCRIPTION:");
         int actionIdx = response.indexOf("SUGGESTED_ACTION:");
+        int summaryIdx = response.indexOf("MISSING_SUMMARY:");
 
         if (descIdx >= 0 && actionIdx > descIdx) {
             description = response.substring(descIdx + "DESCRIPTION:".length(), actionIdx).strip();
-            suggestedAction = response.substring(actionIdx + "SUGGESTED_ACTION:".length()).strip();
+
+            if (summaryIdx > actionIdx) {
+                suggestedAction = response.substring(
+                        actionIdx + "SUGGESTED_ACTION:".length(), summaryIdx).strip();
+                missingSummary = response.substring(
+                        summaryIdx + "MISSING_SUMMARY:".length()).strip();
+            } else {
+                suggestedAction = response.substring(
+                        actionIdx + "SUGGESTED_ACTION:".length()).strip();
+            }
         } else if (descIdx >= 0) {
-            // Only description found, no suggested action section
-            description = response.substring(descIdx + "DESCRIPTION:".length()).strip();
+            if (summaryIdx > descIdx) {
+                description = response.substring(descIdx + "DESCRIPTION:".length(), summaryIdx).strip();
+                missingSummary = response.substring(summaryIdx + "MISSING_SUMMARY:".length()).strip();
+            } else {
+                description = response.substring(descIdx + "DESCRIPTION:".length()).strip();
+            }
+        }
+
+        // Defensive cap at 150 chars for MISSING_SUMMARY (it should be short already)
+        if (missingSummary != null && missingSummary.length() > 150) {
+            missingSummary = missingSummary.substring(0, 150).trim();
+        }
+        // Defensive cap at 150 chars for SUGGESTED_ACTION
+        if (suggestedAction != null && suggestedAction.length() > 150) {
+            suggestedAction = suggestedAction.substring(0, 150).trim();
+        }
+
+        // Fallback: derive missingSummary from description if Claude didn't provide it
+        if (missingSummary == null && description != null) {
+            missingSummary = description.length() > 150
+                    ? description.substring(0, 150).trim()
+                    : description;
         }
 
         if (description == null || description.isEmpty()) {
@@ -123,7 +154,7 @@ public class AlertGenerationAiService {
             return null;
         }
 
-        return new AlertText(description, suggestedAction, null);
+        return new AlertText(description, suggestedAction, missingSummary);
     }
 
     /**

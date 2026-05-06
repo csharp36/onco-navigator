@@ -1,9 +1,12 @@
 package com.onconavigator.activity;
 
 import com.onconavigator.domain.Alert;
+import com.onconavigator.domain.Patient;
 import com.onconavigator.domain.enums.AlertStatus;
 import com.onconavigator.domain.enums.AlertType;
+import com.onconavigator.notification.NotificationService;
 import com.onconavigator.repository.AlertRepository;
+import com.onconavigator.repository.PatientRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -31,9 +34,15 @@ public class AlertGenerationActivityImpl implements AlertGenerationActivity {
     private static final Logger log = LoggerFactory.getLogger(AlertGenerationActivityImpl.class);
 
     private final AlertRepository alertRepository;
+    private final NotificationService notificationService;
+    private final PatientRepository patientRepository;
 
-    public AlertGenerationActivityImpl(AlertRepository alertRepository) {
+    public AlertGenerationActivityImpl(AlertRepository alertRepository,
+                                       NotificationService notificationService,
+                                       PatientRepository patientRepository) {
         this.alertRepository = alertRepository;
+        this.notificationService = notificationService;
+        this.patientRepository = patientRepository;
     }
 
     /**
@@ -45,7 +54,8 @@ public class AlertGenerationActivityImpl implements AlertGenerationActivity {
      */
     @Override
     public void generateAlert(UUID patientId, String pathwayStepName, String alertTypeStr,
-                              String deviationDescription, String suggestedAction, String workflowRunId) {
+                              String deviationDescription, String suggestedAction,
+                              String missingSummary, String workflowRunId) {
 
         // Dedup check (PATH-06): do not create a second OPEN alert for the same (patient, step)
         boolean duplicateExists = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
@@ -61,10 +71,32 @@ public class AlertGenerationActivityImpl implements AlertGenerationActivity {
         alert.setAlertType(AlertType.valueOf(alertTypeStr));
         alert.setPathwayStepName(pathwayStepName);
         alert.setDeviationDescription(deviationDescription);
-        alert.setSuggestedAction(suggestedAction);
+        alert.setSuggestedAction(cap150(suggestedAction, "suggestedAction", patientId));
+        alert.setMissingSummary(cap150(missingSummary, "missingSummary", patientId));
         alert.setWorkflowRunId(workflowRunId);
         alertRepository.save(alert);
 
+        // Dispatch notification (D-06)
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        if (patient != null) {
+            notificationService.dispatchForAlert(alert,
+                    patient.getFirstName() + " " + patient.getLastName(),
+                    patient.getMrn());
+        }
+
         log.info("ALERT_GENERATED: patient={} step={} type={}", patientId, pathwayStepName, alertTypeStr);
+    }
+
+    /**
+     * Truncates a string to 150 characters with a warning log if truncation occurs.
+     * Enforces the PW-ALL-007 constraint.
+     */
+    private String cap150(String value, String fieldName, UUID patientId) {
+        if (value == null) return null;
+        if (value.length() > 150) {
+            log.warn("ALERT_FIELD_TRUNCATED: field={} patient={}", fieldName, patientId);
+            return value.substring(0, 150);
+        }
+        return value;
     }
 }

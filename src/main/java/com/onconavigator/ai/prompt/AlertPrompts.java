@@ -41,10 +41,14 @@ public final class AlertPrompts {
         1. DESCRIPTION: A 2-4 sentence plain-language description of what \
            deviated and why it matters clinically.
         2. SUGGESTED_ACTION: 1-3 specific coordination actions the nurse \
-           navigator should take.
+           navigator should take (max 150 characters total).
+        3. MISSING_SUMMARY: A single sentence (max 150 characters) stating \
+           specifically what is missing or overdue. This is the primary content \
+           of nurse notifications.
 
         Format your response exactly as:
         DESCRIPTION: [your description]
         SUGGESTED_ACTION: [your suggested actions]
+        MISSING_SUMMARY: [your one-sentence summary]
         """;
 }

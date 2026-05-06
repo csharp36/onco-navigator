@@ -20,6 +20,7 @@ import com.onconavigator.repository.CareEventRepository;
 import com.onconavigator.repository.PatientPathwayEdgeRepository;
 import com.onconavigator.repository.PatientPathwayRepository;
 import com.onconavigator.repository.PatientPathwayStepRepository;
+import com.onconavigator.notification.NotificationService;
 import com.onconavigator.repository.PatientRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +79,7 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
     private final PatientPathwayEdgeRepository edgeRepository;
     private final ObjectMapper objectMapper;
     private final AlertGenerationAiService alertGenerationAiService;
+    private final NotificationService notificationService;
 
     public PathwayEvaluationActivityImpl(
             PatientRepository patientRepository,
@@ -87,7 +89,8 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
             PatientPathwayStepRepository stepRepository,
             PatientPathwayEdgeRepository edgeRepository,
             ObjectMapper objectMapper,
-            AlertGenerationAiService alertGenerationAiService) {
+            AlertGenerationAiService alertGenerationAiService,
+            NotificationService notificationService) {
         this.patientRepository = patientRepository;
         this.careEventRepository = careEventRepository;
         this.alertRepository = alertRepository;
@@ -96,6 +99,7 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
         this.edgeRepository = edgeRepository;
         this.objectMapper = objectMapper;
         this.alertGenerationAiService = alertGenerationAiService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -350,17 +354,26 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                     boolean isDuplicate = alertRepository.existsByPatientIdAndPathwayStepNameAndStatus(
                             patient.getId(), "__RESULTS_NOT_READY__", AlertStatus.OPEN);
                     if (!isDuplicate) {
+                        String rnrDesc = "Pending test results are not expected before an upcoming visit. "
+                                + "Review with physician whether the visit should proceed or be rescheduled.";
+                        String rnrAction = "Contact the ordering facility for an estimated result date.";
+                        String rnrMissing = cap150(rnrDesc, "missingSummary", patient.getId());
+
                         Alert rnrAlert = new Alert();
                         rnrAlert.setPatientId(patient.getId());
                         rnrAlert.setAlertType(AlertType.RESULTS_NOT_READY);
                         rnrAlert.setPathwayStepName("__RESULTS_NOT_READY__");
-                        rnrAlert.setDeviationDescription(
-                                "Pending test results are not expected before an upcoming visit. "
-                                + "Review with physician whether the visit should proceed or be rescheduled.");
-                        rnrAlert.setSuggestedAction(
-                                "Contact the ordering facility for an estimated result date.");
+                        rnrAlert.setDeviationDescription(rnrDesc);
+                        rnrAlert.setSuggestedAction(cap150(rnrAction, "suggestedAction", patient.getId()));
+                        rnrAlert.setMissingSummary(rnrMissing);
                         rnrAlert.setStatus(AlertStatus.OPEN);
                         alertRepository.save(rnrAlert);
+
+                        // Dispatch notification (D-06)
+                        notificationService.dispatchForAlert(rnrAlert,
+                                patient.getFirstName() + " " + patient.getLastName(),
+                                patient.getMrn());
+
                         alertsGenerated.add("RESULTS_NOT_READY: patient " + patient.getId());
                         log.info("ALERT_CREATED: patient={} type=RESULTS_NOT_READY", patient.getId());
                     }
@@ -415,71 +428,81 @@ public class PathwayEvaluationActivityImpl implements PathwayEvaluationActivity 
                 patient.getId(), step.getName(), AlertStatus.OPEN);
         if (isDuplicate) return null;
 
-        // Build alert text: use step's alertText if available, or try AI, or use default
-        String description = buildAlertDescription(step, alertType, defaultDescription, patient);
+        // Determine alert text from three sources: template, Claude AI, or fallback
+        String description;
+        String missingSummary;
+        String suggestedAction;
+
+        if (step.getAlertText() != null && !step.getAlertText().isBlank()) {
+            // AI-01: Template-first path — use step's configured alert text
+            description = step.getAlertText();
+            missingSummary = description.length() > 150
+                    ? description.substring(0, 150).trim() : description;
+            suggestedAction = step.getSuggestedAction() != null
+                    ? step.getSuggestedAction() : "Review patient pathway and take corrective action.";
+        } else {
+            // AI-02/AI-03: Try Claude for generated text (ZERO-PHI boundary)
+            AlertText claudeText = alertGenerationAiService.generateAlertDescription(
+                    patient.getCancerType().name(),
+                    step.getName(),
+                    alertType.name(),
+                    step.getWindowDays() != null ? String.valueOf(step.getWindowDays()) : "unknown",
+                    List.of(),
+                    List.of()
+            );
+
+            if (claudeText != null) {
+                // Claude-generated path
+                log.info("ALERT_CLAUDE_GENERATED: patient={} step={}", patient.getId(), step.getId());
+                description = claudeText.deviationDescription();
+                missingSummary = claudeText.missingSummary();
+                suggestedAction = claudeText.suggestedAction();
+            } else {
+                // AI-04: Circuit breaker fallback — use default description
+                log.info("ALERT_FALLBACK_TEMPLATE: patient={} step={}", patient.getId(), step.getId());
+                description = defaultDescription;
+                missingSummary = defaultDescription.length() > 150
+                        ? defaultDescription.substring(0, 150).trim() : defaultDescription;
+                suggestedAction = "Review patient pathway and take corrective action.";
+            }
+        }
 
         Alert alert = new Alert();
         alert.setPatientId(patient.getId());
         alert.setAlertType(alertType);
         alert.setPathwayStepName(step.getName());
         alert.setDeviationDescription(description);
-        alert.setSuggestedAction(step.getSuggestedAction() != null
-                ? step.getSuggestedAction() : "Review patient pathway and take corrective action.");
+        alert.setSuggestedAction(cap150(suggestedAction, "suggestedAction", patient.getId()));
+        alert.setMissingSummary(cap150(missingSummary, "missingSummary", patient.getId()));
         alert.setStatus(AlertStatus.OPEN);
         alertRepository.save(alert);
+
+        // Dispatch notification (D-06: immediate after save)
+        notificationService.dispatchForAlert(alert,
+                patient.getFirstName() + " " + patient.getLastName(),
+                patient.getMrn());
 
         log.info("ALERT_CREATED: patient={} step={} type={}", alertType, patient.getId(), step.getId());
         return alertType.name() + ": step '" + step.getName() + "' for patient " + patient.getId();
     }
 
     /**
-     * Builds the alert deviation description for a pathway step deviation.
+     * Truncates a string to 150 characters with a warning log if truncation occurs.
+     * Enforces the PW-ALL-007 constraint: both missingSummary and suggestedAction
+     * must be at most 150 characters.
      *
-     * <p>AI-01: Template text ({@code step.getAlertText()}) is the primary source for
-     * standard deviations where it is non-null and non-blank.
-     *
-     * <p>AI-02/AI-03: For non-standard deviations, calls {@link AlertGenerationAiService}
-     * with zero-PHI parameters to generate a Claude-powered deviation description.
-     *
-     * <p>AI-04: When Claude is unavailable (circuit breaker open), falls back to the
-     * {@code defaultDescription} parameter.
-     *
-     * <p>ZERO-PHI: Only anonymized clinical context is sent to Claude:
-     * cancer type enum, step name, alert type enum, window days, and step names.
-     * NO patient identifiers (name, MRN, DOB) are referenced.
-     *
-     * @param step               the pathway step in deviation
-     * @param alertType          the type of deviation
-     * @param defaultDescription fallback description
-     * @param patient            patient entity (for cancerType enum only — no PHI accessed)
-     * @return the alert description string
+     * @param value     the string to cap
+     * @param fieldName the field name for logging
+     * @param patientId the patient UUID for logging
+     * @return the capped string, or null if value was null
      */
-    private String buildAlertDescription(PatientPathwayStep step, AlertType alertType,
-            String defaultDescription, Patient patient) {
-        // AI-01: Template text is the primary source for standard deviations
-        if (step.getAlertText() != null && !step.getAlertText().isBlank()) {
-            return step.getAlertText();
+    private String cap150(String value, String fieldName, UUID patientId) {
+        if (value == null) return null;
+        if (value.length() > 150) {
+            log.warn("ALERT_FIELD_TRUNCATED: field={} patient={}", fieldName, patientId);
+            return value.substring(0, 150);
         }
-
-        // AI-02/AI-03: Non-standard deviation — try Claude for generated text
-        // ZERO-PHI: Only anonymized clinical context is sent
-        AlertText claudeText = alertGenerationAiService.generateAlertDescription(
-                patient.getCancerType().name(),           // non-PHI: cancer type enum
-                step.getName(),                           // non-PHI: pathway step name
-                alertType.name(),                         // non-PHI: deviation type enum
-                step.getWindowDays() != null ? String.valueOf(step.getWindowDays()) : "unknown",
-                List.of(),                                // no completed step names available here
-                List.of()                                 // no missing step names available here
-        );
-
-        if (claudeText != null) {
-            log.info("ALERT_CLAUDE_GENERATED: patient={} step={}", patient.getId(), step.getId());
-            return claudeText.deviationDescription();
-        }
-
-        // AI-04: Circuit breaker fallback — use default description
-        log.info("ALERT_FALLBACK_TEMPLATE: patient={} step={}", patient.getId(), step.getId());
-        return defaultDescription;
+        return value;
     }
 
     /**

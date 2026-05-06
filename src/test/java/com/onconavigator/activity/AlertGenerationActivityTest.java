@@ -3,7 +3,9 @@ package com.onconavigator.activity;
 import com.onconavigator.domain.Alert;
 import com.onconavigator.domain.enums.AlertStatus;
 import com.onconavigator.domain.enums.AlertType;
+import com.onconavigator.notification.NotificationService;
 import com.onconavigator.repository.AlertRepository;
+import com.onconavigator.repository.PatientRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -30,6 +32,8 @@ import static org.mockito.Mockito.*;
 class AlertGenerationActivityTest {
 
     private AlertRepository alertRepository;
+    private NotificationService notificationService;
+    private PatientRepository patientRepository;
     private AlertGenerationActivityImpl activity;
 
     private static final UUID PATIENT_ID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
@@ -41,7 +45,9 @@ class AlertGenerationActivityTest {
     @BeforeEach
     void setUp() {
         alertRepository = Mockito.mock(AlertRepository.class);
-        activity = new AlertGenerationActivityImpl(alertRepository);
+        notificationService = Mockito.mock(NotificationService.class);
+        patientRepository = Mockito.mock(PatientRepository.class);
+        activity = new AlertGenerationActivityImpl(alertRepository, notificationService, patientRepository);
     }
 
     /**
@@ -56,7 +62,7 @@ class AlertGenerationActivityTest {
                 PATIENT_ID, STEP_NAME, AlertStatus.OPEN)).thenReturn(false);
 
         activity.generateAlert(PATIENT_ID, STEP_NAME, "MISSING_EVENT",
-                DEVIATION_DESC, SUGGESTED_ACTION, WORKFLOW_RUN_ID);
+                DEVIATION_DESC, SUGGESTED_ACTION, null, WORKFLOW_RUN_ID);
 
         ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
         verify(alertRepository).save(alertCaptor.capture());
@@ -88,7 +94,7 @@ class AlertGenerationActivityTest {
                 PATIENT_ID, STEP_NAME, AlertStatus.OPEN)).thenReturn(true);
 
         activity.generateAlert(PATIENT_ID, STEP_NAME, "MISSING_EVENT",
-                DEVIATION_DESC, SUGGESTED_ACTION, WORKFLOW_RUN_ID);
+                DEVIATION_DESC, SUGGESTED_ACTION, null, WORKFLOW_RUN_ID);
 
         // save() must never be called — duplicate suppressed (PATH-06)
         verify(alertRepository, never()).save(any(Alert.class));
@@ -106,7 +112,7 @@ class AlertGenerationActivityTest {
                 PATIENT_ID, STEP_NAME, AlertStatus.OPEN)).thenReturn(false);
 
         activity.generateAlert(PATIENT_ID, STEP_NAME, "DELAYED_EVENT",
-                "Pathology report not received within the expected window.", SUGGESTED_ACTION, WORKFLOW_RUN_ID);
+                "Pathology report not received within the expected window.", SUGGESTED_ACTION, null, WORKFLOW_RUN_ID);
 
         ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
         verify(alertRepository).save(alertCaptor.capture());

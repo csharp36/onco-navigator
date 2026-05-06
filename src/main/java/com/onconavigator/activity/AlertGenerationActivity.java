@@ -38,9 +38,11 @@ public interface AlertGenerationActivity {
      * @param alertTypeStr        alert type as String: "MISSING_EVENT", "DELAYED_EVENT", or "OUT_OF_ORDER"
      * @param deviationDescription plain-language description of the deviation (from pathway template)
      * @param suggestedAction     suggested corrective action for the nurse navigator (from pathway template)
+     * @param missingSummary      short summary of what is missing (max 150 chars, for notifications)
      * @param workflowRunId       Temporal workflow run ID for traceability (not PHI)
      */
     @ActivityMethod
     void generateAlert(UUID patientId, String pathwayStepName, String alertTypeStr,
-                       String deviationDescription, String suggestedAction, String workflowRunId);
+                       String deviationDescription, String suggestedAction,
+                       String missingSummary, String workflowRunId);
 }
