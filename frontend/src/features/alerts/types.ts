@@ -9,6 +9,7 @@ export interface AlertResponse {
   pathwayStepName: string;
   deviationDescription: string;
   suggestedAction: string;
+  missingSummary: string | null;
   createdAt: string;
   timeElapsed: string;
 }

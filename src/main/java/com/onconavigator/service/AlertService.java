@@ -125,6 +125,7 @@ public class AlertService {
                 a.getPathwayStepName(),
                 a.getDeviationDescription(),
                 a.getSuggestedAction(),
+                a.getMissingSummary(),
                 a.getCreatedAt(),
                 computeTimeElapsed(a.getCreatedAt())
         );

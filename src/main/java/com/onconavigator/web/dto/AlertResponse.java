@@ -33,6 +33,7 @@ public record AlertResponse(
         String pathwayStepName,
         String deviationDescription,
         String suggestedAction,
+        String missingSummary,
         OffsetDateTime createdAt,
         String timeElapsed
 ) {}
