@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: AI Step Extraction from Clinical Documents** - Claude extracts pathway steps from MD notes, orders, and nurse notes; proposed steps require nurse confirmation (completed 2026-05-05)
 - [x] **Phase 7: Referral Trigger + Enhanced Timing** - Referral PDF as pathway clock trigger, event status awareness (Scheduled/Pending/Cancelled), results-before-visit and 48-hour escalation alerts (completed 2026-05-05)
 - [x] **Phase 8: Template Inheritance** - Extensible pathway templates with parent/child inheritance (e.g., rectal inherits from colorectal) (completed 2026-05-05)
-- [ ] **Phase 9: Alert Format + Notification Foundation** - Two-part alerts (what's missing + action ≤150 chars), Teams/email notification infrastructure
+- [x] **Phase 9: Alert Format + Notification Foundation** - Two-part alerts (what's missing + action ≤150 chars), Teams/email notification infrastructure (completed 2026-05-06)
 
 ## Phase Details
 
@@ -277,7 +277,7 @@ Plans:
 - [x] 09-02-PLAN.md — NotificationService interface, LoggingNotificationService, NotificationPreferenceService, NotificationPayload, AlertPrompts MISSING_SUMMARY extension, AlertGenerationAiService parsing, cap150 enforcement, notification dispatch hooks
 - [x] 09-03-PLAN.md — DigestDispatchWorkflow + Activity (Temporal Schedule), DigestScheduleRegistrar startup bean, application-local.yml activity-beans update
 **Wave 3** *(blocked on Wave 2)*
-- [ ] 09-04-PLAN.md — Unit tests: preference merge, severity filter, quiet hours, dispatch routing, digest queue drain, MISSING_SUMMARY parsing, 150-char cap
+- [x] 09-04-PLAN.md — Unit tests: preference merge, severity filter, quiet hours, dispatch routing, digest queue drain, MISSING_SUMMARY parsing, 150-char cap
 
 Cross-cutting constraints:
 - No PHI in Temporal workflow history — notification dispatch receives PHI as method params within activities, never as Temporal activity inputs
@@ -309,4 +309,4 @@ Phase 1 -> 2 -> 3 -> 4 -> 5 --+-- 6 -> 7
 | 6. AI Step Extraction | 5/5 | Complete | 2026-05-05 |
 | 7. Referral Trigger + Enhanced Timing | 4/4 | Complete | 2026-05-05 |
 | 8. Template Inheritance | 3/3 | Complete | 2026-05-05 |
-| 9. Alert Format + Notifications | 3/4 | In Progress | - |
+| 9. Alert Format + Notifications | 4/4 | Complete | 2026-05-06 |
