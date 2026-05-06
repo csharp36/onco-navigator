@@ -33,6 +33,12 @@ public class TemporalConfig {
      */
     public static final String CRON_SCHEDULE = "0 6 * * *";
 
+    /**
+     * Fixed Schedule ID for the digest dispatch periodic schedule.
+     * Registered idempotently by DigestScheduleRegistrar on startup.
+     */
+    public static final String DIGEST_SCHEDULE_ID = "digest-dispatch-schedule";
+
     private TemporalConfig() {
     }
 }

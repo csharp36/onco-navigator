@@ -57,6 +57,7 @@ spring.temporal:
         - pathwayEvaluationActivityImpl
         - alertGenerationActivityImpl
         - sweepActivityImpl
+        - digestDispatchActivityImpl
 
 onconavigator:
   encryption:
